@@ -4,7 +4,7 @@ export const PERSONAL = {
   location: "United States",
   email: "ashish@ashishneupane.com",
   github: "https://github.com/ash-neupane",
-  linkedin: "https://linkedin.com/in/ashishneupane",
+  linkedin: "https://linkedin.com/in/ashish-n",
   summary:
     "I have a deep understanding of LLMs, the technical skills to architect ML pipelines, and a drive to build systems that think and act. I acquired a breadth of experience building production-grade software on AWS by working in a small team with no dedicated DevOps support. Prior to Eight Sleep, I worked on LLM-As-A-Judge to run A/B experiments for Microsoft Copilot. I spent a year off between these roles climbing 14ers and diving deep into research papers in mechanistic interpretability. Now, I\u2019m interested in building from the ground up with Claude Code; what a time to be alive.",
 } as const;

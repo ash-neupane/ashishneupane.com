@@ -1,5 +1,4 @@
-import { PERSONAL, EDUCATION } from "@/data/resume";
-import { Section } from "@/components/section";
+import { PERSONAL } from "@/data/resume";
 
 export default function Home() {
   return (
@@ -23,29 +22,9 @@ export default function Home() {
           <p className="text-xl font-medium text-accent">
             {PERSONAL.title}
           </p>
-          <p className="text-sm text-muted">
-            Building production ML systems at{" "}
-            <span className="font-medium text-foreground">Eight Sleep</span>
-            {" · "}Previously at{" "}
-            <span className="font-medium text-foreground">Microsoft</span>
-            {" · "}
-            <span className="font-medium text-foreground">
-              Tufts University
-            </span>
-          </p>
         </div>
 
-        <p className="max-w-2xl text-base leading-relaxed text-muted">
-          {PERSONAL.summary}
-        </p>
-
         <div className="flex flex-wrap gap-3">
-          <a
-            href={`mailto:${PERSONAL.email}`}
-            className="rounded-lg bg-accent px-5 py-2.5 text-sm font-medium text-white shadow-md shadow-accent/20 transition-all hover:shadow-lg hover:shadow-accent/30 hover:brightness-110"
-          >
-            Get in Touch
-          </a>
           <a
             href={PERSONAL.github}
             target="_blank"
@@ -65,33 +44,23 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Education */}
-      <Section title="Education">
-        {EDUCATION.map((edu) => (
-          <div
-            key={edu.school}
-            className="rounded-xl border border-border/60 bg-surface/80 p-6 backdrop-blur-sm"
-          >
-            <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
-              <div>
-                <h3 className="font-semibold text-foreground">{edu.degree}</h3>
-                <p className="text-sm text-accent">{edu.school}</p>
-              </div>
-              <time className="shrink-0 text-sm text-muted">{edu.period}</time>
-            </div>
-            <ul className="space-y-1.5">
-              {edu.highlights.map((h) => (
-                <li
-                  key={h}
-                  className="relative pl-4 text-sm leading-relaxed text-muted before:absolute before:left-0 before:top-2.5 before:h-1 before:w-1 before:rounded-full before:bg-accent/40"
-                >
-                  {h}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </Section>
+      {/* Under Construction */}
+      <section className="flex flex-col items-center gap-6 rounded-2xl border border-border/60 bg-surface/80 p-12 text-center backdrop-blur-sm">
+        <span className="text-6xl" role="img" aria-label="construction">
+          🏗️
+        </span>
+        <h2 className="text-2xl font-bold text-foreground">
+          Pardon the dust!
+        </h2>
+        <p className="max-w-md text-base leading-relaxed text-muted">
+          This site is being built with vibes and an LLM.
+          Check back soon — or don&apos;t, I&apos;m a sign not a cop.
+        </p>
+        <div className="flex items-center gap-2 rounded-lg bg-accent-subtle px-4 py-2 text-sm text-accent">
+          <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-accent" />
+          Deploying neurons…
+        </div>
+      </section>
     </div>
   );
 }
