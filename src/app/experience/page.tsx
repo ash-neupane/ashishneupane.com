@@ -11,18 +11,20 @@ export const metadata: Metadata = {
 export default function ExperiencePage() {
   return (
     <Section title="Experience">
-      <div className="relative space-y-8">
-        {/* Timeline line */}
-        <div
-          aria-hidden="true"
-          className="absolute left-0 top-0 hidden h-full w-px bg-gradient-to-b from-accent/30 via-accent/10 to-transparent sm:block"
-        />
-        {EXPERIENCE.map((role) => (
-          <div key={`${role.company}-${role.title}`} className="sm:pl-8">
+      <div className="space-y-6">
+        {EXPERIENCE.map((role, i) => (
+          <div key={`${role.company}-${role.title}`} className="relative sm:pl-8">
+            {/* Timeline line — spans from this card to the next */}
+            {i < EXPERIENCE.length - 1 && (
+              <div
+                aria-hidden="true"
+                className="absolute left-[3px] top-3 hidden h-full w-px bg-gradient-to-b from-accent/30 to-accent/5 sm:block"
+              />
+            )}
             {/* Timeline dot */}
             <div
               aria-hidden="true"
-              className="absolute left-0 hidden h-2 w-2 -translate-x-[3.5px] translate-y-3 rounded-full bg-accent/60 sm:block"
+              className="absolute left-0 top-3 hidden h-[7px] w-[7px] rounded-full border-2 border-accent/60 bg-surface sm:block"
             />
             <RoleCard role={role} />
           </div>

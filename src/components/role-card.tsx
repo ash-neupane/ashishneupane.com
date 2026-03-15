@@ -1,12 +1,8 @@
 import type { Role } from "@/data/resume";
 
-interface RoleCardProps {
-  role: Role;
-}
-
-export function RoleCard({ role }: RoleCardProps) {
+export function RoleCard({ role }: { role: Role }) {
   return (
-    <article className="group relative rounded-xl border border-border bg-surface p-6 transition-all hover:border-accent/30 hover:shadow-sm">
+    <article className="rounded-xl border border-border/60 bg-surface/80 p-6 backdrop-blur-sm transition-all hover:border-accent/30 hover:shadow-md hover:shadow-accent/5">
       <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
         <div>
           <h3 className="font-semibold text-foreground">{role.title}</h3>
@@ -28,7 +24,7 @@ export function RoleCard({ role }: RoleCardProps) {
         {role.skills.map((skill) => (
           <span
             key={skill}
-            className="rounded-md bg-accent-subtle/60 px-2 py-0.5 text-xs font-medium text-accent"
+            className="rounded-md bg-accent-subtle/70 px-2 py-0.5 text-xs font-medium text-accent"
           >
             {skill}
           </span>

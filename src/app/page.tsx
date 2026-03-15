@@ -6,16 +6,23 @@ export default function Home() {
     <div className="space-y-20">
       {/* Hero */}
       <section className="relative space-y-8 pt-8">
-        {/* Decorative gradient blob */}
+        {/* Decorative ocean gradient blobs */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute -left-32 -top-16 h-64 w-64 rounded-full bg-accent/5 blur-3xl"
+          className="pointer-events-none absolute -left-40 -top-20 h-80 w-80 rounded-full bg-accent/8 blur-3xl"
         />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-32 top-16 h-64 w-64 rounded-full bg-accent-light/6 blur-3xl"
+        />
+
         <div className="relative space-y-3">
           <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
             {PERSONAL.name}
           </h1>
-          <p className="text-xl font-medium text-muted">{PERSONAL.title}</p>
+          <p className="text-xl font-medium text-accent">
+            {PERSONAL.title}
+          </p>
           <p className="text-sm text-muted">
             Building production ML systems at{" "}
             <span className="font-medium text-foreground">Eight Sleep</span>
@@ -27,13 +34,15 @@ export default function Home() {
             </span>
           </p>
         </div>
+
         <p className="max-w-2xl text-base leading-relaxed text-muted">
           {PERSONAL.summary}
         </p>
+
         <div className="flex flex-wrap gap-3">
           <a
             href={`mailto:${PERSONAL.email}`}
-            className="rounded-lg bg-accent px-5 py-2.5 text-sm font-medium text-white shadow-sm shadow-accent/25 transition-all hover:shadow-md hover:shadow-accent/30 hover:brightness-110"
+            className="rounded-lg bg-accent px-5 py-2.5 text-sm font-medium text-white shadow-md shadow-accent/20 transition-all hover:shadow-lg hover:shadow-accent/30 hover:brightness-110"
           >
             Get in Touch
           </a>
@@ -41,7 +50,7 @@ export default function Home() {
             href={PERSONAL.github}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-lg border border-border bg-surface px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:border-accent/50 hover:text-accent"
+            className="rounded-lg border border-border bg-surface/80 px-5 py-2.5 text-sm font-medium text-foreground backdrop-blur-sm transition-colors hover:border-accent/50 hover:text-accent"
           >
             GitHub
           </a>
@@ -49,7 +58,7 @@ export default function Home() {
             href={PERSONAL.linkedin}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-lg border border-border bg-surface px-5 py-2.5 text-sm font-medium text-foreground transition-colors hover:border-accent/50 hover:text-accent"
+            className="rounded-lg border border-border bg-surface/80 px-5 py-2.5 text-sm font-medium text-foreground backdrop-blur-sm transition-colors hover:border-accent/50 hover:text-accent"
           >
             LinkedIn
           </a>
@@ -58,33 +67,30 @@ export default function Home() {
 
       {/* Education */}
       <Section title="Education">
-        <div className="rounded-xl border border-border bg-surface p-6">
-          {EDUCATION.map((edu) => (
-            <div key={edu.school}>
-              <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
-                <div>
-                  <h3 className="font-semibold text-foreground">
-                    {edu.degree}
-                  </h3>
-                  <p className="text-sm text-accent">{edu.school}</p>
-                </div>
-                <time className="shrink-0 text-sm text-muted">
-                  {edu.period}
-                </time>
+        {EDUCATION.map((edu) => (
+          <div
+            key={edu.school}
+            className="rounded-xl border border-border/60 bg-surface/80 p-6 backdrop-blur-sm"
+          >
+            <div className="mb-3 flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between">
+              <div>
+                <h3 className="font-semibold text-foreground">{edu.degree}</h3>
+                <p className="text-sm text-accent">{edu.school}</p>
               </div>
-              <ul className="space-y-1.5">
-                {edu.highlights.map((h) => (
-                  <li
-                    key={h}
-                    className="relative pl-4 text-sm leading-relaxed text-muted before:absolute before:left-0 before:top-2.5 before:h-1 before:w-1 before:rounded-full before:bg-accent/40"
-                  >
-                    {h}
-                  </li>
-                ))}
-              </ul>
+              <time className="shrink-0 text-sm text-muted">{edu.period}</time>
             </div>
-          ))}
-        </div>
+            <ul className="space-y-1.5">
+              {edu.highlights.map((h) => (
+                <li
+                  key={h}
+                  className="relative pl-4 text-sm leading-relaxed text-muted before:absolute before:left-0 before:top-2.5 before:h-1 before:w-1 before:rounded-full before:bg-accent/40"
+                >
+                  {h}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
       </Section>
     </div>
   );
