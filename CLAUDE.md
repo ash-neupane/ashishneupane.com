@@ -10,8 +10,8 @@ Personal portfolio site for Ashish Neupane — a Next.js (App Router) static sit
 
 ## Architecture
 
-- All resume data lives in `src/data/resume.ts` — edit this file to update content
-- Pages: Home (`/`) and Resume (`/resume`)
+- Personal data lives in `src/data/resume.ts` — edit this file to update content
+- Pages: Home (`/`)
 - Static export to `out/`, deployed via GitHub Actions to GitHub Pages
 - Custom domain `www.ashishneupane.com` via Squarespace DNS
 
