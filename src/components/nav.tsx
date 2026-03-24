@@ -6,7 +6,6 @@ import { PERSONAL } from "@/data/resume";
 
 const LINKS = [
   { href: "/", label: "Home" },
-  { href: "/resume", label: "Resume" },
 ] as const;
 
 export function Nav() {
