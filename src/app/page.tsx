@@ -2,7 +2,7 @@ import { PERSONAL } from "@/data/resume";
 
 export default function Home() {
   return (
-    <div className="space-y-12">
+    <div className="max-w-3xl px-8 py-16 space-y-12">
       <section className="space-y-4">
         <h1 className="text-4xl font-bold tracking-tight text-ink sm:text-5xl">
           {PERSONAL.name}

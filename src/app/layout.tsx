@@ -24,7 +24,7 @@ export default function RootLayout({
     <html lang="en">
       <body className="antialiased">
         <Nav />
-        <main className="mx-auto max-w-3xl px-6 py-16">{children}</main>
+        <main>{children}</main>
       </body>
     </html>
   );

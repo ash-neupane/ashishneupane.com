@@ -11,10 +11,7 @@ function formatStats(papers: number | null, edges: number | null) {
 export default function ResearchIndex() {
   if (RESEARCH.length === 0) {
     return (
-      <div className="space-y-6">
-        <h1 className="text-3xl font-bold tracking-tight text-ink">
-          Research Reading
-        </h1>
+      <div className="max-w-3xl px-8 py-16 space-y-6">
         <p className="rounded-[3px] border border-border bg-surface p-8 text-muted shadow-[var(--shadow-paper)]">
           No reports yet. Check back soon.
         </p>
@@ -23,7 +20,7 @@ export default function ResearchIndex() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="max-w-3xl px-8 py-16">
       <ul className="space-y-5">
         {RESEARCH.map((thread) => (
           <li key={thread.slug}>

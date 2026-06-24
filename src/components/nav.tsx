@@ -19,7 +19,7 @@ export function Nav() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background">
-      <nav className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
+      <nav className="flex items-center justify-between px-8 py-4">
         <Link
           href="/"
           className="text-lg font-semibold tracking-tight text-ink transition-colors hover:text-accent"

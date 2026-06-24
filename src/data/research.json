@@ -1,7 +1,7 @@
 [
   {
     "slug": "bpe-vs-char-tokenization",
-    "title": "Why was BPE crucial? Is character-level provably complete, or does subword tokenization unhobble?",
+    "title": "Why was BPE tokenization crucial?",
     "question": "We know BPE was crucial to get language models to learn anything. Why? It's all compression anyway \u2014 why couldn't character-level tokens reach the same level? Is char-level provably complete (would catch up with more training, just inefficient) or is there an unhobbling we gain from subword tokenization?",
     "date": "2026-06-23",
     "papers": 44,
