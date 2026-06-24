@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>BPE vs character-level tokenization — research report</title>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+<style>
+:root{
+  --sage:#a8ba9a;--bottle:#092b1f;--cream:#f3f1e7;--paper:#faf8ef;
+  --canvas-soft:#cbd6bf;--rule:#d8d2be;
+  --ink:var(--bottle);--surface:var(--cream);--canvas:var(--sage);
+  --accent:var(--bottle);--accent-text:var(--cream);
+  --text1:#092b1f;--text2:#2c4034;--text3:#5e6e5a;
+  --high:#2e6f47;--medium:#a9701b;--low:#b23a2e;
+  --angle-a:#2e6f47;--angle-b:#a9701b;--angle-c:#b23a2e;--angle-d:#6b4a6e;
+  --shadow-rgb:9,43,31;
+  --mono:ui-monospace,"SF Mono","SFMono-Regular",Menlo,Monaco,"Cascadia Mono","Roboto Mono","Courier New",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  --r-xs:2px;--r-sm:3px;
+  --shadow-paper:2px 3px 0 rgba(var(--shadow-rgb),0.18);
+  --shadow-button:2px 3px 0 rgba(var(--shadow-rgb),0.25);
+  --shadow-pop:3px 5px 0 rgba(var(--shadow-rgb),0.22);
+  --s1:2px;--s2:4px;--s3:7px;--s4:10px;--s5:14px;--s6:20px;--s7:28px;--s8:40px;
+  --content-max:1180px;color-scheme:light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--sage);color:var(--text1);font:15px/1.62 var(--sans);-webkit-text-size-adjust:100%}
+.mono{font-family:var(--mono)}
+a{color:var(--bottle);text-decoration:none}
+a:hover{text-decoration:underline}
+.cite{font-family:var(--mono);font-size:.84em;font-weight:600;color:var(--high);
+  border-bottom:1.5px dashed var(--high);padding:0 1px;white-space:nowrap}
+.cite:hover{background:rgba(46,111,71,.12);text-decoration:none}
+.wrap{max-width:var(--content-max);margin:0 auto;padding:0 var(--s6) var(--s8)}
+
+/* header */
+header{background:var(--sage);padding:var(--s8) var(--s6) var(--s7)}
+header .inner{max-width:var(--content-max);margin:0 auto}
+.kicker{font-family:var(--mono);letter-spacing:.18em;text-transform:uppercase;
+  color:var(--text2);font-size:11px;font-weight:700}
+h1{font-size:30px;line-height:1.22;margin:var(--s4) 0 var(--s5);max-width:920px;color:var(--bottle)}
+.qcard{background:var(--cream);border:1.5px solid var(--bottle);border-left:5px solid var(--bottle);
+  border-radius:var(--r-sm);padding:var(--s5) var(--s6);max-width:920px;color:var(--text2);
+  font-size:14.5px;box-shadow:var(--shadow-paper)}
+.qcard .lab{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.12em;
+  color:var(--text3);display:block;margin-bottom:var(--s2)}
+.statline{margin-top:var(--s5);font-family:var(--mono);font-size:13px;color:var(--text2);
+  display:flex;gap:var(--s4);flex-wrap:wrap;align-items:center}
+.statline b{color:var(--bottle)}
+.statline .dot{color:var(--text3)}
+
+/* sticky nav */
+nav.snav{position:sticky;top:0;z-index:60;background:var(--paper);
+  border-top:2px solid var(--bottle);border-bottom:2px solid var(--bottle);
+  box-shadow:var(--shadow-paper)}
+nav.snav .row{max-width:var(--content-max);margin:0 auto;display:flex;align-items:center;
+  gap:var(--s2);padding:var(--s3) var(--s5);overflow-x:auto;-webkit-overflow-scrolling:touch}
+nav.snav .arrow{flex:0 0 auto;width:30px;height:30px;border:1.5px solid var(--bottle);
+  background:var(--cream);color:var(--bottle);border-radius:var(--r-sm);cursor:pointer;
+  font-family:var(--mono);font-size:15px;line-height:1;display:grid;place-items:center;
+  box-shadow:var(--shadow-button)}
+nav.snav .arrow:active{transform:translate(1px,1px);box-shadow:none}
+nav.snav .pills{display:flex;gap:var(--s2);flex:1 1 auto}
+nav.snav .pill{flex:0 0 auto;font-family:var(--mono);font-size:11.5px;font-weight:600;
+  padding:var(--s2) var(--s4);border:1.5px solid var(--canvas-soft);background:var(--cream);
+  color:var(--text2);border-radius:var(--r-sm);cursor:pointer;white-space:nowrap;
+  transition:background .22s ease,color .22s ease,border-color .22s ease,box-shadow .22s ease}
+nav.snav .pill .num{color:var(--text3);margin-right:5px}
+nav.snav .pill:hover{border-color:var(--bottle)}
+nav.snav .pill.on{background:var(--bottle);color:var(--cream);border-color:var(--bottle);
+  box-shadow:var(--shadow-button)}
+nav.snav .pill.on .num{color:var(--sage)}
+
+/* sections */
+main{background:var(--sage)}
+section{max-width:var(--content-max);margin:0 auto;padding:var(--s8) var(--s6);scroll-margin-top:64px}
+.shead{display:flex;align-items:baseline;gap:var(--s4);margin-bottom:var(--s2)}
+.shead .n{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--high)}
+h2{font-size:22px;margin:0;color:var(--bottle)}
+.sub{color:var(--text3);font-size:13.5px;margin:var(--s2) 0 var(--s6);max-width:760px}
+
+/* card surface */
+.panel{background:var(--cream);border:1.5px solid var(--bottle);border-radius:var(--r-sm);
+  box-shadow:var(--shadow-paper)}
+
+/* TLDR */
+.tldr{background:var(--cream);border:1.5px solid var(--bottle);border-radius:var(--r-sm);
+  padding:var(--s5) var(--s6);box-shadow:var(--shadow-pop)}
+ul.bul{list-style:none;margin:0;padding:0}
+ul.bul>li{position:relative;padding:var(--s3) 0 var(--s3) var(--s6);font-size:15px;color:var(--text1);
+  border-bottom:1px dashed var(--rule)}
+ul.bul>li:last-child{border-bottom:none}
+ul.bul>li::before{content:"\25B8";position:absolute;left:0;top:var(--s3);color:var(--high);
+  font-size:13px;font-family:var(--mono)}
+ul.bul .lead{font-weight:600}
+ul.bul ul.sub{list-style:none;margin:var(--s3) 0 0;padding:0}
+ul.bul ul.sub>li{position:relative;padding:var(--s2) 0 var(--s2) var(--s6);font-size:13.6px;
+  color:var(--text2);border-bottom:none}
+ul.bul ul.sub>li::before{content:"\2014";position:absolute;left:0;top:var(--s2);color:var(--text3);
+  font-family:var(--mono);font-size:12px}
+
+/* carousel */
+.carousel{position:relative}
+.carousel .stage{background:var(--cream);border:1.5px solid var(--bottle);border-radius:var(--r-sm);
+  padding:var(--s6) var(--s7);min-height:240px;box-shadow:var(--shadow-pop)}
+.carousel .stage h3{margin:0 0 var(--s5);font-size:18px;color:var(--bottle);line-height:1.3}
+.carousel .ctrl{display:flex;align-items:center;justify-content:space-between;margin-top:var(--s5);gap:var(--s4)}
+.carousel .cbtn{width:38px;height:38px;border:1.5px solid var(--bottle);background:var(--cream);
+  color:var(--bottle);border-radius:var(--r-sm);cursor:pointer;font-family:var(--mono);font-size:18px;
+  display:grid;place-items:center;box-shadow:var(--shadow-button)}
+.carousel .cbtn:active{transform:translate(1px,1px);box-shadow:none}
+.dots{display:flex;gap:var(--s3);justify-content:center;flex-wrap:wrap}
+.dots .d{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--bottle);
+  background:var(--cream);cursor:pointer;padding:0}
+.dots .d.on{background:var(--bottle)}
+.carousel .count{font-family:var(--mono);font-size:12px;color:var(--text3);min-width:48px;text-align:center}
+
+/* viz */
+.viz{background:var(--paper);border:1.5px solid var(--bottle);border-radius:var(--r-sm);
+  padding:var(--s5);box-shadow:var(--shadow-paper);position:relative}
+.viz svg{width:100%;display:block;overflow:visible;touch-action:manipulation}
+.legend{display:flex;gap:var(--s5);flex-wrap:wrap;font-family:var(--mono);font-size:11.5px;
+  color:var(--text2);margin-top:var(--s4);align-items:center}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.vizhint{font-family:var(--mono);font-size:10.5px;color:var(--text3);margin-top:var(--s3)}
+
+/* hover card (bridged) */
+.hovercard{position:fixed;z-index:90;background:var(--cream);border:1.5px solid var(--bottle);
+  border-radius:var(--r-sm);padding:var(--s4) var(--s5);max-width:320px;font-size:12.6px;
+  color:var(--text1);box-shadow:var(--shadow-pop);opacity:0;pointer-events:none;
+  transition:opacity .12s ease}
+.hovercard.show{opacity:1;pointer-events:auto}
+.hovercard .ht{font-weight:700;color:var(--bottle);line-height:1.32;margin-bottom:var(--s2)}
+.hovercard .hm{font-family:var(--mono);font-size:11px;color:var(--text3);margin-bottom:var(--s2)}
+.hovercard .hc{color:var(--text2);font-size:12px;margin-bottom:var(--s3)}
+.hovercard a.cite{display:inline-block}
+
+/* checklist */
+ul.check{list-style:none;margin:0;padding:0;display:grid;gap:var(--s4)}
+ul.check li{display:flex;gap:var(--s4);align-items:flex-start;background:var(--cream);
+  border:1.5px solid var(--bottle);border-radius:var(--r-sm);padding:var(--s4) var(--s5);
+  box-shadow:var(--shadow-paper);font-size:14px}
+ul.check .box{flex:0 0 auto;width:22px;height:22px;border:2px solid var(--bottle);border-radius:var(--r-xs);
+  position:relative;margin-top:1px}
+ul.check .box::after{content:"";position:absolute;left:5px;top:1px;width:7px;height:12px;
+  border:solid var(--high);border-width:0 3px 3px 0;transform:rotate(42deg)}
+
+/* ideas deck */
+.deck{background:var(--cream);border:1.5px solid var(--bottle);border-radius:var(--r-sm);
+  padding:var(--s6);box-shadow:var(--shadow-pop)}
+.deck .dhead{display:flex;align-items:center;justify-content:space-between;gap:var(--s4);
+  margin-bottom:var(--s5);flex-wrap:wrap}
+.deck .did{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--cream);
+  background:var(--bottle);padding:var(--s2) var(--s4);border-radius:var(--r-sm)}
+.shuffle{font-family:var(--mono);font-size:14px;font-weight:700;letter-spacing:.04em;
+  text-transform:uppercase;color:var(--cream);background:var(--high);border:1.5px solid var(--bottle);
+  border-radius:var(--r-sm);padding:var(--s4) var(--s6);cursor:pointer;box-shadow:var(--shadow-button);
+  display:inline-flex;align-items:center;gap:var(--s3)}
+.shuffle:active{transform:translate(1px,1px);box-shadow:none}
+.quad{display:grid;grid-template-columns:1fr 1fr;gap:var(--s4)}
+.quad .cell{border:1.5px solid var(--canvas-soft);border-radius:var(--r-sm);padding:var(--s5);
+  background:var(--paper);min-height:96px}
+.quad .cell .clab{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.1em;
+  color:var(--text3);display:block;margin-bottom:var(--s3)}
+.quad .cell .ctxt{font-size:13.5px;color:var(--text1);line-height:1.5}
+.quad .cell.empty .ctxt{color:var(--text3);font-style:italic}
+
+/* report quality bars */
+.qverdict{font-family:var(--mono);font-size:12.5px;color:var(--text2);margin-bottom:var(--s6)}
+.qverdict b{padding:var(--s1) var(--s3);border-radius:var(--r-xs);color:var(--cream)}
+.qbars{display:grid;gap:var(--s4)}
+.qbar{position:relative;height:34px;border-radius:var(--r-xs);background:var(--paper);
+  border:1.5px solid var(--canvas-soft);overflow:visible;cursor:default}
+.qbar .fill{position:absolute;left:0;top:0;bottom:0;border-radius:var(--r-xs);
+  transition:filter .15s ease}
+.qbar .sc{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-family:var(--mono);
+  font-size:13px;font-weight:700;color:var(--bottle)}
+.qbar:hover .fill{filter:brightness(.92)}
+.qbar .reveal{position:absolute;left:10px;top:50%;transform:translateY(-50%);font-family:var(--mono);
+  font-size:12px;font-weight:700;color:var(--cream);opacity:0;transition:opacity .15s ease;
+  pointer-events:none;text-shadow:0 1px 0 rgba(var(--shadow-rgb),.5)}
+.qbar:hover .reveal{opacity:1}
+.qnote{font-size:12.5px;color:var(--text2);min-height:18px;margin-top:var(--s4);
+  font-style:italic;padding-left:var(--s3);border-left:3px solid var(--rule)}
+
+/* citations accordions */
+.acc{display:grid;gap:var(--s3)}
+.acc .row{background:var(--cream);border:1.5px solid var(--bottle);border-radius:var(--r-sm);
+  box-shadow:var(--shadow-paper);overflow:hidden}
+.acc .head{display:flex;align-items:center;gap:var(--s4);padding:var(--s4) var(--s5);cursor:pointer;
+  user-select:none}
+.acc .head .ang{flex:0 0 auto;width:10px;height:10px;border-radius:2px}
+.acc .head .ttl{flex:1 1 auto;font-size:14px;font-weight:600;color:var(--text1);line-height:1.35}
+.acc .head .yr{flex:0 0 auto;font-family:var(--mono);font-size:12px;color:var(--text2)}
+.acc .head .tw{flex:0 0 auto;font-family:var(--mono);font-size:14px;color:var(--bottle);
+  transition:transform .2s ease}
+.acc .row.open .head .tw{transform:rotate(90deg)}
+.acc .body{max-height:0;overflow:hidden;transition:max-height .28s ease}
+.acc .row.open .body{max-height:420px}
+.acc .body .in{padding:0 var(--s5) var(--s5);border-top:1px dashed var(--rule);margin-top:0;
+  font-size:13px;color:var(--text2)}
+.acc .body .au{font-family:var(--mono);font-size:11.5px;color:var(--text3);margin:var(--s4) 0 var(--s3)}
+.acc .body dl{display:grid;grid-template-columns:auto 1fr;gap:var(--s2) var(--s5);margin:0}
+.acc .body dt{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--text3);padding-top:2px}
+.acc .body dd{margin:0;color:var(--text1)}
+.acc .body .clm{color:var(--text1);margin:var(--s3) 0}
+.acctools{display:flex;gap:var(--s3);margin-bottom:var(--s5);flex-wrap:wrap}
+.acctools button{font-family:var(--mono);font-size:11.5px;border:1.5px solid var(--bottle);
+  background:var(--cream);color:var(--bottle);padding:var(--s2) var(--s4);border-radius:var(--r-sm);
+  cursor:pointer;box-shadow:var(--shadow-button)}
+.acctools button:active{transform:translate(1px,1px);box-shadow:none}
+
+.foot{max-width:var(--content-max);margin:0 auto;padding:var(--s7) var(--s6) var(--s8);
+  font-family:var(--mono);font-size:11.5px;color:var(--text2);border-top:2px solid var(--bottle)}
+
+@media(max-width:680px){
+  h1{font-size:23px}
+  section{padding:var(--s7) var(--s5)}
+  .quad{grid-template-columns:1fr}
+  .carousel .stage{padding:var(--s5)}
+}
+</style></head>
+<body>
+<header><div class="inner">
+  <div class="kicker">Research Journal &middot; auto-explored &middot; 2026-06-23</div>
+  <h1 id="doc-title"></h1>
+  <div class="qcard"><span class="lab">crystallized question</span><span id="doc-question"></span></div>
+  <div class="statline">
+    <span><b class="mono" id="stat-papers"></b> papers</span>
+    <span class="dot">&middot;</span>
+    <span><b class="mono" id="stat-edges"></b> citation links</span>
+  </div>
+</div></header>
+
+<nav class="snav"><div class="row">
+  <button class="arrow" id="nav-prev" aria-label="previous section">&#8249;</button>
+  <div class="pills" id="nav-pills"></div>
+  <button class="arrow" id="nav-next" aria-label="next section">&#8250;</button>
+</div></nav>
+
+<main>
+<section id="tldr">
+  <div class="shead"><span class="n">01</span><h2>TLDR</h2></div>
+  <p class="sub">Captain's-log bottom line. Citation chips link straight to the paper.</p>
+  <div class="tldr"><ul class="bul" id="tldr-list"></ul></div>
+</section>
+
+<section id="insights">
+  <div class="shead"><span class="n">02</span><h2>Key insights</h2></div>
+  <p class="sub">One at a time — the non-obvious, tension-filled findings.</p>
+  <div class="carousel">
+    <div class="stage" id="ins-stage"></div>
+    <div class="ctrl">
+      <button class="cbtn" id="ins-prev" aria-label="previous insight">&#8249;</button>
+      <div class="dots" id="ins-dots"></div>
+      <span class="count" id="ins-count"></span>
+      <button class="cbtn" id="ins-next" aria-label="next insight">&#8250;</button>
+    </div>
+  </div>
+</section>
+
+<section id="graph">
+  <div class="shead"><span class="n">03</span><h2>Citation graph, on a map</h2></div>
+  <p class="sub">Nodes = papers at their lead institution's geography over a faint world map.
+    Size &prop; citations, color = research angle, arrows A&rarr;B mean &ldquo;A cites B.&rdquo;
+    Double-click a node to focus its neighborhood. Hover for a card you can click into.</p>
+  <div class="viz"><svg id="graph-svg" height="600"></svg>
+    <div class="legend" id="graph-legend"></div>
+    <div class="vizhint">double-click node = zoom focus &middot; double-click empty space = reset &middot; arrows point to cited work</div>
+  </div>
+</section>
+
+<section id="timeline">
+  <div class="shead"><span class="n">04</span><h2>Timeline in 3-D</h2></div>
+  <p class="sub">Standard xyz axes: X = year (left&rarr;right), Y = citations (up),
+    Z = research angle (depth, receding). Citation edges drawn as lines in 3-space. Same hover/click.</p>
+  <div class="viz"><svg id="time-svg" height="600"></svg>
+    <div class="legend" id="time-legend"></div>
+    <div class="vizhint">X time &middot; Y citations (log) &middot; Z angle-depth &middot; hover any node</div>
+  </div>
+</section>
+
+<section id="next">
+  <div class="shead"><span class="n">05</span><h2>Next steps</h2></div>
+  <p class="sub">The reading + prototyping checklist.</p>
+  <ul class="check" id="next-list"></ul>
+</section>
+
+<section id="ideas">
+  <div class="shead"><span class="n">06</span><h2>Ideas deck</h2></div>
+  <p class="sub">One research idea at a time, in a 2&times;2. Shuffle to draw another.</p>
+  <div class="deck">
+    <div class="dhead">
+      <span class="did" id="idea-id"></span>
+      <button class="shuffle" id="idea-shuffle">&#9658; shuffle</button>
+    </div>
+    <div class="quad" id="idea-quad"></div>
+  </div>
+</section>
+
+<section id="quality">
+  <div class="shead"><span class="n">07</span><h2>Report quality</h2></div>
+  <p class="sub">Each bar = one validation axis; length &prop; score (1&ndash;5), colored by score.
+    Hover a bar to reveal its axis name and note.</p>
+  <div class="panel" style="padding:var(--s6)">
+    <div class="qverdict" id="q-verdict"></div>
+    <div class="qbars" id="q-bars"></div>
+    <div class="qnote" id="q-note">hover a bar for detail&hellip;</div>
+  </div>
+</section>
+
+<section id="citations">
+  <div class="shead"><span class="n">08</span><h2>Citations</h2></div>
+  <p class="sub" id="cit-sub"></p>
+  <div class="acctools">
+    <button id="acc-expand">expand all</button>
+    <button id="acc-collapse">collapse all</button>
+  </div>
+  <div class="acc" id="acc-list"></div>
+</section>
+</main>
+
+<div class="foot">
+  Generated by the <b>research-journal</b> skill &middot; sage paper-procurement visual system &middot;
+  <span id="foot-stats"></span> &middot; citation side-by-side panel deferred (see todo/).
+</div>
+
+<div class="hovercard" id="hovercard"></div>
+
+<script>
+const PAPERS = [{"id":"gage1994","title":"A New Algorithm for Data Compression","authors":["Philip Gage"],"institutions":["C Users Journal (independent)"],"year":1994,"venue":"The C Users Journal","citation_count":1166,"url":"https://www.derczynski.com/papers/archive/BPE_Gage.pdf","key_claim":"Introduces byte-pair encoding: iteratively replace the most frequent adjacent byte pair with a new symbol.","relevance_to_question":"Establishes BPE as a pure compression algorithm, grounding the 'tokenization is compression' framing.","angle":"A","lat":40.0,"lon":-100.0,"org_type":"independent","citation_count_estimated":false,"cites":[]},{"id":"schuster2012","title":"Japanese and Korean Voice Search","authors":["Mike Schuster","Kaisuke Nakajima"],"institutions":["Google"],"year":2012,"venue":"ICASSP","citation_count":963,"url":"https://research.google/pubs/japanese-and-korean-voice-search/","key_claim":"Introduces the WordPiece model, merging the subword pair that maximizes training-data likelihood under a unigram LM.","relevance_to_question":"Earliest learned subword scheme; ties merge choice to LM likelihood.","angle":"A","lat":37.42,"lon":-122.08,"org_type":"industry","citation_count_estimated":false,"cites":[]},{"id":"sennrich2016","title":"Neural Machine Translation of Rare Words with Subword Units","authors":["Rico Sennrich","Barry Haddow","Alexandra Birch"],"institutions":["University of Edinburgh"],"year":2016,"venue":"ACL","citation_count":8749,"url":"https://aclanthology.org/P16-1162/","key_claim":"Adapts BPE to NMT to give an open vocabulary via a small fixed set of subword units, eliminating UNK.","relevance_to_question":"Foundational subword-for-neural-models paper; rare-word coverage and compositionality.","angle":"A","lat":55.94,"lon":-3.19,"org_type":"academia","citation_count_estimated":false,"cites":["gage1994"]},{"id":"kudo2018","title":"Subword Regularization: Improving NMT Models with Multiple Subword Candidates","authors":["Taku Kudo"],"institutions":["Google"],"year":2018,"venue":"ACL","citation_count":1355,"url":"https://aclanthology.org/P18-1007/","key_claim":"Probabilistic unigram-LM tokenizer (EM) + subword regularization sampling multiple segmentations.","relevance_to_question":"Segmentation is itself a probabilistic LM problem; segmentation entropy as augmentation.","angle":"A","lat":37.42,"lon":-122.08,"org_type":"industry","citation_count_estimated":false,"cites":["sennrich2016","gage1994","schuster2012"]},{"id":"kudo2018b","title":"SentencePiece: A Simple and Language Independent Subword Tokenizer","authors":["Taku Kudo","John Richardson"],"institutions":["Google"],"year":2018,"venue":"EMNLP (Demo)","citation_count":4143,"url":"https://aclanthology.org/D18-2012/","key_claim":"Language-agnostic tokenizer (BPE + unigram) trainable directly from raw text.","relevance_to_question":"Standardized subword tokenization as preprocessing layer.","angle":"A","lat":37.42,"lon":-122.08,"org_type":"industry","citation_count_estimated":false,"cites":["sennrich2016","kudo2018","gage1994","schuster2012"]},{"id":"radford2019","title":"Language Models are Unsupervised Multitask Learners (GPT-2)","authors":["Alec Radford","Jeffrey Wu","Rewon Child"],"institutions":["OpenAI"],"year":2019,"venue":"OpenAI Technical Report","citation_count":29055,"url":"https://cdn.openai.com/better-language-models/language_models_are_unsupervised_multitask_learners.pdf","key_claim":"Byte-level BPE over a 256-byte base + 50k merges → zero OOV for any Unicode, short sequences.","relevance_to_question":"Standard LLM tokenizer; byte base gives completeness, BPE merges give efficiency.","angle":"A","lat":37.76,"lon":-122.41,"org_type":"industry","citation_count_estimated":false,"cites":["sennrich2016","gage1994"]},{"id":"mielke2021","title":"Between Words and Characters: A Brief History of Open-Vocabulary Modeling and Tokenization","authors":["Sabrina J. Mielke","Zaid Alyafeai","Elizabeth Salesky"],"institutions":["Johns Hopkins University","Hugging Face","Google"],"year":2021,"venue":"arXiv","citation_count":216,"url":"https://arxiv.org/abs/2112.10508","key_claim":"Surveys word/subword/character spectrum; no single best tokenization.","relevance_to_question":"Canonical map of the char-vs-subword tradeoff space.","angle":"A","lat":39.33,"lon":-76.62,"org_type":"academia","citation_count_estimated":false,"cites":["sennrich2016","kudo2018","kudo2018b","schuster2012","gage1994","radford2019","clark2021","xue2021"]},{"id":"zouhar2023","title":"Tokenization and the Noiseless Channel","authors":["Vilém Zouhar","Clara Meister","Juan Luis Gastaldi"],"institutions":["ETH Zurich"],"year":2023,"venue":"ACL","citation_count":62,"url":"https://aclanthology.org/2023.acl-long.284/","key_claim":"Rényi efficiency of unigram token distribution predicts BLEU at 0.82 vs -0.30 for raw compressed length.","relevance_to_question":"Compression length alone poorly predicts LM quality; balance matters.","angle":"A","lat":47.38,"lon":8.55,"org_type":"academia","citation_count_estimated":false,"cites":["sennrich2016","kudo2018","kudo2018b","mielke2021"]},{"id":"goldman2024","title":"Unpacking Tokenization: Evaluating Text Compression and its Correlation with Model Performance","authors":["Omer Goldman","Avi Caciularu","Matan Eyal"],"institutions":["Bar-Ilan University","Google Research"],"year":2024,"venue":"Findings of ACL","citation_count":68,"url":"https://aclanthology.org/2024.findings-acl.134/","key_claim":"Compression as 0-gram LM; positive correlation between compression and downstream performance.","relevance_to_question":"'Compression helps' evidence, but compression is a proxy not the full explanation.","angle":"A","lat":32.07,"lon":34.84,"org_type":"academia","citation_count_estimated":false,"cites":["sennrich2016","kudo2018b","zouhar2023","mielke2021","radford2019"]},{"id":"schmidt2024","title":"Tokenization Is More Than Compression","authors":["Craig W. Schmidt","Varshini Reddy","Haoran Zhang"],"institutions":["Kensho Technologies","MIT"],"year":2024,"venue":"EMNLP","citation_count":93,"url":"https://aclanthology.org/2024.emnlp-main.40/","key_claim":"PathPiece minimal-token segmentation shows fewer tokens does NOT reliably improve downstream performance.","relevance_to_question":"Directly falsifies pure compression-maximization as the mechanism.","angle":"A","lat":42.36,"lon":-71.08,"org_type":"industry","citation_count_estimated":false,"cites":["sennrich2016","kudo2018","kudo2018b","zouhar2023","goldman2024","mielke2021"]},{"id":"dagan2024","title":"Getting the Most Out of Your Tokenizer for Pre-training and Domain Adaptation","authors":["Gautier Dagan","Gabriel Synnaeve","Baptiste Rozière"],"institutions":["University of Edinburgh","Meta AI"],"year":2024,"venue":"ICML","citation_count":71,"url":"https://arxiv.org/abs/2402.01035","key_claim":"Tokenizer size, pre-tokenization regex, and training data materially affect speed, context, performance.","relevance_to_question":"Quantifies how tokenizer-driven compression translates into effective context and compute.","angle":"A","lat":55.94,"lon":-3.19,"org_type":"academia","citation_count_estimated":false,"cites":["sennrich2016","kudo2018b","radford2019","zouhar2023","goldman2024"]},{"id":"karpathy2015","title":"The Unreasonable Effectiveness of Recurrent Neural Networks (char-rnn)","authors":["Andrej Karpathy"],"institutions":["Stanford University"],"year":2015,"venue":"Blog","citation_count":2000,"url":"http://karpathy.github.io/2015/05/21/rnn-effectiveness/","key_claim":"A vanilla character-level LSTM generates plausible Shakespeare/LaTeX/Linux source one char at a time.","relevance_to_question":"Existence proof that char-level models learn language.","angle":"B","lat":37.43,"lon":-122.17,"org_type":"academia","citation_count_estimated":true,"cites":[]},{"id":"kim2016","title":"Character-Aware Neural Language Models","authors":["Yoon Kim","Yacine Jernite","David Sontag"],"institutions":["Harvard University","New York University"],"year":2016,"venue":"AAAI","citation_count":1719,"url":"https://arxiv.org/abs/1508.06615","key_claim":"CNN+highway over char embeddings → LSTM matches/beats word-level LMs with fewer params.","relevance_to_question":"Char input is a better inductive prior; gap is params/compute not expressiveness.","angle":"B","lat":42.38,"lon":-71.12,"org_type":"academia","citation_count_estimated":false,"cites":["karpathy2015"]},{"id":"alrfou2019","title":"Character-Level Language Modeling with Deeper Self-Attention","authors":["Rami Al-Rfou","Dokook Choe","Noah Constant"],"institutions":["Google AI"],"year":2019,"venue":"AAAI","citation_count":419,"url":"https://arxiv.org/abs/1808.04444","key_claim":"64-layer transformer + auxiliary losses achieves SOTA char-level (1.06 bpc enwik8).","relevance_to_question":"First convincing pure-character transformer LM; SOTA but extreme depth/compute.","angle":"B","lat":37.42,"lon":-122.08,"org_type":"industry","citation_count_estimated":false,"cites":["karpathy2015","kim2016"]},{"id":"xue2021","title":"ByT5: Towards a Token-Free Future with Pre-trained Byte-to-Byte Models","authors":["Linting Xue","Aditya Barua","Noah Constant"],"institutions":["Google Research"],"year":2021,"venue":"TACL","citation_count":704,"url":"https://arxiv.org/abs/2105.13626","key_claim":"Byte-level T5 is parameter-competitive, wins on noise/transliteration/multilingual; ~4x longer sequences.","relevance_to_question":"Cleanest controlled byte-vs-subword comparison; quantifies compute penalty + robustness wins.","angle":"B","lat":37.42,"lon":-122.08,"org_type":"industry","citation_count_estimated":false,"cites":["sennrich2016","kudo2018b","radford2019","kim2016","clark2021","alrfou2019"]},{"id":"clark2021","title":"CANINE: Pre-training an Efficient Tokenization-Free Encoder","authors":["Jonathan H. Clark","Dan Garrette","Iulia Turc"],"institutions":["Google Research"],"year":2021,"venue":"TACL","citation_count":300,"url":"https://arxiv.org/abs/2103.06874","key_claim":"Char encoder + downsampling beats mBERT by 2.8 F1 on TyDi QA with 28% fewer params.","relevance_to_question":"Char-level winning on multilingual encoder task; downsampling fixes length.","angle":"B","lat":37.42,"lon":-122.08,"org_type":"industry","citation_count_estimated":false,"cites":["sennrich2016","kudo2018b","kim2016","radford2019","alrfou2019"]},{"id":"tay2021","title":"Charformer: Fast Character Transformers via Gradient-based Subword Tokenization","authors":["Yi Tay","Vinh Q. Tran","Sebastian Ruder"],"institutions":["Google Research","DeepMind"],"year":2021,"venue":"ICLR","citation_count":207,"url":"https://arxiv.org/abs/2106.12672","key_claim":"Learned soft tokenization (GBST) 28-100% faster than vanilla byte/subword, matches/beats subword.","relevance_to_question":"Compute objection can be engineered away with learned end-to-end tokenization.","angle":"B","lat":37.42,"lon":-122.08,"org_type":"industry","citation_count_estimated":false,"cites":["sennrich2016","kudo2018b","radford2019","xue2021","clark2021","kim2016"]},{"id":"nawrot2021","title":"Hierarchical Transformers Are More Efficient Language Models (Hourglass)","authors":["Piotr Nawrot","Szymon Tworkowski","Michał Tyrolski"],"institutions":["University of Warsaw","Google"],"year":2021,"venue":"Findings of NAACL","citation_count":115,"url":"https://arxiv.org/abs/2110.13711","key_claim":"U-Net-style down/upsampling transformer beats the baseline at equal compute.","relevance_to_question":"Hierarchy/downsampling makes fine-grained sequences compute-efficient.","angle":"B","lat":52.24,"lon":21.02,"org_type":"academia","citation_count_estimated":false,"cites":["karpathy2015","alrfou2019","clark2021"]},{"id":"yu2023","title":"MEGABYTE: Predicting Million-byte Sequences with Multiscale Transformers","authors":["Lili Yu","Dániel Simig","Colin Flaherty"],"institutions":["Meta AI (FAIR)"],"year":2023,"venue":"NeurIPS","citation_count":173,"url":"https://arxiv.org/abs/2305.07185","key_claim":"Global+local multiscale decoder over byte patches → sub-quadratic attention, competitive with subword.","relevance_to_question":"First byte model to reach subword competitiveness on long-context LM via patching.","angle":"B","lat":37.48,"lon":-122.15,"org_type":"industry","citation_count_estimated":false,"cites":["xue2021","clark2021","tay2021","radford2019","nawrot2021","alrfou2019"]},{"id":"wang2024","title":"MambaByte: Token-free Selective State Space Model","authors":["Junxiong Wang","Tushaar Gangavarapu","Jing Nathan Yan"],"institutions":["Cornell University"],"year":2024,"venue":"COLM","citation_count":69,"url":"https://arxiv.org/abs/2401.13660","key_claim":"Token-free Mamba SSM on raw bytes competitive with/beats subword transformers; linear-length inference.","relevance_to_question":"Non-attention backbone removes quadratic length penalty.","angle":"B","lat":42.45,"lon":-76.48,"org_type":"academia","citation_count_estimated":false,"cites":["xue2021","clark2021","tay2021","yu2023","radford2019"]},{"id":"slagle2024","title":"SpaceByte: Towards Deleting Tokenization from Large Language Modeling","authors":["Kevin Slagle"],"institutions":["Rice University"],"year":2024,"venue":"NeurIPS","citation_count":30,"url":"https://arxiv.org/abs/2404.14408","key_claim":"Space-aligned dynamic byte patches close the byte-vs-subword autoregressive gap.","relevance_to_question":"First byte decoder to ~match tokenized transformer; dynamic boundary beats fixed patches.","angle":"B","lat":29.72,"lon":-95.4,"org_type":"academia","citation_count_estimated":false,"cites":["xue2021","clark2021","tay2021","yu2023","wang2024","nawrot2021"]},{"id":"blt2024","title":"Byte Latent Transformer: Patches Scale Better Than Tokens","authors":["Artidoro Pagnoni","Ram Pasunuru","Pedro Rodriguez"],"institutions":["Meta AI (FAIR)","University of Washington","University of Chicago"],"year":2024,"venue":"ACL 2025","citation_count":135,"url":"https://arxiv.org/abs/2412.09871","key_claim":"FLOP-controlled byte model to 8B/4T: entropy-based dynamic patches match Llama-3 (61.1 vs 60.0) with ~50% fewer inference FLOPs; crushes robustness (CUTE 54.1 vs 27.5).","relevance_to_question":"Decisive evidence byte models match/exceed BPE LLMs at scale; BPE necessity was efficiency not capability.","angle":"B","lat":37.48,"lon":-122.15,"org_type":"industry","citation_count_estimated":false,"cites":["xue2021","clark2021","tay2021","yu2023","slagle2024","wang2024","radford2019","nawrot2021"]},{"id":"hwang2025","title":"Dynamic Chunking for End-to-End Hierarchical Sequence Modeling (H-Net)","authors":["Sukjun Hwang","Brandon Wang","Albert Gu"],"institutions":["Carnegie Mellon University"],"year":2025,"venue":"arXiv","citation_count":61,"url":"https://arxiv.org/abs/2507.07955","key_claim":"End-to-end learned dynamic chunking over raw bytes matches/exceeds tokenized transformers; cross-modal.","relevance_to_question":"Latest tokenizer-free architecture; learned segmentation surpasses BPE.","angle":"B","lat":40.44,"lon":-79.94,"org_type":"academia","citation_count_estimated":false,"cites":["xue2021","clark2021","yu2023","slagle2024","blt2024","wang2024","tay2021","nawrot2021"]},{"id":"rajaraman2024","title":"Toward a Theory of Tokenization in LLMs","authors":["Nived Rajaraman","Jiantao Jiao","Kannan Ramchandran"],"institutions":["UC Berkeley"],"year":2024,"venue":"NeurIPS","citation_count":37,"url":"https://arxiv.org/abs/2404.08335","key_claim":"Without tokenization, transformers on k-th-order Markov (k>=2) collapse to a unigram model at a near-stationary loss point — an OPTIMIZATION barrier (slow escape), not info-theoretic impossibility; they eventually learn with longer training. With tokenization even a unigram token-model is near-optimal.","relevance_to_question":"Central paper. The failure is efficiency/optimization, not representational gap → 'complete but inefficient'.","angle":"C","lat":37.87,"lon":-122.27,"org_type":"academia","citation_count_estimated":false,"cites":["sennrich2016","radford2019","kudo2018b","gage1994","zouhar2023","edelman2024"]},{"id":"yun2020","title":"Are Transformers Universal Approximators of Sequence-to-Sequence Functions?","authors":["Chulhee Yun","Srinadh Bhojanapalli","Ankit Singh Rawat"],"institutions":["MIT","Google Research"],"year":2020,"venue":"ICLR","citation_count":519,"url":"https://arxiv.org/abs/1912.10077","key_claim":"Transformers with positional encodings are universal approximators of continuous seq-to-seq functions.","relevance_to_question":"Char-level transformers lack no function subword ones have; granularity changes encoding not class.","angle":"C","lat":42.36,"lon":-71.09,"org_type":"academia","citation_count_estimated":false,"cites":[]},{"id":"merrill2023","title":"The Parallelism Tradeoff: Limitations of Log-Precision Transformers","authors":["William Merrill","Ashish Sabharwal"],"institutions":["NYU","Allen Institute for AI"],"year":2023,"venue":"TACL","citation_count":212,"url":"https://arxiv.org/abs/2207.00729","key_claim":"Log-precision constant-depth transformers ⊆ uniform TC0; binding resource is sequence length/depth not granularity.","relevance_to_question":"Real expressivity limit is depth-vs-serial-compute indexed by sequence length; char vs subword only redistributes compute.","angle":"C","lat":40.73,"lon":-73.99,"org_type":"academia","citation_count_estimated":false,"cites":["yun2020"]},{"id":"li2024cot","title":"Chain of Thought Empowers Transformers to Solve Inherently Serial Problems","authors":["Zhiyuan Li","Hong Liu","Denny Zhou"],"institutions":["Stanford","Google DeepMind","TTIC"],"year":2024,"venue":"ICLR","citation_count":286,"url":"https://arxiv.org/abs/2402.12875","key_claim":"Extra intermediate tokens let constant-depth transformers exceed TC0; token count is a compute budget.","relevance_to_question":"Granularity affects serial compute per unit of meaning; changes compute allocation not function class.","angle":"C","lat":37.43,"lon":-122.17,"org_type":"academia","citation_count_estimated":false,"cites":["yun2020","merrill2023"]},{"id":"pfau2024","title":"Let's Think Dot by Dot: Hidden Computation in Transformer Language Models","authors":["Jacob Pfau","William Merrill","Samuel R. Bowman"],"institutions":["NYU"],"year":2024,"venue":"COLM","citation_count":197,"url":"https://arxiv.org/abs/2404.15758","key_claim":"Meaningless filler tokens provide usable extra computation but learning to use them needs dense supervision.","relevance_to_question":"Token COUNT not content is the compute lever; exploiting more tokens is optimization-hard (parallels char-level).","angle":"C","lat":40.73,"lon":-73.99,"org_type":"academia","citation_count_estimated":false,"cites":["merrill2023","li2024cot","yun2020"]},{"id":"phan2025","title":"Exact Byte-Level Probabilities from Tokenized Language Models","authors":["Buu Phan","Brandon Amos","Itai Gat"],"institutions":["University of Toronto","Meta AI (FAIR)"],"year":2025,"venue":"ICLR","citation_count":15,"url":"https://arxiv.org/abs/2410.09303","key_claim":"Byte-Token Representation Lemma: exact byte distribution recoverable from a tokenized model with no retraining.","relevance_to_question":"Token and byte models carry the same information → argues against a representational 'unhobbling'.","angle":"C","lat":43.66,"lon":-79.4,"org_type":"academia","citation_count_estimated":false,"cites":["sennrich2016","radford2019","rajaraman2024","phan2024bias","xue2021","edelman2024"]},{"id":"phan2024bias","title":"Understanding and Mitigating Tokenization Bias in Language Models","authors":["Buu Phan","Marton Havasi","Matthew Muckley"],"institutions":["Meta AI (FAIR)","University of Toronto"],"year":2024,"venue":"arXiv","citation_count":17,"url":"https://arxiv.org/abs/2406.16829","key_claim":"BPE/maximum-prefix encoding induce a sampling bias correctable post-hoc to unbiased byte-level estimates.","relevance_to_question":"Token/byte mismatch is a sampling/decoding bias not a capability gap.","angle":"C","lat":37.48,"lon":-122.15,"org_type":"industry","citation_count_estimated":false,"cites":["sennrich2016","radford2019","kudo2018b","rajaraman2024"]},{"id":"lesci2025","title":"Causal Estimation of Tokenisation Bias","authors":["Pietro Lesci","Clara Meister","Tiago Pimentel"],"institutions":["University of Cambridge","ETH Zurich"],"year":2025,"venue":"ACL","citation_count":14,"url":"https://arxiv.org/abs/2506.03149","key_claim":"Regression-discontinuity at the vocab cutoff: a subword's mere presence can raise its chars' probability up to 17x.","relevance_to_question":"Tokenization causally changes probabilities the char-string shouldn't depend on; sharpens artifact-vs-fundamental.","angle":"C","lat":52.2,"lon":0.12,"org_type":"academia","citation_count_estimated":false,"cites":["sennrich2016","radford2019","rajaraman2024","phan2024bias","zouhar2023","phan2025","edelman2024"]},{"id":"gigant2026","title":"Decoupling the Benefits of Subword Tokenization via Byte-level Simulation","authors":["Théo Gigant","Bowen Peng","Jeffrey Quesnelle"],"institutions":["Nous Research"],"year":2026,"venue":"arXiv","citation_count":2,"url":"https://arxiv.org/abs/2604.27263","key_claim":"Dominant subword benefit is training-sample throughput (4x more bytes/step); boundary info gives only modest transient gain.","relevance_to_question":"Most direct answer: subword advantage is primarily EFFICIENCY, substantially closeable by engineering.","angle":"C","lat":37.77,"lon":-122.42,"org_type":"industry","citation_count_estimated":false,"cites":["sennrich2016","radford2019","blt2024","rajaraman2024","xue2021","dagan2024","goldman2024","edelman2024"]},{"id":"zhang2025","title":"Tokenization Constraints in LLMs: Symbolic and Arithmetic Reasoning Limits","authors":["Xiang Zhang","Juntai Cao","Jiaqi Wei"],"institutions":["University of British Columbia"],"year":2025,"venue":"arXiv","citation_count":14,"url":"https://arxiv.org/abs/2505.14178","key_claim":"Token granularity must align with task structure; subword hobbles symbol-by-symbol tasks (arithmetic, counting).","relevance_to_question":"Counterpoint: subword sometimes HOBBLES vs char-level; reframes as granularity-task match.","angle":"C","lat":49.26,"lon":-123.25,"org_type":"academia","citation_count_estimated":false,"cites":["radford2019","singh2024","zhang2024count","karpathy2024","rajaraman2024"]},{"id":"zhang2024count","title":"Counting Ability of Large Language Models and Impact of Tokenization","authors":["Xiang Zhang","Juntai Cao","Chenyu You"],"institutions":["University of British Columbia","Stony Brook University"],"year":2024,"venue":"arXiv","citation_count":30,"url":"https://arxiv.org/abs/2410.19730","key_claim":"Subword tokenization impedes inductive counting by merging atomic reasoning units; char-level helps.","relevance_to_question":"Concrete case where char-level granularity is the ADVANTAGE.","angle":"C","lat":49.26,"lon":-123.25,"org_type":"academia","citation_count_estimated":false,"cites":["radford2019","singh2024","karpathy2024","xue2021"]},{"id":"kaplan2025lexicon","title":"From Tokens to Words: On the Inner Lexicon of LLMs","authors":["Guy Kaplan","Matanel Oren","Yuval Reif"],"institutions":["Hebrew University of Jerusalem"],"year":2025,"venue":"ICLR","citation_count":49,"url":"https://arxiv.org/abs/2410.05864","key_claim":"LLMs implicitly reconstruct whole-word representations from multi-token subword inputs.","relevance_to_question":"Models compensate for sub-optimal tokenization internally → completeness, compensable.","angle":"C","lat":31.78,"lon":35.2,"org_type":"academia","citation_count_estimated":false,"cites":["sennrich2016","radford2019","kim2016","rajaraman2024","clark2021","edelman2024"]},{"id":"singh2024","title":"Tokenization counts: the impact of tokenization on arithmetic in frontier LLMs","authors":["Aaditya K. Singh","DJ Strouse"],"institutions":["UCL Gatsby Unit","Google DeepMind"],"year":2024,"venue":"arXiv","citation_count":113,"url":"https://arxiv.org/abs/2402.14903","key_claim":"R2L digit grouping (comma separators) lifts GPT-4 addition ~84%→~99%; L2R chunking clashes with carry logic.","relevance_to_question":"Core evidence an LLM math failure is caused by tokenization and fixable by changing digit tokenization.","angle":"D","lat":51.52,"lon":-0.13,"org_type":"academia","citation_count_estimated":false,"cites":["radford2019","karpathy2024"]},{"id":"karpathy2024","title":"Let's build the GPT Tokenizer (lecture)","authors":["Andrej Karpathy"],"institutions":["independent (ex-OpenAI/Tesla)"],"year":2024,"venue":"Video lecture","citation_count":50,"url":"https://www.youtube.com/watch?v=zduSFxRajkE","key_claim":"Tokenization is the root cause of many LLM pathologies: spelling, reversal, non-English, arithmetic, glitch tokens.","relevance_to_question":"Canonical practitioner framing of tokenization as 'root of evil'.","angle":"D","lat":37.43,"lon":-122.17,"org_type":"independent","citation_count_estimated":true,"cites":["sennrich2016","kudo2018b","radford2019","gage1994","karpathy2015"]},{"id":"rumbelow2023","title":"SolidGoldMagikarp (plus, prompt generation)","authors":["Jessica Rumbelow","Matthew Watkins"],"institutions":["SERI-MATS"],"year":2023,"venue":"LessWrong / AI Alignment Forum","citation_count":12,"url":"https://www.lesswrong.com/posts/aPeJE8bSo6rAFoLqg/solidgoldmagikarp-plus-prompt-generation","key_claim":"Discovered anomalous 'glitch tokens' in the BPE vocab but near-absent from training, with untrained embeddings.","relevance_to_question":"Failure mode that exists only because a tokenizer reified rare strings as atomic tokens.","angle":"D","lat":37.87,"lon":-122.27,"org_type":"independent","citation_count_estimated":false,"cites":["radford2019","sennrich2016"]},{"id":"petrov2023","title":"Language Model Tokenizers Introduce Unfairness Between Languages","authors":["Aleksandar Petrov","Emanuele La Malfa","Philip Torr"],"institutions":["University of Oxford"],"year":2023,"venue":"NeurIPS","citation_count":227,"url":"https://arxiv.org/abs/2305.15425","key_claim":"Identical content can require up to ~15x more tokens in some languages, creating cost/latency/context unfairness.","relevance_to_question":"Tokenization-caused multilingual unfairness; byte/char reduce disparity.","angle":"D","lat":51.75,"lon":-1.26,"org_type":"academia","citation_count_estimated":false,"cites":["sennrich2016","kudo2018b","radford2019","xue2021","clark2021"]},{"id":"chai2024","title":"Tokenization Falling Short: On Subword Robustness in Large Language Models","authors":["Yekun Chai","Yewei Fang","Qiwei Peng"],"institutions":["Baidu","University of Copenhagen"],"year":2024,"venue":"Findings of EMNLP","citation_count":3,"url":"https://aclanthology.org/2024.findings-emnlp.86/","key_claim":"'Curse of tokenization': LLMs oblivious to internal token structure, sensitive to typos and length; scaling mitigates not eliminates.","relevance_to_question":"Systematic benchmark of tokenization-induced robustness and structure-probing failures.","angle":"D","lat":40.05,"lon":116.3,"org_type":"industry","citation_count_estimated":false,"cites":["sennrich2016","radford2019","karpathy2024","xue2021","petrov2023","clark2021"]},{"id":"edman2024","title":"CUTE: Measuring LLMs' Understanding of Their Tokens","authors":["Lukas Edman","Helmut Schmid","Alexander Fraser"],"institutions":["TU Munich","LMU Munich"],"year":2024,"venue":"EMNLP","citation_count":25,"url":"https://arxiv.org/abs/2409.15452","key_claim":"Benchmark of spelling/char-edit/orthographic tasks shows LLMs lack direct access to the characters composing their tokens.","relevance_to_question":"Quantifies the 'strawberry'-class character-blindness from subword tokenization.","angle":"D","lat":48.15,"lon":11.57,"org_type":"academia","citation_count_estimated":false,"cites":["radford2019","karpathy2024","chai2024","singh2024","xue2021"]},{"id":"wang2024stringllm","title":"StringLLM: Understanding the String Processing Capability of Large Language Models","authors":["Xilong Wang","Hao Fu","Jindong Wang"],"institutions":["academic (arXiv 2410.01208)"],"year":2024,"venue":"arXiv","citation_count":1,"url":"https://arxiv.org/abs/2410.01208","key_claim":"LLMs lose granular char-level detail during tokenization; explicitly separating characters restores performance.","relevance_to_question":"Direct evidence for string-reversal/manipulation failures and the char-level fix.","angle":"D","lat":38.83,"lon":-77.31,"org_type":"academia","citation_count_estimated":false,"cites":["radford2019","karpathy2024","chai2024","singh2024","edman2024"]},{"id":"morphbpe2024","title":"Morphological Typology in BPE Subword Productivity and Language Modeling","authors":["academic (arXiv 2410.23656)"],"institutions":["academic"],"year":2024,"venue":"arXiv","citation_count":2,"url":"https://arxiv.org/abs/2410.23656","key_claim":"BPE subword segmentation tracks morphological structure and productivity, aiding LM generalization.","relevance_to_question":"Unhobbling side: subwords capture morphology and rare-word structure.","angle":"D","lat":38.9,"lon":-77.04,"org_type":"academia","citation_count_estimated":false,"cites":["sennrich2016","kudo2018b","radford2019","mielke2021","xue2021"]},{"id":"edelman2024","title":"The Evolution of Statistical Induction Heads: In-Context Learning Markov Chains","authors":["Benjamin L. Edelman","Ezra Edelman","Surbhi Goel"],"institutions":["Harvard University","University of Pennsylvania"],"year":2024,"venue":"NeurIPS","citation_count":40,"citation_count_estimated":true,"url":"https://arxiv.org/abs/2402.11004","key_claim":"On 1st-order Markov data transformers pass through a unigram phase ('a stumbling block, not a stepping stone') before learning bigram in-context statistics — the actual source of the 'escapes the saddle with more training' behavior.","relevance_to_question":"Clarifies that the optimistic 'char-level escapes the unigram saddle' result is 1st-order only; Rajaraman's k>=2 case shows persistent failure.","angle":"C","lat":42.36,"lon":-71.09,"org_type":"academia","cites":["yun2020"]}];
+const CONTENT = {"id":"bpe-vs-char-tokenization","title":"Why was BPE crucial? Is character-level provably complete, or does subword tokenization unhobble?","question":"We know BPE was crucial to get language models to learn anything. Why? It's all compression anyway — why couldn't character-level tokens reach the same level? Is char-level provably complete (would catch up with more training, just inefficient) or is there an unhobbling we gain from subword tokenization?","date":"2026-06-23","stats":{"papers":44,"edges":182},"tldr":[{"point":"Verdict: complete, NOT unhobbled — but \"just inefficient, would catch up\" is unproven at the level the question asks.","sub":["Char/byte is information-theoretically + expressively complete: exact byte distribution recoverable from a tokenized model, no retraining [[phan2025]]; transformers are universal approximators regardless of granularity [[yun2020]].","So BPE adds NO capability bytes fundamentally lack. Its edge is efficiency/learnability."]},{"point":"Why BPE was crucial = a data-efficiency multiplier + a saddle-skipping shortcut.","sub":["~4× more text per gradient step is the dominant benefit once you decouple the variables [[gigant2026]].","Turns a hard sequential-dependency problem into easy unigram counting [[rajaraman2024]], Thm 4.5."]},{"point":"⚠ The catch (a correction the adversarial pass caught in my own first draft):","sub":["\"Transformers can't learn without tokenization\" [[rajaraman2024]] is an OPTIMIZATION saddle, not impossibility — but for k≥2 Markov the char model FAILS to converge, stuck at the unigram point.","The optimistic \"escapes with more training\" is the easier 1st-order case [[edelman2024]] (\"a stumbling block, not a stepping stone\").","Every frontier-scale \"bytes match subword\" (BLT [[blt2024]], H-Net [[hwang2025]]) wins via LEARNED dynamic patches = tokenization re-invented end-to-end, not raw chars. BLT's Llama-3 beat is on non-matched data."]},{"point":"The twist: tokenization both unhobbles AND hobbles.","sub":["Unhobbles: morphology, long-range deps, throughput.","Hobbles: arithmetic, spelling, counting, glitch tokens — byte models win on exactly these (BLT spelling 99.9% vs 1.1%)."]}],"insights":[{"title":"\"Can't learn without tokenization\" is an optimization saddle, not impossibility","points":["[[rajaraman2024]] is routinely mis-cited.","Char model collapses onto the unigram model — a near-stationary point of the loss.","Info-theoretically it CAN represent the truth; for k≥2 it empirically fails to escape under wide sweeps.","The \"escapes eventually\" claim is 1st-order only [[edelman2024]]."]},{"title":"Tokenization both unhobbles AND hobbles — the trade is directional","points":["Subword unhobbles: morphology, long-range dependency, throughput.","Subword hobbles: arithmetic, counting, spelling, reversal [[zhang2024count]] [[zhang2025]].","\"How many r's in strawberry\" fails only because the token vector doesn't expose its chars [[edman2024]]."]},{"title":"Compression correlates with quality — but minimizing tokens does NOT help","points":["Fewer-tokens-is-better is falsified by PathPiece [[schmidt2024]].","Balance of the token distribution (Rényi eff.) predicts BLEU 0.82; raw compressed length −0.30 [[zouhar2023]].","Mechanism is entropy redistribution, not compression per se."]},{"title":"Byte models win on exactly the tasks tokenization breaks","points":["BLT vs Llama-3: CUTE 54.1 vs 27.5; spelling 99.9% vs 1.1% [[blt2024]].","~50% fewer inference FLOPs.","BPE's weaknesses and bytes' strengths are the same axis from both sides."]},{"title":"The subword advantage is almost all throughput, not boundary info","points":["Byte-level simulation decouples the two [[gigant2026]].","Dominant benefit: 4× more bytes per training step.","Knowing subword boundaries adds only a modest, transient inductive-bias gain."]},{"title":"Models already secretly reconstruct what tokenization destroyed","points":["LLMs rebuild whole-word \"inner lexicon\" reps from multi-token input [[kaplan2025lexicon]].","They spend capacity UNDOING the tokenizer — evidence of completeness + a hidden tax."]},{"title":"\"Tokenizer-free\" may just mean \"tokenizer, learned end-to-end\"","points":["BLT / H-Net / SpaceByte close the gap with dynamic LEARNED chunking [[hwang2025]] [[slagle2024]].","\"Kill the tokenizer\" might really mean \"make tokenization differentiable.\"","Untested: do learned boundaries just rediscover BPE merges?"]}],"next_steps":["Read [[rajaraman2024]] in full — esp. Fig. 3 + Thm 4.5; the whole thread pivots on reading it right.","Read [[gigant2026]] — cleanest throughput-vs-boundary decoupling; most directly answers \"why BPE.\"","Read [[blt2024]] + [[hwang2025]] for \"is tokenizer-free just learned-tokenizer?\"; [[kaplan2025lexicon]] for the mechanism.","Prototype D1 (unigram-saddle-escape replication) — smallest experiment that hits the open question; 1 GPU.","Then D4 (equal-bytes char-vs-BPE) on the same harness to isolate throughput."],"ideas":[{"id":"D1","question":"Does a pure char-level model escape the unigram saddle, and how fast vs source depth?","hypothesis":"On k-Markov data, char loss plateaus at unigram entropy then escapes; escape time scales with k (or never, for k≥2).","experiment":"Train small char transformers on synthetic k=2..6 Markov; log loss; chart escape-time vs k & depth. Replicate + extend Rajaraman Fig. 3.","why":"Rajaraman proved the saddle exists but never charted its cost curve — the exact quantity \"is it a real wall?\" hinges on."},{"id":"D2","question":"Can curriculum or auxiliary losses accelerate saddle escape?","hypothesis":"A spelling/next-bigram aux loss or easy→hard curriculum escapes the saddle in far fewer steps.","experiment":"Same setup; ablate aux n-gram head, curriculum ordering, baseline; measure steps-to-escape.","why":"The optimization framing implies the barrier is trainable-around — nobody tried curriculum as the lever."},{"id":"D3","question":"Is \"inner lexicon\" reconstruction what char models must learn?","hypothesis":"Char models converge to a depth where word identity is linearly probeable — that depth marks saddle escape.","experiment":"Train char + BPE on identical data; Kaplan-style probes across layers/steps; correlate word-probe emergence with plateau exit.","why":"Connects two disconnected literatures: the optimization-barrier story and the inner-lexicon mechanism."},{"id":"D4","question":"How much of BPE's advantage is throughput vs boundary information?","hypothesis":"Matching bytes-seen erases most of BPE's edge; the residual is the boundary inductive bias.","experiment":"Train char vs BPE at equal bytes-per-step (not tokens-per-step); measure residual gap. Small-scale Gigant.","why":"Independent replication isolating the variable is citable and de-risks the whole thread."},{"id":"D5","question":"Can you pretrain with BPE then anneal down to bytes — efficiency AND robustness?","hypothesis":"BPE skips the saddle cheaply; fine-tuning to byte-level recovers char abilities without full retraining.","experiment":"Train BPE model, graft byte head (à la Phan recoverability), continue on bytes; test CUTE/arithmetic recovery.","why":"Contrarian: everyone treats it as char-XOR-BPE; nobody tried BPE→byte annealing as a schedule."},{"id":"D6","question":"Does the char compute-penalty grow polynomially or exponentially with hierarchy depth?","hypothesis":"The multiplier grows polynomially (not exponentially) with structural depth of the source.","experiment":"Synthetic PCFGs of tunable depth; measure char-vs-BPE compute-to-target-loss as depth rises.","why":"The literal empirical proxy for \"is it ever a fundamental wall\" — PCFG depth is a clean cheap knob."},{"id":"D7","question":"Is learned dynamic chunking just rediscovering BPE merges?","hypothesis":"H-Net/BLT learned boundaries correlate highly with a BPE/Unigram segmentation of the same text.","experiment":"Train a small dynamic-chunking model; compute boundary overlap with BPE merges.","why":"Reframes the entire \"kill the tokenizer\" movement; high narrative payoff."},{"id":"D8","question":"When does a byte/char path pay for itself in a product?","hypothesis":"For spelling/counting/arithmetic/multilingual-fairness-critical products, byte beats BPE on the exact failure modes [[petrov2023]] [[singh2024]].","experiment":"Benchmark the 4 pathology classes; quantify error-rate delta byte vs BPE; package as a \"which tokenizer for which product\" rubric.","why":"Product angle: the trade-off is documented academically but not turned into a shippable decision tool."}],"report_quality":{"verdict":"MEDIUM","verdict_note":"Decomposed thesis well-supported; headline oversold two things (now corrected): the saddle as escapable, and BLT/H-Net as proof char granularity matches at scale.","axes":[{"name":"Freshness","score":5,"note":"Captures the 2024–25 'kill the tokenizer' turn (BLT, H-Net, SpaceByte, MambaByte) + 2025–26 theory. gigant2026 verified real."},{"name":"Accuracy","score":2,"note":"Two serious overstatements caught & fixed: Rajaraman 'escapes' is actually Edelman's 1st-order (k≥2 fails to converge); 'BLT beats Llama-3' is on non-matched training data."},{"name":"Reproducibility","score":3,"note":"Strong where it counts (Rajaraman theorem; BLT/ByT5/CANINE controlled w/ code) but mixes peer-reviewed with blog/lecture sources ungraded."},{"name":"Bias / Completeness","score":4,"note":"Does NOT cherry-pick toward 'char is fine'; foregrounds the counter-current. Weak spot: strongest pro-tokenization steel-man left as an open question."},{"name":"Causal rigor","score":4,"note":"Elevates the identification-strategy papers (Lesci RDD, Gigant decoupling). Docked: headline inherits the BLT learned-patching confound."},{"name":"Scale transfer","score":2,"note":"'Provably complete' leans on toy Markov + universal-approx + encoder-scale byte models; only frontier evidence uses learned patching on a confounded comparison."},{"name":"Falsifiability","score":4,"note":"PROVEN-expressivity / PROVEN-efficiency / UNPROVEN-capability-wall is the right falsifiable structure; honesty now propagated to the lead."}]}};
+const NPAPERS = 44;
+const NEDGES = 182;
+
+const ANGLES = {A:'var(--angle-a)',B:'var(--angle-b)',C:'var(--angle-c)',D:'var(--angle-d)'};
+const ANGLE_HEX = {A:'#2e6f47',B:'#a9701b',C:'#b23a2e',D:'#6b4a6e'};
+const ANGLE_NAME = {A:'Foundations / compression',B:'Empirical char & byte',C:'Theory / completeness',D:'Pathologies'};
+const SCORE_HEX = {1:'#b23a2e',2:'#b23a2e',3:'#a9701b',4:'#2e6f47',5:'#2e6f47'};
+const byId = Object.fromEntries(PAPERS.map(p=>[p.id,p]));
+const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+/* turn [[id]] refs into clickable citation links */
+function renderCites(text){
+  return esc(text).replace(/\[\[([a-z0-9_]+)\]\]/gi,(m,id)=>{
+    const p=byId[id];
+    if(!p) return id;
+    return `<a class="cite" href="${p.url}" target="_blank" rel="noopener" title="${esc(p.title)}">${id}</a>`;
+  });
+}
+
+/* ---------- header ---------- */
+document.getElementById('doc-title').textContent = CONTENT.title;
+document.getElementById('doc-question').textContent = CONTENT.question;
+document.getElementById('stat-papers').textContent = NPAPERS;
+document.getElementById('stat-edges').textContent = NEDGES;
+document.getElementById('foot-stats').textContent = `${NPAPERS} papers, ${NEDGES} edges`;
+
+/* ---------- TLDR ---------- */
+(function(){
+  const ul = document.getElementById('tldr-list');
+  CONTENT.tldr.forEach(item=>{
+    const li=document.createElement('li');
+    if(typeof item==='string'){ li.innerHTML=renderCites(item); }
+    else{
+      li.innerHTML=`<span class="lead">${renderCites(item.point)}</span>`;
+      if(item.sub&&item.sub.length){
+        const sub=document.createElement('ul'); sub.className='sub';
+        item.sub.forEach(s=>{const sl=document.createElement('li');sl.innerHTML=renderCites(s);sub.appendChild(sl);});
+        li.appendChild(sub);
+      }
+    }
+    ul.appendChild(li);
+  });
+})();
+
+/* ---------- INSIGHTS CAROUSEL ---------- */
+(function(){
+  const data=CONTENT.insights; let i=0;
+  const stage=document.getElementById('ins-stage');
+  const dotsEl=document.getElementById('ins-dots');
+  const countEl=document.getElementById('ins-count');
+  data.forEach((_,k)=>{
+    const d=document.createElement('button'); d.className='d'; d.setAttribute('aria-label','insight '+(k+1));
+    d.onclick=()=>{i=k;render();}; dotsEl.appendChild(d);
+  });
+  function render(){
+    const it=data[i];
+    stage.style.opacity=0;
+    setTimeout(()=>{
+      stage.innerHTML=`<h3>${renderCites(it.title)}</h3><ul class="bul">`+
+        it.points.map(p=>`<li>${renderCites(p)}</li>`).join('')+`</ul>`;
+      stage.style.opacity=1;
+    },120);
+    [...dotsEl.children].forEach((d,k)=>d.classList.toggle('on',k===i));
+    countEl.textContent=`${i+1} / ${data.length}`;
+  }
+  stage.style.transition='opacity .18s ease';
+  document.getElementById('ins-prev').onclick=()=>{i=(i-1+data.length)%data.length;render();};
+  document.getElementById('ins-next').onclick=()=>{i=(i+1)%data.length;render();};
+  render();
+})();
+
+/* ---------- shared hover card (bridged) ---------- */
+const hc=document.getElementById('hovercard');
+let hcHideTimer=null;
+function cardHTML(p){
+  const auth=(p.authors||[]).slice(0,3).join(', ')+((p.authors||[]).length>3?' et al.':'');
+  const inst=(p.institutions||[])[0]||'';
+  return `<div class="ht">${esc(p.title)}</div>`+
+    `<div class="hm">${esc(auth)} &middot; ${p.year} &middot; ${esc(p.venue||'')}</div>`+
+    `<div class="hm">${(p.citation_count||0).toLocaleString()} citations${p.citation_count_estimated?' (est.)':''} &middot; ${esc(inst)} &middot; angle ${p.angle}</div>`+
+    `<div class="hc">${esc(p.key_claim||'')}</div>`+
+    `<a class="cite" href="${p.url}" target="_blank" rel="noopener">open ${p.id} &#8599;</a>`;
+}
+function showCard(p,x,y){
+  clearTimeout(hcHideTimer);
+  hc.innerHTML=cardHTML(p);
+  hc.classList.add('show');
+  const w=hc.offsetWidth||320,h=hc.offsetHeight||160;
+  let lx=x+16,ly=y+16;
+  if(lx+w>innerWidth-8)lx=x-w-16;
+  if(ly+h>innerHeight-8)ly=innerHeight-h-8;
+  if(lx<8)lx=8; if(ly<8)ly=8;
+  hc.style.left=lx+'px'; hc.style.top=ly+'px';
+}
+function scheduleHideCard(){
+  clearTimeout(hcHideTimer);
+  hcHideTimer=setTimeout(()=>hc.classList.remove('show'),260);
+}
+hc.addEventListener('mouseenter',()=>clearTimeout(hcHideTimer));
+hc.addEventListener('mouseleave',scheduleHideCard);
+
+/* ---------- citation graph on a map ---------- */
+(function(){
+  const svg=d3.select('#graph-svg');
+  const node0=svg.node(); const W=node0.clientWidth||900, H=600;
+  svg.attr('viewBox',`0 0 ${W} ${H}`);
+  const proj=d3.geoNaturalEarth1().scale(W/6.0).translate([W/2,H/2+10]);
+
+  const defs=svg.append('defs');
+  ['A','B','C','D'].forEach(a=>{
+    defs.append('marker').attr('id','arr-'+a).attr('viewBox','0 -5 10 10').attr('refX',9)
+      .attr('refY',0).attr('markerWidth',5).attr('markerHeight',5).attr('orient','auto')
+      .append('path').attr('d','M0,-4L9,0L0,4').attr('fill',ANGLE_HEX[a]).attr('fill-opacity',.7);
+  });
+
+  const gMap=svg.append('g');        // world map (faint)
+  const g=svg.append('g');           // zoomable layer
+  const gGrid=g.append('g');
+  const gLink=g.append('g');
+  const gNode=g.append('g');
+
+  // graticule
+  const path=d3.geoPath(proj);
+  gGrid.append('path').attr('d',path(d3.geoGraticule10())).attr('fill','none')
+    .attr('stroke','#c3cdb6').attr('stroke-width',.4).attr('stroke-opacity',.6);
+
+  const csize=d3.scaleSqrt().domain([0,d3.max(PAPERS,p=>p.citation_count||0)||1]).range([4,26]);
+  const nodes=PAPERS.map(p=>{
+    const xy=proj([p.lon,p.lat]);
+    return Object.assign({},p,{ax:xy[0],ay:xy[1],x:xy[0]+(Math.random()-.5)*4,y:xy[1]+(Math.random()-.5)*4});
+  });
+  const links=[];
+  PAPERS.forEach(p=>(p.cites||[]).forEach(t=>{if(byId[t])links.push({source:p.id,target:t});}));
+
+  const link=gLink.selectAll('line').data(links).join('line')
+    .attr('stroke',d=>ANGLE_HEX[byId[d.source]?byId[d.source].angle:'A']||'#5e6e5a')
+    .attr('stroke-width',1).attr('stroke-opacity',.28)
+    .attr('marker-end',d=>`url(#arr-${byId[d.source]?byId[d.source].angle:'A'})`);
+
+  const node=gNode.selectAll('g').data(nodes).join('g').style('cursor','pointer');
+  node.append('circle').attr('r',d=>csize(d.citation_count||0))
+    .attr('fill',d=>ANGLE_HEX[d.angle]||'#5e6e5a').attr('fill-opacity',.86)
+    .attr('stroke','#092b1f').attr('stroke-width',1.2);
+
+  const sim=d3.forceSimulation(nodes)
+    .force('link',d3.forceLink(links).id(d=>d.id).distance(26).strength(.05))
+    .force('charge',d3.forceManyBody().strength(-14))
+    .force('x',d3.forceX(d=>d.ax).strength(.5))
+    .force('y',d3.forceY(d=>d.ay).strength(.5))
+    .force('collide',d3.forceCollide().radius(d=>csize(d.citation_count||0)+2.5))
+    .on('tick',ticked);
+  function ticked(){
+    link.attr('x1',d=>d.source.x).attr('y1',d=>d.source.y)
+        .attr('x2',d=>d.target.x).attr('y2',d=>d.target.y);
+    node.attr('transform',d=>`translate(${d.x},${d.y})`);
+  }
+
+  const zoom=d3.zoom().scaleExtent([0.5,8]).on('zoom',e=>{
+    g.attr('transform',e.transform);
+    gMap.attr('transform',e.transform);
+  });
+  svg.call(zoom).on('dblclick.zoom',null);
+
+  node.on('mouseenter',function(e,d){
+      const con=new Set([d.id]);
+      links.forEach(l=>{if(l.source.id===d.id)con.add(l.target.id);if(l.target.id===d.id)con.add(l.source.id);});
+      node.style('opacity',n=>con.has(n.id)?1:.14);
+      link.style('opacity',l=>l.source.id===d.id||l.target.id===d.id?.85:.05);
+      showCard(d,e.clientX,e.clientY);
+    })
+    .on('mousemove',function(e,d){ if(hc.classList.contains('show')) showCard(d,e.clientX,e.clientY); })
+    .on('mouseleave',function(){
+      node.style('opacity',1); link.style('opacity',.28);
+      scheduleHideCard();
+    })
+    .on('dblclick',function(e,d){
+      e.stopPropagation();
+      const k=2.6;
+      const tx=W/2-d.ax*k, ty=H/2-d.ay*k;
+      svg.transition().duration(650).call(zoom.transform,d3.zoomIdentity.translate(tx,ty).scale(k));
+    });
+  svg.on('dblclick',()=>svg.transition().duration(650).call(zoom.transform,d3.zoomIdentity));
+
+  // world map
+  fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+    .then(r=>r.json()).then(t=>{
+      gMap.insert('path',':first-child').attr('d',path(topojson.feature(t,t.objects.countries)))
+        .attr('fill','#d8e0cf').attr('fill-opacity',.55).attr('stroke','#b6c2a8').attr('stroke-width',.4);
+    }).catch(()=>{});
+
+  // legend
+  const lg=document.getElementById('graph-legend');
+  ['A','B','C','D'].forEach(a=>{
+    lg.insertAdjacentHTML('beforeend',`<span><i style="background:${ANGLE_HEX[a]}"></i>${ANGLE_NAME[a]}</span>`);
+  });
+  lg.insertAdjacentHTML('beforeend','<span style="margin-left:auto">&#9679; size = citations</span>');
+})();
+
+/* ---------- 3-D timeline (standard xyz) ---------- */
+(function(){
+  const svg=d3.select('#time-svg');
+  const W=svg.node().clientWidth||900, H=600;
+  svg.attr('viewBox',`0 0 ${W} ${H}`);
+
+  // 3D -> 2D projection. X right, Y up, Z receding (up-right at shallow angle).
+  const ZX=0.46, ZY=-0.30;                // unit Z vector on screen
+  const ox=70, oy=H-90;                    // origin (bottom-left-front)
+  const proj=(x,y,z)=>[ ox + x + z*ZX*120, oy - y + z*ZY*120 ];
+
+  const years=d3.extent(PAPERS,p=>p.year);
+  const angleOrder=['A','B','C','D'];
+  const xScale=d3.scaleLinear().domain(years).range([0, W-260]);
+  const yScale=d3.scaleLog().domain([1,d3.max(PAPERS,p=>p.citation_count||1)||1]).range([0, H-220]).clamp(true);
+  const zOf=a=>angleOrder.indexOf(a);     // 0..3 depth units
+  const csize=d3.scaleSqrt().domain([0,d3.max(PAPERS,p=>p.citation_count||0)||1]).range([3.5,18]);
+
+  const gFloor=svg.append('g'), gEdge=svg.append('g'), gItem=svg.append('g'), gAxis=svg.append('g');
+
+  // floor grid: one receding lane line per angle, across full time
+  angleOrder.forEach(a=>{
+    const z=zOf(a);
+    const p0=proj(xScale(years[0]),0,z), p1=proj(xScale(years[1]),0,z);
+    gFloor.append('line').attr('x1',p0[0]).attr('y1',p0[1]).attr('x2',p1[0]).attr('y2',p1[1])
+      .attr('stroke',ANGLE_HEX[a]).attr('stroke-opacity',.22).attr('stroke-width',1.2);
+    const lp=proj(xScale(years[1]),0,z);
+    gFloor.append('text').attr('x',lp[0]+8).attr('y',lp[1]+4).attr('fill',ANGLE_HEX[a])
+      .attr('font-family','var(--mono)').attr('font-size',10).attr('font-weight',700)
+      .attr('opacity',.85).text(a);
+  });
+  // depth connectors at start
+  angleOrder.forEach((a,i)=>{ if(i===0)return;
+    const p0=proj(xScale(years[0]),0,zOf(angleOrder[i-1])), p1=proj(xScale(years[0]),0,zOf(a));
+    gFloor.append('line').attr('x1',p0[0]).attr('y1',p0[1]).attr('x2',p1[0]).attr('y2',p1[1])
+      .attr('stroke','#b6c2a8').attr('stroke-opacity',.5).attr('stroke-width',1);
+  });
+
+  // axes: X (time) and Y (citations) on the front plane (z=0)
+  // X axis ticks
+  d3.range(years[0],years[1]+1).forEach(yr=>{
+    const p=proj(xScale(yr),0,0);
+    gAxis.append('text').attr('x',p[0]).attr('y',p[1]+18).attr('text-anchor','middle')
+      .attr('fill','#5e6e5a').attr('font-family','var(--mono)').attr('font-size',9).text(yr);
+    gAxis.append('line').attr('x1',p[0]).attr('y1',p[1]).attr('x2',p[0]).attr('y2',p[1]+5)
+      .attr('stroke','#b6c2a8').attr('stroke-width',1);
+  });
+  const xa0=proj(xScale(years[0]),0,0), xa1=proj(xScale(years[1]),0,0);
+  gAxis.append('line').attr('x1',xa0[0]).attr('y1',xa0[1]).attr('x2',xa1[0]).attr('y2',xa1[1])
+    .attr('stroke','#092b1f').attr('stroke-width',1.4);
+  gAxis.append('text').attr('x',(xa0[0]+xa1[0])/2).attr('y',xa0[1]+34).attr('text-anchor','middle')
+    .attr('fill','#2c4034').attr('font-family','var(--mono)').attr('font-size',10).attr('font-weight',700).text('X · time →');
+  // Y axis
+  const ya1=proj(xScale(years[0]),H-220,0);
+  gAxis.append('line').attr('x1',xa0[0]).attr('y1',xa0[1]).attr('x2',ya1[0]).attr('y2',ya1[1])
+    .attr('stroke','#092b1f').attr('stroke-width',1.4);
+  [10,100,1000,10000].forEach(v=>{
+    if(v>yScale.domain()[1])return;
+    const p=proj(xScale(years[0]),yScale(v),0);
+    gAxis.append('text').attr('x',p[0]-8).attr('y',p[1]+3).attr('text-anchor','end')
+      .attr('fill','#5e6e5a').attr('font-family','var(--mono)').attr('font-size',8.5).text(v);
+  });
+  gAxis.append('text').attr('transform',`translate(${xa0[0]-40},${(xa0[1]+ya1[1])/2}) rotate(-90)`)
+    .attr('text-anchor','middle').attr('fill','#2c4034').attr('font-family','var(--mono)')
+    .attr('font-size',10).attr('font-weight',700).text('Y · citations ↑');
+
+  // citation edges in 3-space
+  const items=PAPERS.map(p=>{
+    const base=proj(xScale(p.year),0,zOf(p.angle));
+    const top=proj(xScale(p.year),yScale(p.citation_count||1),zOf(p.angle));
+    return {p,base,top};
+  });
+  const posOf=Object.fromEntries(items.map(it=>[it.p.id,it.top]));
+  const edges=[];
+  PAPERS.forEach(p=>(p.cites||[]).forEach(t=>{if(posOf[t])edges.push({a:p.id,b:t,col:ANGLE_HEX[p.angle]});}));
+  gEdge.selectAll('line').data(edges).join('line')
+    .attr('x1',d=>posOf[d.a][0]).attr('y1',d=>posOf[d.a][1])
+    .attr('x2',d=>posOf[d.b][0]).attr('y2',d=>posOf[d.b][1])
+    .attr('stroke',d=>d.col).attr('stroke-width',.7).attr('stroke-opacity',.16);
+
+  // pillars + nodes (painter's order: far depth first, then by base y)
+  items.sort((a,b)=>a.base[1]-b.base[1]);
+  const it=gItem.selectAll('g.it').data(items).join('g').attr('class','it').style('cursor','pointer');
+  it.append('line').attr('x1',d=>d.base[0]).attr('y1',d=>d.base[1]).attr('x2',d=>d.top[0]).attr('y2',d=>d.top[1])
+    .attr('stroke',d=>ANGLE_HEX[d.p.angle]).attr('stroke-opacity',.4).attr('stroke-width',1.3);
+  it.append('ellipse').attr('cx',d=>d.base[0]).attr('cy',d=>d.base[1]).attr('rx',3.5).attr('ry',1.8)
+    .attr('fill','#092b1f').attr('opacity',.18);
+  it.append('circle').attr('cx',d=>d.top[0]).attr('cy',d=>d.top[1])
+    .attr('r',d=>csize(d.p.citation_count||0)).attr('fill',d=>ANGLE_HEX[d.p.angle])
+    .attr('fill-opacity',.9).attr('stroke','#092b1f').attr('stroke-width',1.1);
+
+  it.on('mouseenter',(e,d)=>{
+      it.style('opacity',o=>o.p.id===d.p.id?1:.25);
+      showCard(d.p,e.clientX,e.clientY);
+    })
+    .on('mousemove',(e,d)=>{ if(hc.classList.contains('show')) showCard(d.p,e.clientX,e.clientY); })
+    .on('mouseleave',()=>{ it.style('opacity',1); scheduleHideCard(); });
+
+  // Z axis label
+  const za=proj(xScale(years[0]),0,3);
+  gAxis.append('text').attr('x',za[0]+18).attr('y',za[1]-6).attr('fill','#2c4034')
+    .attr('font-family','var(--mono)').attr('font-size',10).attr('font-weight',700).text('Z · angle ↗');
+
+  const lg=document.getElementById('time-legend');
+  ['A','B','C','D'].forEach(a=>lg.insertAdjacentHTML('beforeend',
+    `<span><i style="background:${ANGLE_HEX[a]}"></i>${ANGLE_NAME[a]}</span>`));
+})();
+
+/* ---------- NEXT STEPS checklist ---------- */
+(function(){
+  const ul=document.getElementById('next-list');
+  CONTENT.next_steps.forEach(s=>{
+    const li=document.createElement('li');
+    li.innerHTML=`<span class="box"></span><span>${renderCites(s)}</span>`;
+    ul.appendChild(li);
+  });
+})();
+
+/* ---------- IDEAS DECK ---------- */
+(function(){
+  const ideas=CONTENT.ideas; let cur=0;
+  const idEl=document.getElementById('idea-id');
+  const quad=document.getElementById('idea-quad');
+  const cells=[['question','Research question'],['hypothesis','Hypothesis'],
+               ['experiment','Experiment'],['why','Why it matters']];
+  function render(){
+    const it=ideas[cur];
+    idEl.textContent=it.id;
+    quad.innerHTML=cells.map(([k,lab])=>{
+      const v=it[k];
+      const empty=!v;
+      return `<div class="cell${empty?' empty':''}"><span class="clab">${lab}</span>`+
+             `<div class="ctxt">${empty?'—':renderCites(v)}</div></div>`;
+    }).join('');
+  }
+  document.getElementById('idea-shuffle').onclick=()=>{
+    if(ideas.length<2){render();return;}
+    let n; do{n=Math.floor(Math.random()*ideas.length);}while(n===cur);
+    cur=n; render();
+  };
+  render();
+})();
+
+/* ---------- REPORT QUALITY bars ---------- */
+(function(){
+  const q=CONTENT.report_quality;
+  const v=document.getElementById('q-verdict');
+  const vhex={HIGH:'#2e6f47',MEDIUM:'#a9701b',LOW:'#b23a2e'}[q.verdict]||'#a9701b';
+  v.innerHTML=`verdict: <b style="background:${vhex}">${q.verdict}</b> &nbsp;${esc(q.verdict_note)}`;
+  const bars=document.getElementById('q-bars');
+  const note=document.getElementById('q-note');
+  const maxw=100;
+  q.axes.forEach(ax=>{
+    const w=(ax.score/5)*maxw;
+    const col=SCORE_HEX[ax.score]||'#a9701b';
+    const bar=document.createElement('div');
+    bar.className='qbar';
+    bar.innerHTML=`<div class="fill" style="width:${w}%;background:${col}"></div>`+
+      `<span class="reveal">${esc(ax.name)}</span><span class="sc">${ax.score}</span>`;
+    bar.addEventListener('mouseenter',()=>{note.textContent=`${ax.name}: ${ax.note}`;});
+    bar.addEventListener('mouseleave',()=>{note.textContent='hover a bar for detail…';});
+    bars.appendChild(bar);
+  });
+})();
+
+/* ---------- CITATIONS accordions ---------- */
+(function(){
+  const list=document.getElementById('acc-list');
+  const sorted=[...PAPERS].sort((a,b)=>(b.citation_count||0)-(a.citation_count||0));
+  document.getElementById('cit-sub').textContent=
+    `${NPAPERS} sources, sorted by citations. Expand a row for claim, venue, angle, and link.`;
+  sorted.forEach(p=>{
+    const auth=(p.authors||[]).slice(0,3).join(', ')+((p.authors||[]).length>3?' et al.':'');
+    const row=document.createElement('div'); row.className='row';
+    row.innerHTML=
+      `<div class="head"><span class="ang" style="background:${ANGLE_HEX[p.angle]}"></span>`+
+      `<span class="ttl">${esc(p.title)}</span>`+
+      `<span class="yr">${(p.citation_count||0).toLocaleString()}${p.citation_count_estimated?'*':''} · ${p.year}</span>`+
+      `<span class="tw">&#9656;</span></div>`+
+      `<div class="body"><div class="in"><div class="au">${esc(auth)}</div>`+
+      `<div class="clm">${esc(p.key_claim||'')}</div>`+
+      `<dl>`+
+      `<dt>venue</dt><dd>${esc(p.venue||'')}</dd>`+
+      `<dt>angle</dt><dd>${p.angle} — ${ANGLE_NAME[p.angle]}</dd>`+
+      `<dt>institution</dt><dd>${esc((p.institutions||[])[0]||'')}</dd>`+
+      `<dt>relevance</dt><dd>${esc(p.relevance_to_question||'')}</dd>`+
+      `<dt>link</dt><dd><a class="cite" href="${p.url}" target="_blank" rel="noopener">${p.id} &#8599;</a></dd>`+
+      `</dl></div></div>`;
+    row.querySelector('.head').addEventListener('click',()=>row.classList.toggle('open'));
+    list.appendChild(row);
+  });
+  document.getElementById('acc-expand').onclick=()=>list.querySelectorAll('.row').forEach(r=>r.classList.add('open'));
+  document.getElementById('acc-collapse').onclick=()=>list.querySelectorAll('.row').forEach(r=>r.classList.remove('open'));
+})();
+
+/* ---------- STICKY NAV ---------- */
+(function(){
+  const secs=[
+    ['tldr','TLDR'],['insights','Insights'],['graph','Graph·map'],['timeline','Timeline'],
+    ['next','Next'],['ideas','Ideas'],['quality','Quality'],['citations','Citations']
+  ];
+  const pills=document.getElementById('nav-pills');
+  secs.forEach(([id,label],k)=>{
+    const b=document.createElement('button'); b.className='pill'; b.dataset.id=id;
+    b.innerHTML=`<span class="num">${String(k+1).padStart(2,'0')}</span>${label}`;
+    b.onclick=()=>document.getElementById(id).scrollIntoView({behavior:'smooth',block:'start'});
+    pills.appendChild(b);
+  });
+  const pillEls=[...pills.children];
+  let active=0;
+  function setActive(k){
+    if(k===active)return; active=k;
+    pillEls.forEach((p,i)=>p.classList.toggle('on',i===k));
+    const el=pillEls[k];
+    if(el) el.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
+  }
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        const k=secs.findIndex(s=>s[0]===e.target.id);
+        if(k>=0)setActive(k);
+      }
+    });
+  },{rootMargin:'-45% 0px -50% 0px',threshold:0});
+  secs.forEach(([id])=>{const el=document.getElementById(id);if(el)obs.observe(el);});
+  pillEls[0].classList.add('on');
+  document.getElementById('nav-prev').onclick=()=>{const k=Math.max(0,active-1);
+    document.getElementById(secs[k][0]).scrollIntoView({behavior:'smooth',block:'start'});};
+  document.getElementById('nav-next').onclick=()=>{const k=Math.min(secs.length-1,active+1);
+    document.getElementById(secs[k][0]).scrollIntoView({behavior:'smooth',block:'start'});};
+})();
+</script>
+</body></html>
