@@ -1,0 +1,1468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What structure lives inside mHC's residual-mixing matrices?</title>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+<style>
+:root {
+  --sage: #a8ba9a;
+  --surface: #c8d5bc;
+  --raised: #d5e0ca;
+  --ink: #0c2a1e;
+  --bottle: #0c2a1e;
+  --text2: #2c4034;
+  --muted: #4d5d46;
+  --border: #8fa17c;
+  --on-ink: #d5e0ca;
+  --background: var(--sage);
+  --accent: var(--ink);
+  --accent-text: var(--on-ink);
+  --score: #2e6f47;
+  --angle-a: #2e6f47;
+  --angle-b: #a9701b;
+  --angle-c: #b23a2e;
+  --angle-d: #6b4a6e;
+  --shadow-rgb: 12, 42, 30;
+  --mono: ui-monospace, "SF Mono", Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  --r-xs: 2px; --r-sm: 3px;
+  --shadow-paper: 2px 3px 0 rgba(var(--shadow-rgb), 0.16);
+  --shadow-button: 2px 3px 0 rgba(var(--shadow-rgb), 0.22);
+  --shadow-pop: 3px 5px 0 rgba(var(--shadow-rgb), 0.20);
+  --s1:2px;--s2:4px;--s3:7px;--s4:10px;--s5:14px;--s6:20px;--s7:28px;--s8:40px;
+  --content-width: 1100px;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; background: var(--background); color: var(--ink);
+  font-family: var(--sans); font-size: 16px; line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap { max-width: var(--content-width); margin: 0 auto; padding: 0 24px; }
+a { color: var(--ink); text-decoration-color: var(--border); text-underline-offset: 2px; }
+h1 { font-size: clamp(26px, 4.5vw, 40px); line-height: 1.12; margin: 0 0 var(--s5); letter-spacing: -0.01em; }
+h2 { font-size: clamp(20px, 3vw, 27px); margin: 0 0 var(--s5); letter-spacing: -0.01em; }
+h3 { font-size: 18px; margin: 0 0 var(--s4); }
+section { padding: var(--s8) 0; border-top: 1px dashed var(--border); }
+.mono { font-family: var(--mono); }
+
+/* header */
+header.head { padding-top: var(--s8); }
+.eyebrow { font-family: var(--mono); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: var(--s4); }
+.qcard {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm);
+  box-shadow: var(--shadow-paper); padding: var(--s6); margin: var(--s5) 0;
+  font-size: clamp(16px, 2.2vw, 20px); line-height: 1.45; color: var(--text2);
+}
+.statline { font-family: var(--mono); font-size: 13px; color: var(--muted); margin-top: var(--s5); }
+.statline b { color: var(--ink); }
+
+/* nav */
+nav.sticky {
+  position: sticky; top: 0; z-index: 50;
+  background: var(--sage); border-bottom: 1px solid var(--border);
+  margin-top: var(--s7);
+}
+nav.sticky .navinner { display: flex; align-items: center; gap: var(--s2); padding: var(--s3) 0; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+nav.sticky .navinner::-webkit-scrollbar { display: none; }
+.pill {
+  flex: 0 0 auto; font-family: var(--mono); font-size: 12px; cursor: pointer;
+  padding: 6px 11px; border: 1px solid var(--border); border-radius: 999px;
+  background: var(--raised); color: var(--text2); white-space: nowrap;
+  transition: background .25s ease, color .25s ease, box-shadow .25s ease, transform .15s ease;
+  text-decoration: none;
+}
+.pill:hover { transform: translateY(-1px); }
+.pill.active { background: var(--ink); color: var(--on-ink); box-shadow: var(--shadow-button); }
+.navarrow {
+  flex: 0 0 auto; font-family: var(--mono); cursor: pointer; user-select: none;
+  border: 1px solid var(--border); background: var(--raised); color: var(--ink);
+  width: 30px; height: 30px; border-radius: 999px; display: grid; place-items: center;
+  font-size: 15px; line-height: 1;
+}
+.navarrow:hover { background: var(--surface); }
+
+/* tldr */
+ul.log { list-style: none; padding: 0; margin: 0; }
+ul.log > li { position: relative; padding-left: 20px; margin-bottom: var(--s4); color: var(--text2); }
+ul.log > li::before { content: "–"; position: absolute; left: 2px; color: var(--muted); font-family: var(--mono); }
+ul.log ul.sub { list-style: none; padding: 0; margin: var(--s2) 0 var(--s3); }
+ul.log ul.sub > li { position: relative; padding-left: 18px; margin: var(--s2) 0; color: var(--muted); font-size: 15px; }
+ul.log ul.sub > li::before { content: "·"; position: absolute; left: 4px; color: var(--border); font-family: var(--mono); }
+.tag { font-family: var(--mono); font-size: 12px; font-weight: 700; padding: 1px 6px; border-radius: var(--r-xs); margin-right: 4px; }
+.tag.settled { background: rgba(46,111,71,.16); color: var(--angle-a); }
+.tag.open { background: rgba(178,58,46,.14); color: var(--angle-c); }
+
+/* citation chip */
+.cite {
+  font-family: var(--mono); font-size: .82em; padding: 0 4px; border-radius: var(--r-xs);
+  background: var(--raised); border: 1px solid var(--border); color: var(--text2);
+  text-decoration: none; cursor: pointer; white-space: nowrap;
+}
+.cite:hover { background: var(--surface); }
+
+/* citation popover */
+#pop {
+  position: fixed; z-index: 200; max-width: 340px; display: none;
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm);
+  box-shadow: var(--shadow-pop); padding: var(--s4); font-size: 13px; line-height: 1.4; color: var(--text2);
+}
+#pop .pt { font-weight: 700; color: var(--ink); font-size: 13.5px; margin-bottom: 3px; }
+#pop .pm { font-family: var(--mono); font-size: 11.5px; color: var(--muted); margin-bottom: 6px; }
+#pop .pc { margin-bottom: 7px; }
+#pop a { font-family: var(--mono); font-size: 12px; }
+
+/* carousel */
+.carousel { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); box-shadow: var(--shadow-paper); padding: var(--s6); min-height: 230px; }
+.carousel h3 { color: var(--ink); }
+.dots { display: flex; gap: 8px; justify-content: center; margin-top: var(--s5); flex-wrap: wrap; }
+.dot { width: 9px; height: 9px; border-radius: 999px; background: var(--raised); border: 1px solid var(--border); cursor: pointer; transition: background .2s, transform .2s; padding: 0; }
+.dot.on { background: var(--ink); transform: scale(1.15); }
+.carow { display: flex; align-items: center; gap: var(--s4); }
+.cbtn { flex: 0 0 auto; font-family: var(--mono); cursor: pointer; border: 1px solid var(--border); background: var(--raised); color: var(--ink); width: 34px; height: 34px; border-radius: 999px; font-size: 16px; }
+.cbtn:hover { background: var(--surface); }
+.cbody { flex: 1 1 auto; }
+
+/* figures */
+.figbox { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); box-shadow: var(--shadow-paper); padding: var(--s4); }
+.figbox svg { width: 100%; display: block; }
+.fighint { font-family: var(--mono); font-size: 11.5px; color: var(--muted); margin-top: var(--s3); }
+
+/* timeline */
+#time-svg { cursor: grab; touch-action: none; }
+#time-svg:active { cursor: grabbing; }
+
+/* next steps checklist */
+ul.checks { list-style: none; padding: 0; margin: 0; }
+ul.checks li { display: flex; gap: var(--s4); align-items: flex-start; margin-bottom: var(--s4); color: var(--text2); }
+.box { flex: 0 0 auto; width: 18px; height: 18px; margin-top: 2px; border: 2px solid var(--ink); border-radius: var(--r-xs); background: var(--raised); }
+
+/* idea deck */
+.deck { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); box-shadow: var(--shadow-paper); padding: var(--s6); }
+.deckgrid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--s4); }
+.cell { background: var(--raised); border: 1px solid var(--border); border-radius: var(--r-sm); padding: var(--s4); }
+.cell .lbl { font-family: var(--mono); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 5px; }
+.cell .val { color: var(--text2); font-size: 14.5px; line-height: 1.4; }
+.shuffle { margin-top: var(--s5); font-family: var(--mono); font-size: 14px; cursor: pointer; padding: 11px 22px; border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--ink); color: var(--on-ink); box-shadow: var(--shadow-button); }
+.shuffle:hover { transform: translateY(-1px); }
+
+/* quality bars */
+.qrow { display: flex; align-items: center; gap: var(--s4); margin-bottom: var(--s4); }
+.qname { flex: 0 0 150px; font-family: var(--mono); font-size: 13px; color: var(--ink); }
+.qtrack { flex: 1 1 auto; height: 22px; background: var(--raised); border: 1px solid var(--border); border-radius: var(--r-xs); position: relative; }
+.qfill { height: 100%; background: var(--sage); border-right: 2px solid var(--score); border-radius: var(--r-xs) 0 0 var(--r-xs); transition: width .5s ease; }
+.qscore { flex: 0 0 30px; font-family: var(--mono); font-size: 13px; color: var(--muted); text-align: right; }
+.qnote { font-family: var(--mono); font-size: 11.5px; color: var(--muted); margin: -2px 0 var(--s5) 154px; max-height: 0; overflow: hidden; opacity: 0; transition: max-height .3s ease, opacity .3s ease; }
+.qrowwrap:hover .qnote { max-height: 60px; opacity: 1; }
+
+/* accordions */
+.acc { border: 1px solid var(--border); border-radius: var(--r-sm); background: var(--surface); margin-bottom: var(--s2); overflow: hidden; }
+.acc summary { cursor: pointer; padding: var(--s4); list-style: none; display: flex; justify-content: space-between; gap: var(--s4); align-items: baseline; }
+.acc summary::-webkit-details-marker { display: none; }
+.acc .atitle { font-weight: 600; color: var(--ink); font-size: 15px; }
+.acc .ameta { font-family: var(--mono); font-size: 12px; color: var(--muted); white-space: nowrap; }
+.acc .abody { padding: 0 var(--s4) var(--s4); color: var(--text2); font-size: 14px; }
+.acc .abody div { margin-bottom: 5px; }
+.acc .abody .k { font-family: var(--mono); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-right: 6px; }
+
+footer { padding: var(--s8) 0; border-top: 1px dashed var(--border); font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+@media (max-width: 640px) {
+  .deckgrid { grid-template-columns: 1fr; }
+  .qname { flex-basis: 92px; font-size: 11px; }
+  .qnote { margin-left: 96px; }
+}
+</style>
+</head>
+<body>
+
+<div id="pop"></div>
+
+<header class="head wrap">
+  <div class="eyebrow">Research thread · 2026-06-24</div>
+  <h1 id="report-title"></h1>
+  <div class="qcard" id="report-question"></div>
+  <div class="statline" id="report-stats"></div>
+</header>
+
+<nav class="sticky">
+  <div class="wrap">
+    <div class="navinner" id="navinner"></div>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<section id="tldr"><h2>TLDR</h2><ul class="log" id="tldr-list"></ul></section>
+
+<section id="insights"><h2>Key insights</h2>
+  <div class="carousel">
+    <div class="carow">
+      <button class="cbtn" id="ins-prev">‹</button>
+      <div class="cbody" id="ins-body"></div>
+      <button class="cbtn" id="ins-next">›</button>
+    </div>
+    <div class="dots" id="ins-dots"></div>
+  </div>
+</section>
+
+<section id="graph"><h2>Citation graph</h2>
+  <div class="figbox"><svg id="map-svg"></svg></div>
+  <div class="fighint">Drag to pan · scroll to zoom · double-click a node to focus · arrows point from citing paper to cited paper</div>
+</section>
+
+<section id="timeline"><h2>Timeline</h2>
+  <div class="figbox"><svg id="time-svg"></svg></div>
+  <div class="fighint">X = year · Y = citations · Z = angle lane · click-drag to orbit</div>
+</section>
+
+<section id="next"><h2>Next steps</h2><ul class="checks" id="next-list"></ul></section>
+
+<section id="ideas"><h2>Idea deck</h2>
+  <div class="deck">
+    <div class="deckgrid" id="deck-grid"></div>
+    <button class="shuffle" id="deck-shuffle">⤮ Shuffle</button>
+  </div>
+</section>
+
+<section id="quality"><h2>Report quality</h2><div id="quality-bars"></div></section>
+
+<section id="citations"><h2>Citations</h2><div id="cite-list"></div></section>
+
+</main>
+
+<footer class="wrap"><span id="foot-stats"></span></footer>
+
+<script>
+const PAPERS = [
+  {
+    "id": "xie2025mhc",
+    "title": "mHC: Manifold-Constrained Hyper-Connections",
+    "authors": "Zhenda Xie, Yixuan Wei, et al. (DeepSeek-AI, ~20 authors)",
+    "institutions": "DeepSeek-AI",
+    "year": 2025,
+    "venue": "arXiv:2512.24880",
+    "citation_count": 55,
+    "url": "https://arxiv.org/abs/2512.24880",
+    "key_claim": "Constrains HC's n\u00d7n stream-mixing matrices to the Birkhoff polytope (doubly-stochastic, via Sinkhorn-Knopp ~20 iters): Perron eigenvalue=1, |\u03bb|\u22641, spectral norm \u22641, closure under multiplication. Cuts composite signal gain from ~3000x (unconstrained HC, 27B divergence) to ~1.6, with ~6.7% overhead at n=4; +4-7pt downstream at 27B.",
+    "relevance_to_question": "Primary source: defines exactly which manifold and the spectral/geometric structure it forces on the added linear maps.",
+    "angle": "A",
+    "citation_count_estimated": false,
+    "lat": 39.9,
+    "lon": 116.4,
+    "org_type": "industry",
+    "cites": [
+      "zhu2024hc",
+      "lucidrains-hc",
+      "jastrzebski2017",
+      "li2020cayley",
+      "scholkemper2024",
+      "xie2017resnext"
+    ]
+  },
+  {
+    "id": "zhu2024hc",
+    "title": "Hyper-Connections",
+    "authors": "Defa Zhu, Hongzhi Huang, Zihao Huang, Yutao Zeng, Yunyao Mao, Banggu Wu, Qiyang Min, Xun Zhou",
+    "institutions": "ByteDance Seed",
+    "year": 2024,
+    "venue": "ICLR 2025 (arXiv:2409.19606)",
+    "citation_count": 66,
+    "url": "https://arxiv.org/abs/2409.19606",
+    "key_claim": "Replaces x+f(x) with n parallel hidden copies mixed by an (n+1)x(n+1) matrix (depth-connections B, merge Am, width-connections Ar); static SHC + dynamic DHC escape the gradient-vanishing vs representation-collapse seesaw. ~1.8x faster convergence on OLMoE-1B-7B at +0.03% params.",
+    "relevance_to_question": "Direct predecessor; defines the learnable linear mixing matrices whose emergent structure the question asks about.",
+    "angle": "A",
+    "citation_count_estimated": false,
+    "lat": 39.9,
+    "lon": 116.4,
+    "org_type": "industry",
+    "cites": [
+      "jastrzebski2017",
+      "xie2017resnext",
+      "elhage2021"
+    ]
+  },
+  {
+    "id": "zhu2025frac",
+    "title": "Frac-Connections: Fractional Extension of Hyper-Connections",
+    "authors": "Defa Zhu, Hongzhi Huang, Jundong Zhou, Zihao Huang, Yutao Zeng, Banggu Wu, Qiyang Min, Xun Zhou",
+    "institutions": "ByteDance Seed",
+    "year": 2025,
+    "venue": "arXiv:2503.14125",
+    "citation_count": 5,
+    "url": "https://arxiv.org/abs/2503.14125",
+    "key_claim": "Instead of widening the hidden state into n copies, split it into fractional parts to retain partial HC benefits at lower memory-access cost; validated on a 7B MoE to 3T tokens.",
+    "relevance_to_question": "Sibling in the hyper-connection family; contrasts the width-expansion design choice mHC inherits and constrains.",
+    "angle": "A",
+    "citation_count_estimated": false,
+    "lat": 39.9,
+    "lon": 116.4,
+    "org_type": "industry",
+    "cites": [
+      "zhu2024hc",
+      "xie2025mhc",
+      "lucidrains-hc",
+      "jastrzebski2017",
+      "scholkemper2024",
+      "xie2017resnext"
+    ]
+  },
+  {
+    "id": "elhage2021",
+    "title": "A Mathematical Framework for Transformer Circuits",
+    "authors": "Nelson Elhage, Neel Nanda, Catherine Olsson, Tom Henighan, et al.",
+    "institutions": "Anthropic",
+    "year": 2021,
+    "venue": "Transformer Circuits Thread",
+    "citation_count": 900,
+    "url": "https://transformer-circuits.pub/2021/framework/index.html",
+    "key_claim": "The residual stream is a bandwidth-limited communication channel that does no computation itself; all components read/write subspaces, making residual bandwidth a shared, competed-for budget.",
+    "relevance_to_question": "Origin of the 'residual stream as information bottleneck / shared bus' framing that motivates HC/mHC.",
+    "angle": "A",
+    "lat": 37.77,
+    "lon": -122.42,
+    "org_type": "industry",
+    "cites": [
+      "xie2017resnext"
+    ]
+  },
+  {
+    "id": "sun2025curse",
+    "title": "The Curse of Depth in Large Language Models",
+    "authors": "Wenfang Sun, Xinyuan Song, Pengxiang Li, Lu Yin, Yefeng Zheng, Shiwei Liu",
+    "institutions": "multi-institution",
+    "year": 2025,
+    "venue": "arXiv:2502.05795",
+    "citation_count": 44,
+    "url": "https://arxiv.org/abs/2502.05795",
+    "key_claim": "Pre-LN output variance grows exponentially with depth, driving deep-block Jacobians toward identity (representation collapse), so ~half of deep layers are ineffective; LayerNorm-Scaling mitigates.",
+    "relevance_to_question": "Quantifies the depth-side residual-stream pathology mHC's norm-preserving maps target.",
+    "angle": "A",
+    "citation_count_estimated": false,
+    "lat": 51.75,
+    "lon": -1.26,
+    "org_type": "academia",
+    "cites": [
+      "dong2021",
+      "xie2017resnext",
+      "elhage2021",
+      "zhu2024hc",
+      "xie2025mhc"
+    ]
+  },
+  {
+    "id": "xie2017resnext",
+    "title": "Aggregated Residual Transformations for Deep Neural Networks (ResNeXt)",
+    "authors": "Saining Xie, Ross Girshick, Piotr Doll\u00e1r, Zhuowen Tu, Kaiming He",
+    "institutions": "UC San Diego, Facebook AI Research",
+    "year": 2017,
+    "venue": "CVPR 2017 (arXiv:1611.05431)",
+    "citation_count": 11717,
+    "url": "https://arxiv.org/abs/1611.05431",
+    "key_claim": "Replace a single residual transform with parallel branches (cardinality) aggregated via split-transform-merge; cardinality beats depth/width for capacity.",
+    "relevance_to_question": "Architectural lineage for multi-branch / multi-stream residuals \u2014 ancestor of HC's n parallel streams.",
+    "angle": "A",
+    "citation_count_estimated": false,
+    "lat": 32.88,
+    "lon": -117.23,
+    "org_type": "industry",
+    "cites": [
+      "greff2016",
+      "saxe2013",
+      "arjovsky2016"
+    ]
+  },
+  {
+    "id": "birkhoff1946",
+    "title": "Birkhoff-von Neumann Theorem (doubly-stochastic spectral facts)",
+    "authors": "G. Birkhoff; J. von Neumann",
+    "institutions": "classical mathematics",
+    "year": 1946,
+    "venue": "classical result",
+    "citation_count": 4000,
+    "url": "https://en.wikipedia.org/wiki/Doubly_stochastic_matrix",
+    "key_claim": "Doubly-stochastic matrices form a convex polytope whose extreme points are exactly permutation matrices; Perron eigenvalue=1 (eigenvector all-ones), all other |\u03bb|\u22641.",
+    "relevance_to_question": "The exact spectral/geometric theorem mHC invokes \u2014 permutation extreme points, Perron mode, non-expansion.",
+    "angle": "B",
+    "lat": 42.37,
+    "lon": -71.11,
+    "org_type": "academia",
+    "cites": []
+  },
+  {
+    "id": "arjovsky2016",
+    "title": "Unitary Evolution Recurrent Neural Networks",
+    "authors": "Martin Arjovsky, Amar Shah, Yoshua Bengio",
+    "institutions": "Univ. Buenos Aires, MILA / Univ. Montreal",
+    "year": 2016,
+    "venue": "ICML 2016",
+    "citation_count": 894,
+    "url": "https://arxiv.org/abs/1511.06464",
+    "key_claim": "Restricts recurrent matrix eigenvalues to the unit circle (unitary) so |\u03bb|=1 exactly, preventing vanishing/exploding gradients; built from diagonal, Fourier, Householder factors.",
+    "relevance_to_question": "Foundational unit-circle constraint on a recurrent mixing matrix \u2014 direct analogue of constraining depth-mixing.",
+    "angle": "B",
+    "citation_count_estimated": false,
+    "lat": 45.5,
+    "lon": -73.61,
+    "org_type": "academia",
+    "cites": [
+      "saxe2013",
+      "birkhoff1946"
+    ]
+  },
+  {
+    "id": "helfrich2018",
+    "title": "Orthogonal Recurrent Neural Networks with Scaled Cayley Transform",
+    "authors": "Kyle E. Helfrich, Devin Willmott, Qiang Ye",
+    "institutions": "University of Kentucky",
+    "year": 2018,
+    "venue": "ICML 2018",
+    "citation_count": 152,
+    "url": "https://arxiv.org/abs/1707.09520",
+    "key_claim": "Parametrizes orthogonal recurrent matrix as scaled Cayley transform of a skew-symmetric matrix with \u00b11 diagonal; eigenvalues on the unit circle, isometric recurrence.",
+    "relevance_to_question": "Cayley/skew-symmetric route to orthogonality (all singular values=1) \u2014 alternative manifold parametrization for stream mixing.",
+    "angle": "B",
+    "citation_count_estimated": false,
+    "lat": 38.04,
+    "lon": -84.5,
+    "org_type": "academia",
+    "cites": [
+      "arjovsky2016",
+      "saxe2013",
+      "pennington2018",
+      "xie2017resnext",
+      "shwartzziv2017",
+      "mena2018"
+    ]
+  },
+  {
+    "id": "lezcano2019",
+    "title": "Cheap Orthogonal Constraints in Neural Networks: A Simple Parametrization of the Orthogonal and Unitary Group (expRNN)",
+    "authors": "Mario Lezcano-Casado, David Mart\u00ednez-Rubio",
+    "institutions": "University of Oxford",
+    "year": 2019,
+    "venue": "ICML 2019",
+    "citation_count": 249,
+    "url": "https://arxiv.org/abs/1901.08428",
+    "key_claim": "Riemannian exponential-map trivialization of SO(n)/U(n)/Stiefel turns orthogonality-constrained optimization into unconstrained Euclidean optimization; guarantees exact orthogonality (\u03c3_i=1).",
+    "relevance_to_question": "Stiefel-manifold parametrization for orthogonal-constrained mixing maps; the manifold-optimization machinery underlying constrained HC variants.",
+    "angle": "B",
+    "citation_count_estimated": false,
+    "lat": 51.75,
+    "lon": -1.26,
+    "org_type": "academia",
+    "cites": [
+      "arjovsky2016",
+      "helfrich2018",
+      "saxe2013",
+      "pennington2018",
+      "xie2017resnext",
+      "shwartzziv2017"
+    ]
+  },
+  {
+    "id": "saxe2013",
+    "title": "Exact Solutions to the Nonlinear Dynamics of Learning in Deep Linear Neural Networks",
+    "authors": "Andrew M. Saxe, James L. McClelland, Surya Ganguli",
+    "institutions": "Stanford University",
+    "year": 2013,
+    "venue": "ICLR 2014 (arXiv:1312.6120)",
+    "citation_count": 2115,
+    "url": "https://arxiv.org/abs/1312.6120",
+    "key_claim": "Random orthogonal initialization (all singular values=1, dynamical isometry) yields depth-independent learning times, unlike Gaussian init.",
+    "relevance_to_question": "Origin of dynamical isometry \u2014 the spectral-radius\u22481 rationale that motivates constraining residual-stream mixing.",
+    "angle": "B",
+    "citation_count_estimated": false,
+    "lat": 37.43,
+    "lon": -122.17,
+    "org_type": "academia",
+    "cites": [
+      "birkhoff1946"
+    ]
+  },
+  {
+    "id": "pennington2017",
+    "title": "Resurrecting the Sigmoid in Deep Learning through Dynamical Isometry: Theory and Practice",
+    "authors": "Jeffrey Pennington, Samuel S. Schoenholz, Surya Ganguli",
+    "institutions": "Google Brain, Stanford",
+    "year": 2017,
+    "venue": "NeurIPS 2017",
+    "citation_count": 301,
+    "url": "https://arxiv.org/abs/1711.04735",
+    "key_claim": "Trainability requires the input-output Jacobian's full singular spectrum concentrated near 1 (dynamical isometry), achievable via orthogonal weights + free-probability tuning.",
+    "relevance_to_question": "Theoretical backbone for why \u03c3 near 1 (what doubly-stochastic/orthogonal mixing enforces) governs deep signal propagation.",
+    "angle": "B",
+    "citation_count_estimated": false,
+    "lat": 37.42,
+    "lon": -122.08,
+    "org_type": "industry",
+    "cites": [
+      "birkhoff1946",
+      "saxe2013",
+      "arjovsky2016"
+    ]
+  },
+  {
+    "id": "pennington2018",
+    "title": "The Emergence of Spectral Universality in Deep Networks",
+    "authors": "Jeffrey Pennington, Samuel S. Schoenholz, Surya Ganguli",
+    "institutions": "Google Brain, Stanford",
+    "year": 2018,
+    "venue": "AISTATS 2018",
+    "citation_count": 186,
+    "url": "https://arxiv.org/abs/1802.09979",
+    "key_claim": "Uses random-matrix/free-probability theory to characterize the full Jacobian singular-value distribution and when it concentrates at 1.",
+    "relevance_to_question": "Spectral-distribution lens for reasoning about composite mixing-matrix spectra across depth.",
+    "angle": "B",
+    "citation_count_estimated": false,
+    "lat": 37.42,
+    "lon": -122.08,
+    "org_type": "industry",
+    "cites": [
+      "birkhoff1946",
+      "saxe2013",
+      "arjovsky2016",
+      "xie2017resnext",
+      "shwartzziv2017",
+      "mena2018"
+    ]
+  },
+  {
+    "id": "heimersheim2023",
+    "title": "Residual Stream Norms Grow Exponentially over the Forward Pass",
+    "authors": "Stefan Heimersheim, Alex Turner",
+    "institutions": "independent / alignment research",
+    "year": 2023,
+    "venue": "AlignmentForum / LessWrong",
+    "citation_count": 15,
+    "url": "https://www.alignmentforum.org/posts/8mizBCm3dyc432nK8/residual-stream-norms-grow-exponentially-over-the-forward",
+    "key_claim": "Residual stream norm grows ~exponentially (\u22481.045x/layer in GPT2-XL) across the forward pass.",
+    "relevance_to_question": "Empirically motivates the norm-growth mHC's non-expansive (\u03c3_max\u22641) maps control.",
+    "angle": "B",
+    "lat": 52.2,
+    "lon": 0.12,
+    "org_type": "independent",
+    "cites": [
+      "xie2017resnext",
+      "dong2021",
+      "greff2016",
+      "jastrzebski2017",
+      "oono2019",
+      "roth2023"
+    ]
+  },
+  {
+    "id": "ablate2026",
+    "title": "Ablate and Rescue: A Causal Analysis of Residual Stream Hyper-Connections",
+    "authors": "William Peng, Josheev Rai, Kevin Tseng, Siwei Wang, Sean Wu",
+    "institutions": "academic (affiliations not on abstract page)",
+    "year": 2026,
+    "venue": "arXiv:2603.14833",
+    "citation_count": 0,
+    "url": "https://arxiv.org/abs/2603.14833",
+    "key_claim": "First open mHC LM (781M, 36 layers, 4 streams); CKA shows a mid-layer checkerboard of two stream groups (~L12); high CKA similarity does NOT imply causal interchangeability \u2014 pair (0,2) mutually recoverable ~75-81%, pair (1,3) asymmetric.",
+    "relevance_to_question": "Direct causal/interpretability evidence on effective-rank/subspace geometry of the constrained multi-stream maps.",
+    "angle": "C",
+    "citation_count_estimated": false,
+    "lat": 37.43,
+    "lon": -122.17,
+    "org_type": "academia",
+    "cites": [
+      "lucidrains-hc",
+      "jastrzebski2017",
+      "zhu2024hc",
+      "xie2025mhc",
+      "scholkemper2024",
+      "heimersheim2023"
+    ]
+  },
+  {
+    "id": "spectralsphere2026",
+    "title": "Beyond the Birkhoff Polytope: Spectral-Sphere-Constrained Hyper-Connections",
+    "authors": "Zhaoyi Liu, Haichuan Zhang, Ang Li",
+    "institutions": "n/a",
+    "year": 2026,
+    "venue": "arXiv:2603.20896",
+    "citation_count": 0,
+    "url": "https://arxiv.org/abs/2603.20896",
+    "key_claim": "Argues doubly-stochasticity bounds singular values but not eigenvalue magnitudes and causes identity degeneration; constrains mixing matrices to the spectral sphere (unit spectral radius) instead.",
+    "relevance_to_question": "Directly contrasts the spectral implications of Birkhoff vs spectral-radius constraints on the added maps.",
+    "angle": "B",
+    "citation_count_estimated": false,
+    "lat": 39.9,
+    "lon": 116.4,
+    "org_type": "academia",
+    "cites": [
+      "gomhc2026",
+      "xie2025mhc",
+      "mhcgnn2026",
+      "birkhoff1946",
+      "zhu2024hc",
+      "zhu2025frac"
+    ]
+  },
+  {
+    "id": "gomhc2026",
+    "title": "go-mHC: Direct Parameterization of Manifold-Constrained Hyper-Connections via Generalized Orthostochastic Matrices",
+    "authors": "Torque Dandachi, Sophia Diggs-Galligan",
+    "institutions": "n/a",
+    "year": 2026,
+    "venue": "arXiv:2604.02309",
+    "citation_count": 1,
+    "url": "https://arxiv.org/abs/2604.02309",
+    "key_claim": "Parametrizes the mixing as generalized orthostochastic matrices (entrywise square of orthogonal), bridging the orthogonal group and doubly-stochasticity without iterative Sinkhorn.",
+    "relevance_to_question": "Shows the orthogonal\u2194doubly-stochastic bridge directly in the mHC linear maps; isolates Sinkhorn overhead.",
+    "angle": "B",
+    "citation_count_estimated": false,
+    "lat": 40.0,
+    "lon": -100.0,
+    "org_type": "academia",
+    "cites": [
+      "xie2025mhc",
+      "mhcgnn2026",
+      "zhu2024hc",
+      "zhu2025frac",
+      "lucidrains-hc",
+      "jastrzebski2017"
+    ]
+  },
+  {
+    "id": "jpmhc2026",
+    "title": "JPmHC: Dynamical Isometry via Orthogonal Hyper-Connections",
+    "authors": "Biswa Sengupta, Jinhua Wang, Leo Brunswic",
+    "institutions": "n/a",
+    "year": 2026,
+    "venue": "arXiv:2602.18308",
+    "citation_count": 1,
+    "url": "https://arxiv.org/abs/2602.18308",
+    "key_claim": "Argues orthogonal (Cayley-parameterized) hyper-connections give true dynamical isometry and better gradient spectra than doubly-stochastic ('bistochastic') baselines.",
+    "relevance_to_question": "Competing-constraint evidence: questions whether doubly-stochastic is the right manifold vs orthogonal/Stiefel.",
+    "angle": "D",
+    "citation_count_estimated": false,
+    "lat": 51.51,
+    "lon": -0.13,
+    "org_type": "academia",
+    "cites": [
+      "mhcgnn2026",
+      "pennington2017",
+      "zhu2024hc",
+      "xie2025mhc",
+      "zhu2025frac",
+      "lucidrains-hc"
+    ]
+  },
+  {
+    "id": "mhclite2026",
+    "title": "mHC-lite: You Don't Need 20 Sinkhorn-Knopp Iterations",
+    "authors": "Yongyi Yang, Jianyang Gao",
+    "institutions": "n/a",
+    "year": 2026,
+    "venue": "arXiv:2601.05732",
+    "citation_count": 8,
+    "url": "https://arxiv.org/abs/2601.05732",
+    "key_claim": "Far fewer than 20 Sinkhorn iterations (or an exact Birkhoff reparameterization) recover mHC's stability/quality, cutting projection overhead and the depth-accumulating approximation gap.",
+    "relevance_to_question": "Ablates the Sinkhorn iteration count \u2014 tests how much of the structure/overhead is necessary; exposes the approximate-double-stochasticity limit.",
+    "angle": "C",
+    "citation_count_estimated": false,
+    "lat": 42.28,
+    "lon": -83.74,
+    "org_type": "academia",
+    "cites": [
+      "cuturi2013",
+      "dong2021",
+      "mena2018",
+      "lucidrains-hc"
+    ]
+  },
+  {
+    "id": "mhcgnn2026",
+    "title": "mHC-GNN: Manifold-Constrained Hyper-Connections for Graph Neural Networks",
+    "authors": "Subhankar Mishra",
+    "institutions": "n/a",
+    "year": 2026,
+    "venue": "arXiv:2601.02451",
+    "citation_count": 3,
+    "url": "https://arxiv.org/abs/2601.02451",
+    "key_claim": "Ports doubly-stochastic stream-mixing to GNNs; claims provably slower over-smoothing and ability to distinguish graphs beyond 1-WL.",
+    "relevance_to_question": "Cross-domain replication making the diffusion/oversmoothing connection literal; the doubly-stochastic-mixing structure slows representation collapse.",
+    "angle": "D",
+    "citation_count_estimated": false,
+    "lat": 20.3,
+    "lon": 85.82,
+    "org_type": "academia",
+    "cites": [
+      "xie2025mhc",
+      "oono2019",
+      "roth2023",
+      "zhu2024hc",
+      "zhu2025frac",
+      "lucidrains-hc"
+    ]
+  },
+  {
+    "id": "lucidrains-hc",
+    "title": "hyper-connections (PyTorch implementation)",
+    "authors": "Phil Wang (lucidrains)",
+    "institutions": "Independent open-source",
+    "year": 2024,
+    "venue": "GitHub",
+    "citation_count": 0,
+    "url": "https://github.com/lucidrains/hyper-connections",
+    "key_claim": "Open-source PyTorch implementation of HC supporting static/dynamic streams, fractionated dims (Frac), and mHC; ~186 stars.",
+    "relevance_to_question": "Evidence of independent reproducibility/adoption; lowers the bar to verify the empirical claims.",
+    "angle": "C",
+    "lat": 37.77,
+    "lon": -122.42,
+    "org_type": "independent",
+    "cites": [
+      "zhu2024hc",
+      "jastrzebski2017",
+      "scholkemper2024"
+    ]
+  },
+  {
+    "id": "jastrzebski2017",
+    "title": "Residual Connections Encourage Iterative Inference",
+    "authors": "Stanis\u0142aw Jastrz\u0119bski, Devansh Arpit, Nicolas Ballas, Vikas Verma, Tong Che, Yoshua Bengio",
+    "institutions": "MILA / Univ. Montreal, Jagiellonian Univ.",
+    "year": 2017,
+    "venue": "ICLR 2018 (arXiv:1710.04773)",
+    "citation_count": 180,
+    "url": "https://arxiv.org/abs/1710.04773",
+    "key_claim": "A residual block moves the representation along the negative loss gradient; deeper layers iteratively refine a shared representation (unrolled iterative estimation).",
+    "relevance_to_question": "Establishes the iterative-inference / unrolled-dynamical-system reading mHC's doubly-stochastic mixer modifies.",
+    "angle": "D",
+    "citation_count_estimated": false,
+    "lat": 45.5,
+    "lon": -73.61,
+    "org_type": "academia",
+    "cites": [
+      "greff2016",
+      "xie2017resnext",
+      "cuturi2013",
+      "shwartzziv2017"
+    ]
+  },
+  {
+    "id": "greff2016",
+    "title": "Highway and Residual Networks learn Unrolled Iterative Estimation",
+    "authors": "Klaus Greff, Rupesh K. Srivastava, J\u00fcrgen Schmidhuber",
+    "institutions": "IDSIA / USI-SUPSI",
+    "year": 2016,
+    "venue": "ICLR 2017 (arXiv:1612.07771)",
+    "citation_count": 228,
+    "url": "https://arxiv.org/abs/1612.07771",
+    "key_claim": "Residual/highway layers iteratively refine estimates of the same features instead of building a fresh hierarchy.",
+    "relevance_to_question": "Core conceptual precursor for the residual stream as a dynamical refinement process that mHC perturbs.",
+    "angle": "D",
+    "citation_count_estimated": false,
+    "lat": 46.03,
+    "lon": 8.96,
+    "org_type": "academia",
+    "cites": [
+      "saxe2013",
+      "arjovsky2016",
+      "cuturi2013"
+    ]
+  },
+  {
+    "id": "chen2018node",
+    "title": "Neural Ordinary Differential Equations",
+    "authors": "Ricky T. Q. Chen, Yulia Rubanova, Jesse Bettencourt, David Duvenaud",
+    "institutions": "University of Toronto, Vector Institute",
+    "year": 2018,
+    "venue": "NeurIPS 2018",
+    "citation_count": 7156,
+    "url": "https://arxiv.org/abs/1806.07366",
+    "key_claim": "A residual network is the Euler discretization of an ODE; depth becomes continuous time, casting the network as a learned dynamical system.",
+    "relevance_to_question": "Provides the ODE/dynamical-system formalism for asking what a doubly-stochastic mixing step does to the implied dynamics.",
+    "angle": "D",
+    "citation_count_estimated": false,
+    "lat": 43.66,
+    "lon": -79.4,
+    "org_type": "academia",
+    "cites": [
+      "cuturi2013",
+      "shwartzziv2017",
+      "greff2016",
+      "jastrzebski2017"
+    ]
+  },
+  {
+    "id": "dong2021",
+    "title": "Attention is Not All You Need: Pure Attention Loses Rank Doubly Exponentially with Depth",
+    "authors": "Yihe Dong, Jean-Baptiste Cordonnier, Andreas Loukas",
+    "institutions": "Google, EPFL",
+    "year": 2021,
+    "venue": "ICML 2021",
+    "citation_count": 552,
+    "url": "https://arxiv.org/abs/2103.03404",
+    "key_claim": "Without skips and MLPs, self-attention output converges doubly-exponentially to a rank-1 matrix (token uniformity); skips and MLPs halt the collapse.",
+    "relevance_to_question": "Doubly-stochastic averaging is the canonical rank-collapse operator \u2014 the central tension: what stops mHC streams collapsing is the residual injection.",
+    "angle": "D",
+    "citation_count_estimated": false,
+    "lat": 37.42,
+    "lon": -122.08,
+    "org_type": "industry",
+    "cites": [
+      "oono2019",
+      "birkhoff1946",
+      "chen2018node",
+      "cuturi2013",
+      "shwartzziv2017",
+      "mena2018"
+    ]
+  },
+  {
+    "id": "oono2019",
+    "title": "Graph Neural Networks Exponentially Lose Expressive Power for Node Classification",
+    "authors": "Kenta Oono, Taiji Suzuki",
+    "institutions": "University of Tokyo, RIKEN AIP",
+    "year": 2019,
+    "venue": "ICLR 2020 (arXiv:1905.10947)",
+    "citation_count": 31,
+    "url": "https://arxiv.org/abs/1905.10947",
+    "key_claim": "Deep GNNs converge to a low-dimensional invariant subspace of the (doubly-)stochastic propagation operator, losing node-discriminative power exponentially with depth (oversmoothing).",
+    "relevance_to_question": "Formalizes Perron-collapse for stochastic mixing operators \u2014 the failure mode latent in mHC's diffusion step.",
+    "angle": "D",
+    "citation_count_estimated": false,
+    "lat": 35.71,
+    "lon": 139.76,
+    "org_type": "academia",
+    "cites": [
+      "shwartzziv2017",
+      "mena2018",
+      "greff2016",
+      "xie2017resnext",
+      "saxe2013",
+      "arjovsky2016"
+    ]
+  },
+  {
+    "id": "scholkemper2024",
+    "title": "Residual Connections and Normalization Can Provably Prevent Oversmoothing in GNNs",
+    "authors": "Michael Scholkemper, Xinyi Wu, Ali Jadbabaie, Michael T. Schaub",
+    "institutions": "RWTH Aachen, MIT",
+    "year": 2024,
+    "venue": "NeurIPS 2024 (arXiv:2406.02997)",
+    "citation_count": 33,
+    "url": "https://arxiv.org/abs/2406.02997",
+    "key_claim": "Residual connections plus normalization provably prevent the averaging operator from collapsing representations to the Perron eigenvector.",
+    "relevance_to_question": "Explains why mHC's interleaved residual injection defeats the consensus collapse its doubly-stochastic mixer would otherwise cause.",
+    "angle": "D",
+    "citation_count_estimated": false,
+    "lat": 50.78,
+    "lon": 6.08,
+    "org_type": "academia",
+    "cites": [
+      "jastrzebski2017",
+      "greff2016",
+      "xie2017resnext",
+      "zhu2024hc",
+      "heimersheim2023",
+      "chen2018node"
+    ]
+  },
+  {
+    "id": "mena2018",
+    "title": "Learning Latent Permutations with Gumbel-Sinkhorn Networks",
+    "authors": "Gonzalo E. Mena, David Belanger, Scott Linderman, Jasper Snoek",
+    "institutions": "Columbia, Google Brain",
+    "year": 2018,
+    "venue": "ICLR 2018 (arXiv:1802.08665)",
+    "citation_count": 337,
+    "url": "https://arxiv.org/abs/1802.08665",
+    "key_claim": "Sinkhorn normalization yields a differentiable, approximately doubly-stochastic operator (the Birkhoff-polytope projection) for learning soft permutations/assignments.",
+    "relevance_to_question": "Same Sinkhorn machinery mHC uses; situates mHC in the differentiable-OT / Birkhoff-projection lineage and its approximation properties.",
+    "angle": "D",
+    "citation_count_estimated": false,
+    "lat": 40.81,
+    "lon": -73.96,
+    "org_type": "academia",
+    "cites": [
+      "cuturi2013",
+      "shwartzziv2017",
+      "greff2016",
+      "xie2017resnext",
+      "saxe2013",
+      "arjovsky2016"
+    ]
+  },
+  {
+    "id": "cuturi2013",
+    "title": "Sinkhorn Distances: Lightspeed Computation of Optimal Transport",
+    "authors": "Marco Cuturi",
+    "institutions": "Kyoto University",
+    "year": 2013,
+    "venue": "NeurIPS 2013 (arXiv:1306.0895)",
+    "citation_count": 5476,
+    "url": "https://arxiv.org/abs/1306.0895",
+    "key_claim": "Entropy-regularized OT is solved by Sinkhorn-Knopp iteration, projecting onto doubly-stochastic couplings cheaply and differentiably.",
+    "relevance_to_question": "Foundational for the Sinkhorn-Knopp projection at the heart of mHC's manifold constraint.",
+    "angle": "D",
+    "citation_count_estimated": false,
+    "lat": 35.01,
+    "lon": 135.77,
+    "org_type": "academia",
+    "cites": []
+  },
+  {
+    "id": "li2020cayley",
+    "title": "Efficient Riemannian Optimization on the Stiefel Manifold via the Cayley Transform",
+    "authors": "Jun Li, Li Fuxin, Sinisa Todorovic",
+    "institutions": "Oregon State University",
+    "year": 2020,
+    "venue": "ICLR 2020 (arXiv:2002.01113)",
+    "citation_count": 145,
+    "url": "https://arxiv.org/abs/2002.01113",
+    "key_claim": "Cayley-transform retractions enable efficient training under orthogonality (Stiefel) constraints (Cayley SGD/ADAM).",
+    "relevance_to_question": "The orthogonal-constraint alternative to doubly-stochastic mixing; backbone of competing orthogonal-HC proposals.",
+    "angle": "D",
+    "citation_count_estimated": false,
+    "lat": 44.56,
+    "lon": -123.28,
+    "org_type": "academia",
+    "cites": [
+      "helfrich2018",
+      "chen2018node",
+      "cuturi2013",
+      "shwartzziv2017",
+      "mena2018",
+      "greff2016"
+    ]
+  },
+  {
+    "id": "shwartzziv2017",
+    "title": "Opening the Black Box of Deep Neural Networks via Information",
+    "authors": "Ravid Shwartz-Ziv, Naftali Tishby",
+    "institutions": "Hebrew University of Jerusalem",
+    "year": 2017,
+    "venue": "arXiv:1703.00810",
+    "citation_count": 1623,
+    "url": "https://arxiv.org/abs/1703.00810",
+    "key_claim": "DNN training has a fitting then a compression phase in the information plane, optimizing the IB compression-prediction tradeoff per layer.",
+    "relevance_to_question": "The genuine Information Bottleneck principle \u2014 distinguishes Tishby's I(X;T)/I(T;Y) framing from mHC's loose 'residual-bandwidth' use of the term.",
+    "angle": "D",
+    "citation_count_estimated": false,
+    "lat": 31.77,
+    "lon": 35.2,
+    "org_type": "academia",
+    "cites": [
+      "greff2016",
+      "xie2017resnext",
+      "saxe2013",
+      "arjovsky2016",
+      "cuturi2013"
+    ]
+  },
+  {
+    "id": "kolchinsky2018",
+    "title": "Caveats for Information Bottleneck in Deterministic Scenarios",
+    "authors": "Artemy Kolchinsky, Brendan D. Tracey, Steven Van Kuyk",
+    "institutions": "Santa Fe Institute",
+    "year": 2018,
+    "venue": "ICLR 2019 (arXiv:1808.07593)",
+    "citation_count": 90,
+    "url": "https://arxiv.org/abs/1808.07593",
+    "key_claim": "For deterministic networks the IB functional is ill-posed (infinite or piecewise-constant), so the IB curve cannot be traced by the IB Lagrangian.",
+    "relevance_to_question": "Shows IB itself is contested for deterministic nets \u2014 reinforcing that mHC's 'information bottleneck' is metaphor, not rigorous IB.",
+    "angle": "D",
+    "citation_count_estimated": false,
+    "lat": 35.69,
+    "lon": -105.94,
+    "org_type": "academia",
+    "cites": [
+      "shwartzziv2017",
+      "chen2018node",
+      "cuturi2013",
+      "mena2018",
+      "greff2016",
+      "jastrzebski2017"
+    ]
+  },
+  {
+    "id": "roth2023",
+    "title": "Rank Collapse Causes Over-Smoothing and Over-Correlation in Graph Neural Networks",
+    "authors": "Andreas Roth, Thomas Liebig",
+    "institutions": "TU Dortmund",
+    "year": 2023,
+    "venue": "LoG 2023 (arXiv:2308.16800)",
+    "citation_count": 20,
+    "url": "https://arxiv.org/abs/2308.16800",
+    "key_claim": "Oversmoothing and over-correlation are unified as rank collapse of the feature matrix under repeated mixing operators.",
+    "relevance_to_question": "Sharpens the rank-collapse risk of doubly-stochastic averaging that mHC must avoid across depth.",
+    "angle": "D",
+    "citation_count_estimated": false,
+    "lat": 51.49,
+    "lon": 7.41,
+    "org_type": "academia",
+    "cites": [
+      "oono2019",
+      "shwartzziv2017",
+      "dong2021",
+      "mena2018",
+      "greff2016",
+      "xie2017resnext"
+    ]
+  }
+];
+const CONTENT = {
+  "title": "What structure lives inside mHC's residual-mixing matrices?",
+  "question": "What kind of structures emerge in the linear transformations added by Manifold Constrained Hyper Connections (mHC) used in modern language models to solve the information bottleneck problem in the residual stream? Studied from geometric, eigenvalue, and other perspectives.",
+  "date": "2026-06-24",
+  "stats": { "papers": 33, "edges": 149 },
+
+  "tldr": [
+    { "point": "mHC [[xie2025mhc]] widens the residual stream into n parallel copies, then constrains each n×n mixing matrix to the Birkhoff polytope (doubly-stochastic) via Sinkhorn–Knopp.", "sub": [
+      "Generalizes Hyper-Connections [[zhu2024hc]], whose free mixing matrices broke the residual identity-map and blew composite gain to ~3000× at 27B.",
+      "Doubly-stochastic projection caps composite signal gain at ~1.6×."
+    ]},
+    { "point": "SETTLED — what the manifold forces (true of any doubly-stochastic matrix, by theorem):", "sub": [
+      "Perron eigenvalue = 1 (all-ones eigenvector); every other |λ| ≤ 1.",
+      "Spectral norm σ_max ≤ 1 (non-expansive); closed under multiplication, so the composite stays bounded at any depth [[birkhoff1946]].",
+      "By Birkhoff–von Neumann, the map is a convex combination of stream-permutations — an averaging operator between routing and uniform mixing."
+    ]},
+    { "point": "OPEN — what actually emerges in trained weights: nobody has reported the eigenvalue/SVD spectra, the polytope entropy, or the effective rank of a single trained H^res.", "sub": [
+      "The geometric thesis is inferred from the imposed constraint, NOT measured. Frame as enforced-by-construction, not empirically-observed.",
+      "Only mechanistic probe (Ablate-and-Rescue [[ablate2026]]) shows streams specialize into causally non-interchangeable roles — argues against uniform collapse, but measures CKA, not the matrices."
+    ]},
+    "\"Information bottleneck\" here = limited residual bandwidth (mech-interp sense), NOT Tishby's IB [[shwartzziv2017]]. mHC optimizes zero mutual information.",
+    "Verdict HIGH confidence: core paper + 7 follow-ups all verified on arXiv (Jun 2026), math is correct — but every headline number is single-source, self-reported, closed-weights DeepSeek at ≤27B."
+  ],
+
+  "insights": [
+    { "title": "Enforced ≠ emergent", "points": [
+      "λ=1, |λ|≤1, σ_max≤1 are a math consequence of the doubly-stochastic constraint.",
+      "True of an untrained random Sinkhorn matrix too — they say nothing about what training selects.",
+      "The real question is where inside that envelope the learned maps land."
+    ]},
+    { "title": "The free axis: routing ⇄ uniform averaging", "points": [
+      "Birkhoff–von Neumann: every mixer is a convex combo of stream-permutations [[birkhoff1946]].",
+      "Low entropy → near-permutation (routing); high entropy → near-uniform (consensus).",
+      "That position — the polytope entropy — is exactly the unmeasured quantity."
+    ]},
+    { "title": "Stability and oversmoothing are the same operator", "points": [
+      "A doubly-stochastic operator is the canonical non-expansive stabilizer AND the canonical Perron-consensus / rank-collapse operator [[oono2019]] [[dong2021]].",
+      "mHC trades gradient-explosion for a latent oversmoothing mode.",
+      "Suppressed by tiny n, input-dependent matrices, and interleaved residual injection [[scholkemper2024]] — never characterized."
+    ]},
+    { "title": "Doubly-stochastic is not orthogonal", "points": [
+      "σ_max ≤ 1 but σ_min can fall below 1: contractive, non-isometric, generally non-invertible, rank-shrinking toward the Perron mode.",
+      "The deliberate price vs the true isometry (all σ=1) of orthogonal/Stiefel variants [[jpmhc2026]] [[lezcano2019]].",
+      "Competing 2026 proposals push spectral-sphere [[spectralsphere2026]] and orthostochastic [[gomhc2026]] instead."
+    ]},
+    { "title": "Same idea, older lineage: orthogonal/unitary RNNs", "points": [
+      "Constraining a depth-recurrent mixing matrix is the uRNN problem [[arjovsky2016]].",
+      "|eigenvalue|=1 via unitary (uRNN), scaled-Cayley [[helfrich2018]], or Riemannian exp-map [[lezcano2019]].",
+      "All chase σ≈1 dynamical isometry [[saxe2013]] [[pennington2017]] — mHC picks the cheaper, contractive cousin."
+    ]},
+    { "title": "Streams specialize — and asymmetrically", "points": [
+      "Ablate-and-Rescue [[ablate2026]]: mid-layer CKA checkerboard, two stream groups formed by ~layer 12.",
+      "High CKA similarity does NOT imply causal interchangeability.",
+      "Pair (1,3) asymmetric: rescuing stream 3 restores 15.86% more KL than stream 1 — differentiated, directional info."
+    ]},
+    { "title": "It's a diffusion step bolted onto a residual block", "points": [
+      "Doubly-stochastic mixing = discrete Markov/diffusion operator over the n-stream graph.",
+      "The residual is an Euler step of an ODE [[chen2018node]] doing iterative inference [[jastrzebski2017]].",
+      "Sinkhorn–Knopp is the same machinery as differentiable optimal transport [[cuturi2013]] / Gumbel-Sinkhorn [[mena2018]]."
+    ]},
+    { "title": "The measurement gap is the headline", "points": [
+      "Every spectral claim traces to one closed-weights DeepSeek paper via scalar row/column-sum gain proxies.",
+      "No published eigenvalue or SVD spectrum of a single trained H^res.",
+      "Highest-value, lowest-cost open experiment in the whole thread."
+    ]}
+  ],
+
+  "next_steps": [
+    "Clone lucidrains/hyper-connections, confirm the mHC path runs, train one small n=4 LM with periodic H^res checkpointing.",
+    "Run the missing-spectra measurement (D1) + its untrained-vs-trained control (D8) first — highest value, lowest cost.",
+    "Lock a matched Pre-LN baseline early so the effective-rank and oversmoothing tests are apples-to-apples.",
+    "Branch into the manifold ablation (D4) and oversmoothing sweep (D5) reusing the same backbone.",
+    "Report framing: foreground enforced-envelope vs emergent-point; flag every DeepSeek headline number as single-source self-reported."
+  ],
+
+  "ideas": [
+    { "id": "D1", "question": "What are the eigenvalue/SVD spectra of trained H^res across layers and training steps?", "hypothesis": "They drift from high-entropy near-uniform (early) toward sparser near-permutation / near-identity (late), with σ_min staying well below 1.", "experiment": "Train a small mHC LM (lucidrains, n=4, ~100–300M), dump every H^res per checkpoint, plot eigenvalues / SVD / entropy vs (layer, step).", "why": "THE named open measurement — converts the entire geometric thesis from inference to data." },
+    { "id": "D2", "question": "Does the doubly-stochastic entropy of learned mixers move toward permutations or toward uniform over training?", "hypothesis": "Entropy decreases (toward routing) where streams specialize, increases where they pool.", "experiment": "Per-matrix entropy (distance to nearest permutation vs to uniform 1/n) for each checkpoint; correlate with the layer's downstream contribution.", "why": "Pinpoints the single free axis Birkhoff–von Neumann leaves open; near-free alongside D1." },
+    { "id": "D3", "question": "Does mHC actually widen residual-stream effective rank vs Pre-LN?", "hypothesis": "Effective rank stays higher across depth and degrades more slowly than baseline.", "experiment": "Matched mHC vs Pre-LN small LMs; measure per-layer stable rank / singular-value entropy of activations over depth.", "why": "Tests the core motivating claim directly instead of via proxy cosine similarity." },
+    { "id": "D4", "question": "Is doubly-stochastic the best constraint, or do orthogonal / spectral-sphere / orthostochastic / unconstrained win?", "hypothesis": "Orthogonal matches stability with better gradient spectra; unconstrained diverges; doubly-stochastic best per-FLOP.", "experiment": "Same backbone, swap only the constraint (Sinkhorn vs Cayley vs spectral-sphere vs go-mHC vs none); compare composite gain, loss, downstream.", "why": "Resolves the live JPmHC / spectral-sphere debate at solo-researcher scale." },
+    { "id": "D5", "question": "Can the latent consensus-collapse (oversmoothing) mode be triggered?", "hypothesis": "Shrinking residual-injection magnitude or stacking depth drives stream-to-stream CKA → 1.", "experiment": "Sweep residual-injection scale α↓ and depth↑ on a small mHC LM; track inter-stream CKA and effective rank toward the Perron mode.", "why": "Confirms or kills the paper's uncharacterized failure mode; tests Scholkemper's 'residual injection prevents collapse' mechanistically." },
+    { "id": "D6", "question": "Is the CKA checkerboard + non-interchangeable (1,3) asymmetry robust, and is it visible in H^res itself?", "hypothesis": "The asymmetry shows up as directional off-diagonal mass in the learned mixers, not just in carried content.", "experiment": "Reproduce Ablate-and-Rescue's CKA + ablate-rescue on the D1 model; cross-reference rescue asymmetry against off-diagonal structure of the H^res rows/columns.", "why": "Links the one existing causal result to the actual matrices — 'streams differ' becomes 'here's the operator that makes them differ.'" },
+    { "id": "D7", "question": "How few Sinkhorn iterations preserve the spectral structure, and does the approximation gap accumulate with depth?", "hypothesis": "Far fewer than 20 suffice (per mHC-lite); residual double-stochasticity error grows with depth.", "experiment": "Sweep t_max ∈ {1,2,5,10,20} and exact-Birkhoff; measure per-layer deviation of the composite from doubly-stochastic and downstream loss.", "why": "Isolates how much of the structure (and the 6.7% overhead) is actually load-bearing." },
+    { "id": "D8", "question": "How much of the observed spectrum is constraint-forced vs training-selected?", "hypothesis": "Untrained Sinkhorn mixers are high-entropy / near-uniform; training meaningfully moves them.", "experiment": "Compare H^res spectra / entropy at init vs converged for the D1 model — a near-zero-cost control.", "why": "Without it, any 'emergent structure' claim is unfalsifiable; cheapest experiment, highest framing payoff." },
+    { "id": "Q1", "question": "Does the spectrum vary systematically with depth — early layers route, late layers average, mirroring the curse-of-depth Jacobian→identity trend [[sun2025curse]]?", "why": "Would connect mHC's structure to the known depth pathology it claims to fix." },
+    { "id": "Q2", "question": "What drives the asymmetric, non-interchangeable stream roles — off-diagonal structure of H^res, or purely what the streams carry?", "why": "Determines whether stream specialization is an operator property or a content property." }
+  ],
+
+  "report_quality": {
+    "verdict": "HIGH",
+    "verdict_note": "Core paper + 7 follow-ups verified verbatim on arXiv; math correct; but all headline numbers single-source, self-reported, closed-weights DeepSeek at ≤27B, and no trained-weight spectra exist.",
+    "axes": [
+      { "name": "Freshness", "score": 5, "note": "Core + 7 follow-ups all 2025–2026, current to the day." },
+      { "name": "Accuracy", "score": 5, "note": "Every checkable quantitative claim matches the source verbatim (3000×→1.6×, 27B/262B tok, 6.7%@n=4, tmax=20)." },
+      { "name": "Reproducibility", "score": 3, "note": "One open repro (lucidrains) + one open model (Ablate-and-Rescue 781M); core 27B is closed-weights." },
+      { "name": "Bias/Completeness", "score": 4, "note": "Good adversarial breadth, but heavy reliance on DeepSeek self-reported numbers; no 3rd-party 27B replication." },
+      { "name": "Causal rigor", "score": 4, "note": "Ablate-and-Rescue gives genuine interventions; CKA≠interchangeability correctly flagged." },
+      { "name": "Scale-transfer", "score": 3, "note": "Tops out at 27B ≪ frontier; 'effective at scale' is honest-flagged extrapolation." },
+      { "name": "Falsifiability", "score": 4, "note": "Clear open measurement named: empirical eigenvalue/SVD spectra of trained H^res." }
+    ]
+  }
+};
+const PMAP = {}; PAPERS.forEach(p => PMAP[p.id] = p);
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+
+/* ---------- citation chips + popovers ---------- */
+function citeify(text){
+  return esc(text).replace(/\[\[([a-zA-Z0-9_\-]+)\]\]/g, (m, id) => {
+    const p = PMAP[id];
+    if(!p) return id;
+    return `<a class="cite" href="${esc(p.url)}" target="_blank" rel="noopener" data-cite="${id}">${id}</a>`;
+  });
+}
+const pop = document.getElementById('pop');
+let popTimer = null;
+function popHTML(p){
+  return `<div class="pt">${esc(p.title)}</div>`+
+    `<div class="pm">${esc(p.authors)} · ${p.year} · ${esc(p.venue)} · ${p.citation_count} cites</div>`+
+    `<div class="pc">${esc(p.key_claim)}</div>`+
+    `<a class="cite" href="${esc(p.url)}" target="_blank" rel="noopener">open paper →</a>`;
+}
+function showPop(p, x, y){
+  clearTimeout(popTimer);
+  pop.innerHTML = popHTML(p);
+  pop.style.display = 'block';
+  const w = pop.offsetWidth, h = pop.offsetHeight;
+  let px = x + 12, py = y + 12;
+  if(px + w > window.innerWidth - 8) px = x - w - 12;
+  if(py + h > window.innerHeight - 8) py = y - h - 12;
+  pop.style.left = Math.max(8, px) + 'px';
+  pop.style.top = Math.max(8, py) + 'px';
+}
+function hidePopSoon(){ popTimer = setTimeout(() => pop.style.display = 'none', 280); }
+pop.addEventListener('mouseenter', () => clearTimeout(popTimer));
+pop.addEventListener('mouseleave', hidePopSoon);
+document.addEventListener('mouseover', e => {
+  const c = e.target.closest('[data-cite]');
+  if(c){ const p = PMAP[c.getAttribute('data-cite')]; if(p) showPop(p, e.clientX, e.clientY); }
+});
+document.addEventListener('mouseout', e => {
+  if(e.target.closest('[data-cite]')) hidePopSoon();
+});
+
+/* ---------- header ---------- */
+document.getElementById('report-title').textContent = CONTENT.title;
+document.getElementById('report-question').textContent = CONTENT.question;
+const nP = PAPERS.length, nE = CONTENT.stats ? CONTENT.stats.edges : 0;
+document.getElementById('report-stats').innerHTML = `<b>${nP}</b> papers · <b>${nE}</b> citation links`;
+document.getElementById('foot-stats').textContent = `${nP} papers · ${nE} citation links · ${CONTENT.date}`;
+
+/* ---------- nav ---------- */
+const SECTIONS = [
+  ['tldr','TLDR'],['insights','Insights'],['graph','Graph'],['timeline','Timeline'],
+  ['next','Next steps'],['ideas','Idea deck'],['quality','Quality'],['citations','Citations']
+];
+const navinner = document.getElementById('navinner');
+const prevA = document.createElement('button'); prevA.className='navarrow'; prevA.textContent='‹';
+const nextA = document.createElement('button'); nextA.className='navarrow'; nextA.textContent='›';
+navinner.appendChild(prevA);
+SECTIONS.forEach(([id,label], i) => {
+  const a = document.createElement('a');
+  a.className = 'pill'; a.href = '#'+id; a.dataset.target = id;
+  a.textContent = String(i+1).padStart(2,'0') + ' ' + label;
+  navinner.appendChild(a);
+});
+navinner.appendChild(nextA);
+const pills = [...navinner.querySelectorAll('.pill')];
+let activeIdx = 0;
+function setActive(i){
+  activeIdx = Math.max(0, Math.min(SECTIONS.length-1, i));
+  pills.forEach((p,j) => p.classList.toggle('active', j===activeIdx));
+  const ap = pills[activeIdx];
+  if(ap) ap.scrollIntoView({inline:'center', block:'nearest', behavior:'smooth'});
+}
+prevA.onclick = () => { const t = SECTIONS[Math.max(0,activeIdx-1)][0]; document.getElementById(t).scrollIntoView({behavior:'smooth'}); };
+nextA.onclick = () => { const t = SECTIONS[Math.min(SECTIONS.length-1,activeIdx+1)][0]; document.getElementById(t).scrollIntoView({behavior:'smooth'}); };
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting){ const i = SECTIONS.findIndex(s => s[0]===e.target.id); if(i>=0) setActive(i); } });
+}, { rootMargin: '-45% 0px -50% 0px', threshold: 0 });
+SECTIONS.forEach(([id]) => obs.observe(document.getElementById(id)));
+
+/* ---------- TLDR ---------- */
+const tldrList = document.getElementById('tldr-list');
+function renderPoint(txt){
+  let t = txt;
+  t = t.replace(/^SETTLED\b/,'<span class="tag settled">SETTLED</span>').replace(/^OPEN\b/,'<span class="tag open">OPEN</span>');
+  // the tag replace happens before citeify escapes; apply citeify to remaining
+  return t;
+}
+CONTENT.tldr.forEach(item => {
+  const li = document.createElement('li');
+  if(typeof item === 'string'){
+    li.innerHTML = citeify(item);
+  } else {
+    let head = citeify(item.point);
+    head = head.replace(/^SETTLED\b/,'<span class="tag settled">SETTLED</span>').replace(/^OPEN\b/,'<span class="tag open">OPEN</span>');
+    li.innerHTML = head;
+    if(item.sub && item.sub.length){
+      const ul = document.createElement('ul'); ul.className = 'sub';
+      item.sub.forEach(s => { const sli = document.createElement('li'); sli.innerHTML = citeify(s); ul.appendChild(sli); });
+      li.appendChild(ul);
+    }
+  }
+  tldrList.appendChild(li);
+});
+
+/* ---------- insights carousel ---------- */
+const INS = CONTENT.insights; let insI = 0;
+const insBody = document.getElementById('ins-body'), insDots = document.getElementById('ins-dots');
+function renderIns(){
+  const x = INS[insI];
+  insBody.innerHTML = `<h3>${esc(x.title)}</h3><ul class="log">` +
+    x.points.map(p => `<li>${citeify(p)}</li>`).join('') + `</ul>`;
+  [...insDots.children].forEach((d,j) => d.classList.toggle('on', j===insI));
+}
+INS.forEach((_,j) => { const b = document.createElement('button'); b.className='dot'; b.onclick=()=>{insI=j;renderIns();}; insDots.appendChild(b); });
+document.getElementById('ins-prev').onclick = () => { insI = (insI-1+INS.length)%INS.length; renderIns(); };
+document.getElementById('ins-next').onclick = () => { insI = (insI+1)%INS.length; renderIns(); };
+renderIns();
+
+/* ---------- next steps ---------- */
+const nextList = document.getElementById('next-list');
+CONTENT.next_steps.forEach(s => {
+  const li = document.createElement('li');
+  li.innerHTML = `<span class="box"></span><span>${citeify(s)}</span>`;
+  nextList.appendChild(li);
+});
+
+/* ---------- idea deck ---------- */
+const IDEAS = CONTENT.ideas; let deckI = 0;
+const deckGrid = document.getElementById('deck-grid');
+function cell(lbl, val){
+  return `<div class="cell"><div class="lbl">${lbl}</div><div class="val">${val ? citeify(val) : '—'}</div></div>`;
+}
+function renderDeck(){
+  const x = IDEAS[deckI];
+  deckGrid.innerHTML = cell('Research question', x.question) + cell('Hypothesis', x.hypothesis) +
+    cell('Experiment', x.experiment) + cell('Why', x.why);
+}
+document.getElementById('deck-shuffle').onclick = () => {
+  let n; do { n = Math.floor(Math.random()*IDEAS.length); } while(n===deckI && IDEAS.length>1);
+  deckI = n; renderDeck();
+};
+renderDeck();
+
+/* ---------- quality bars ---------- */
+const qBars = document.getElementById('quality-bars');
+CONTENT.report_quality.axes.forEach(a => {
+  const wrap = document.createElement('div'); wrap.className = 'qrowwrap';
+  wrap.innerHTML =
+    `<div class="qrow"><div class="qname">${esc(a.name)}</div>`+
+    `<div class="qtrack"><div class="qfill" style="width:${(a.score/5*100)}%"></div></div>`+
+    `<div class="qscore">${a.score}/5</div></div>`+
+    `<div class="qnote">${esc(a.note)}</div>`;
+  qBars.appendChild(wrap);
+});
+
+/* ---------- citations accordions ---------- */
+const ANGLE_NAME = {A:'Architecture lineage', B:'Spectral / manifold', C:'Empirical / interp', D:'Dynamics / theory'};
+const citeListEl = document.getElementById('cite-list');
+[...PAPERS].sort((a,b) => b.citation_count - a.citation_count).forEach(p => {
+  const d = document.createElement('details'); d.className = 'acc';
+  d.innerHTML =
+    `<summary><span class="atitle">${esc(p.title)}</span>`+
+    `<span class="ameta">${esc(p.authors.split(',')[0])} · ${p.year} · ${p.citation_count} cites</span></summary>`+
+    `<div class="abody">`+
+    `<div><span class="k">claim</span>${esc(p.key_claim)}</div>`+
+    `<div><span class="k">venue</span>${esc(p.venue)}</div>`+
+    `<div><span class="k">angle</span>${p.angle} — ${ANGLE_NAME[p.angle]||''}</div>`+
+    `<div><span class="k">cites</span><span class="mono">${p.citation_count}</span></div>`+
+    `<div><a class="cite" href="${esc(p.url)}" target="_blank" rel="noopener">open paper →</a></div>`+
+    `</div>`;
+  citeListEl.appendChild(d);
+});
+
+/* ---------- citation size scale ---------- */
+const csize = d3.scaleSqrt().domain([0, d3.max(PAPERS,p=>p.citation_count)||1]).range([3, 11]);
+
+/* ====================================================================
+   GRAPH ON WORLD MAP
+   ==================================================================== */
+(function(){
+  const svg = d3.select('#map-svg');
+  const W = svg.node().clientWidth || 1000, H = 520;
+  svg.attr('viewBox', `0 0 ${W} ${H}`);
+  const root = svg.append('g');
+  const proj = d3.geoNaturalEarth1();
+
+  // edges A cites B
+  const edges = [];
+  PAPERS.forEach(p => (p.cites||[]).forEach(t => { if(PMAP[t]) edges.push({s:p, t:PMAP[t]}); }));
+  const maxQ = d3.max(edges, e => (e.s.citation_count||0)+(e.t.citation_count||0)) || 1;
+  const ew = d3.scaleLinear().domain([0,maxQ]).range([0.4, 3.2]);
+
+  // arrow marker
+  const defs = svg.append('defs');
+  defs.append('marker').attr('id','arr').attr('viewBox','0 -5 10 10').attr('refX',9).attr('refY',0)
+    .attr('markerWidth',5).attr('markerHeight',5).attr('orient','auto')
+    .append('path').attr('d','M0,-5L10,0L0,5').attr('fill','var(--muted)');
+
+  function render(world){
+    // fit projection to dense cluster (N. America / Atlantic / Europe) initially
+    proj.fitExtent([[10,10],[W-10,H-10]], {type:'MultiPoint', coordinates:[[-125,28],[40,58]]});
+    const path = d3.geoPath(proj);
+
+    if(world){
+      root.append('path').attr('d', path(world))
+        .attr('fill','#bccdb0').attr('stroke','var(--ink)').attr('stroke-width',0.8).attr('stroke-opacity',0.85);
+    }
+    root.append('path').attr('d', path(d3.geoGraticule10()))
+      .attr('fill','none').attr('stroke','var(--border)').attr('stroke-width',0.4).attr('stroke-opacity',0.5);
+
+    // node positions = institution lat/lon, jittered for collisions
+    const jit = {};
+    const nodes = PAPERS.filter(p => p.lat!=null && p.lon!=null).map(p => {
+      const xy = proj([p.lon, p.lat]); const k = p.lat+','+p.lon;
+      jit[k] = (jit[k]||0)+1; const n = jit[k], ang = n*1.3;
+      return { p, x: xy[0] + (n>1?Math.cos(ang)*(7+n*2):0), y: xy[1] + (n>1?Math.sin(ang)*(7+n*2):0) };
+    });
+    const npos = {}; nodes.forEach(d => npos[d.p.id] = d);
+
+    const eg = root.append('g');
+    eg.selectAll('line').data(edges.filter(e => npos[e.s.id] && npos[e.t.id])).join('line')
+      .attr('x1', e => npos[e.s.id].x).attr('y1', e => npos[e.s.id].y)
+      .attr('x2', e => npos[e.t.id].x).attr('y2', e => npos[e.t.id].y)
+      .attr('stroke','var(--muted)').attr('stroke-opacity',0.4)
+      .attr('stroke-width', e => ew((e.s.citation_count||0)+(e.t.citation_count||0)))
+      .attr('marker-end','url(#arr)');
+
+    const ng = root.append('g');
+    ng.selectAll('circle').data(nodes).join('circle')
+      .attr('cx', d => d.x).attr('cy', d => d.y)
+      .attr('r', d => csize(d.p.citation_count))
+      .attr('fill','var(--sage)').attr('stroke','var(--ink)').attr('stroke-width',1.3)
+      .style('cursor','pointer')
+      .on('mouseover', (e,d) => showPop(d.p, e.clientX, e.clientY))
+      .on('mouseout', hidePopSoon)
+      .on('dblclick', (e,d) => {
+        e.stopPropagation();
+        const k = 3;
+        svg.transition().duration(600).call(zoom.transform,
+          d3.zoomIdentity.translate(W/2,H/2).scale(k).translate(-d.x,-d.y));
+      });
+  }
+
+  const zoom = d3.zoom().scaleExtent([0.6, 8]).on('zoom', e => root.attr('transform', e.transform));
+  svg.call(zoom).on('dblclick.zoom', null);
+
+  d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+    .then(t => render(topojson.feature(t, t.objects.countries)))
+    .catch(() => render(null));
+})();
+
+/* ====================================================================
+   3D TIMELINE — orbitable pillars
+   ==================================================================== */
+(function(){
+  const svg = d3.select('#time-svg');
+  const W = svg.node().clientWidth || 1000, H = 560;
+  svg.attr('viewBox', `0 0 ${W} ${H}`);
+  const g = svg.append('g');
+
+  const years = d3.extent(PAPERS, p => p.year);
+  const order = ['A','B','C','D'];
+  const xS = d3.scaleLinear().domain(years).range([-300, 300]);     // X = time
+  const yS = d3.scaleLinear().domain([0, d3.max(PAPERS,p=>p.citation_count)]).range([0, 280]); // Y = citations
+  const zS = a => (order.indexOf(a) - 1.5) * 90;                    // Z = angle lane
+
+  const nodes = PAPERS.map(p => ({ p, X: xS(p.year), Y: yS(p.citation_count), Z: zS(p.angle) }));
+  const npos = {}; nodes.forEach(n => npos[n.p.id] = n);
+  const edges = [];
+  PAPERS.forEach(p => (p.cites||[]).forEach(t => { if(npos[t]) edges.push({s:npos[p.id], t:npos[t]}); }));
+  const maxQ = d3.max(edges, e => (e.s.p.citation_count)+(e.t.p.citation_count)) || 1;
+  const ew = d3.scaleLinear().domain([0,maxQ]).range([0.4, 2.6]);
+
+  let yaw = 0.62, pitch = 0.45;
+  const cx = W/2, cy = H/2 + 60, scale = 0.62;
+  function project(X, Y, Z){
+    // rotate around Y axis (yaw) then tilt (pitch); Y is vertical (up = negative screen y)
+    const cosY = Math.cos(yaw), sinY = Math.sin(yaw);
+    let x1 = X*cosY - Z*sinY;
+    let z1 = X*sinY + Z*cosY;
+    const cosP = Math.cos(pitch), sinP = Math.sin(pitch);
+    let y1 = Y*cosP - z1*sinP;
+    let depth = Y*sinP + z1*cosP;
+    return [cx + x1*scale, cy - y1*scale, depth];
+  }
+
+  function draw(){
+    g.selectAll('*').remove();
+
+    // floor axis lines per lane
+    order.forEach(a => {
+      const z = zS(a);
+      const p0 = project(-300, 0, z), p1 = project(300, 0, z);
+      g.append('line').attr('x1',p0[0]).attr('y1',p0[1]).attr('x2',p1[0]).attr('y2',p1[1])
+        .attr('stroke','var(--border)').attr('stroke-width',0.8).attr('stroke-dasharray','3 4').attr('stroke-opacity',0.7);
+      const lbl = project(-330, 0, z);
+      g.append('text').attr('x',lbl[0]).attr('y',lbl[1]).attr('fill','var(--muted)')
+        .attr('font-family','var(--mono)').attr('font-size',11).attr('text-anchor','middle').text(a);
+    });
+    // vertical Y axis at origin
+    const yo = project(-300,0,zS('A')), yt = project(-300, 280, zS('A'));
+    g.append('line').attr('x1',yo[0]).attr('y1',yo[1]).attr('x2',yt[0]).attr('y2',yt[1])
+      .attr('stroke','var(--border)').attr('stroke-width',0.8).attr('stroke-opacity',0.6);
+
+    // edges in 3-space
+    const eg = g.append('g');
+    edges.forEach(e => {
+      const a = project(e.s.X, e.s.Y, e.s.Z), b = project(e.t.X, e.t.Y, e.t.Z);
+      eg.append('line').attr('x1',a[0]).attr('y1',a[1]).attr('x2',b[0]).attr('y2',b[1])
+        .attr('stroke','var(--muted)').attr('stroke-opacity',0.28)
+        .attr('stroke-width', ew(e.s.p.citation_count + e.t.p.citation_count));
+    });
+
+    // pillars + nodes, painter's-sorted by depth
+    const drawn = nodes.map(n => {
+      const top = project(n.X, n.Y, n.Z), base = project(n.X, 0, n.Z);
+      return { n, top, base, depth: top[2] };
+    }).sort((a,b) => a.depth - b.depth);
+
+    const pg = g.append('g');
+    drawn.forEach(d => {
+      pg.append('line').attr('x1',d.base[0]).attr('y1',d.base[1]).attr('x2',d.top[0]).attr('y2',d.top[1])
+        .attr('stroke','var(--border)').attr('stroke-width',1.4).attr('stroke-opacity',0.65);
+      pg.append('circle').attr('cx',d.top[0]).attr('cy',d.top[1]).attr('r',csize(d.n.p.citation_count))
+        .attr('fill','var(--sage)').attr('stroke','var(--ink)').attr('stroke-width',1.2).style('cursor','pointer')
+        .on('mouseover',(e)=>showPop(d.n.p, e.clientX, e.clientY))
+        .on('mouseout',hidePopSoon)
+        .on('click',()=>window.open(d.n.p.url,'_blank','noopener'));
+    });
+  }
+  draw();
+
+  // drag to orbit
+  let dragging = false, lx = 0, ly = 0;
+  function down(e){ dragging = true; const pt = e.touches?e.touches[0]:e; lx = pt.clientX; ly = pt.clientY; }
+  function move(e){
+    if(!dragging) return;
+    const pt = e.touches?e.touches[0]:e;
+    yaw += (pt.clientX - lx) * 0.01;
+    pitch += (pt.clientY - ly) * 0.006;
+    pitch = Math.max(-0.05, Math.min(1.2, pitch));
+    lx = pt.clientX; ly = pt.clientY;
+    draw();
+    if(e.cancelable) e.preventDefault();
+  }
+  function up(){ dragging = false; }
+  const el = svg.node();
+  el.addEventListener('mousedown', down); window.addEventListener('mousemove', move); window.addEventListener('mouseup', up);
+  el.addEventListener('touchstart', down, {passive:true}); el.addEventListener('touchmove', move, {passive:false}); el.addEventListener('touchend', up);
+})();
+</script>
+</body>
+</html>
