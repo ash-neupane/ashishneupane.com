@@ -24,15 +24,6 @@ export default function ResearchIndex() {
 
   return (
     <div className="space-y-8">
-      <header className="space-y-2">
-        <h1 className="text-3xl font-bold tracking-tight text-ink">
-          Research Reading
-        </h1>
-        <p className="text-muted">
-          Open questions I chased down, each one a thread of papers.
-        </p>
-      </header>
-
       <ul className="space-y-5">
         {RESEARCH.map((thread) => (
           <li key={thread.slug}>

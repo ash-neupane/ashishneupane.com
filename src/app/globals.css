@@ -1,22 +1,23 @@
 @import "tailwindcss";
 
 /*
- * Sage "paper procurement" palette.
- * Cream paper on a sage desk, bottle-green ink, monospaced figures,
- * hard offset shadows (no blur). LIGHT ONLY. NO GRADIENTS anywhere.
+ * Sage "paper procurement" palette (v2 — single-tone, no white/cream).
+ * ONE background tone everywhere = sage. Light surfaces are LIGHTER SAGE.
+ * Bottle-green ink, hard offset shadows (no blur). LIGHT ONLY. NO GRADIENTS.
  */
 :root {
-  --background: #a8ba9a; /* sage desk */
-  --foreground: #092b1f; /* bottle-green ink */
-  --muted: #5e6e5a;
-  --accent: #092b1f;
-  --surface: #f3f1e7; /* cream card */
-  --paper: #faf8ef; /* brighter sheet */
-  --ink: #092b1f;
-  --border: #d8d2be;
+  --background: #a8ba9a; /* single sage tone — page, header, footer */
+  --foreground: #0c2a1e; /* bottle-green ink */
+  --muted: #4d5d46;
+  --accent: #0c2a1e;
+  --surface: #c8d5bc; /* cards */
+  --paper: #d5e0ca; /* lightest sage */
+  --ink: #0c2a1e;
+  --on-ink: #d5e0ca; /* text on a bottle-green fill — light sage, never white */
+  --border: #8fa17c;
 
-  --shadow-paper: 2px 3px 0 rgba(9, 43, 31, 0.18);
-  --shadow-pop: 3px 5px 0 rgba(9, 43, 31, 0.22);
+  --shadow-paper: 2px 3px 0 rgba(12, 42, 30, 0.16);
+  --shadow-pop: 3px 5px 0 rgba(12, 42, 30, 0.2);
 
   --font-mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Monaco,
     "Cascadia Mono", "Roboto Mono", "Courier New", monospace;
@@ -32,6 +33,7 @@
   --color-surface: var(--surface);
   --color-paper: var(--paper);
   --color-ink: var(--ink);
+  --color-on-ink: var(--on-ink);
   --color-border: var(--border);
 
   --shadow-paper: var(--shadow-paper);
@@ -50,5 +52,5 @@ body {
 
 ::selection {
   background: var(--accent);
-  color: var(--surface);
+  color: var(--on-ink);
 }

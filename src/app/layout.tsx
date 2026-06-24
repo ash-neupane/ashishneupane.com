@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Nav } from "@/components/nav";
-import { Footer } from "@/components/footer";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -26,7 +25,6 @@ export default function RootLayout({
       <body className="antialiased">
         <Nav />
         <main className="mx-auto max-w-3xl px-6 py-16">{children}</main>
-        <Footer />
       </body>
     </html>
   );

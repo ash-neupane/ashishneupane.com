@@ -18,7 +18,7 @@ Personal portfolio site for Ashish Neupane — a Next.js (App Router) static sit
 
 ## Code style
 
-- Web (React/TS) style guide: [docs/patterns/web-style.md](docs/patterns/web-style.md)
+- Web (Next.js/TS) style guide: [docs/patterns/web-style.md](docs/patterns/web-style.md)
 - **No `useEffect` in pages/components.** Derive in render, put user-action logic in handlers. Enforced by ESLint (`no-restricted-syntax` + import ban in `eslint.config.mjs`).
 
 ## Docs
