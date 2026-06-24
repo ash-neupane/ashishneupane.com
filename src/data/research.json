@@ -1,5 +1,14 @@
 [
   {
+    "slug": "mhc-residual-structures",
+    "title": "What structure lives inside mHC's residual-mixing matrices?",
+    "question": "What kind of structures emerge in the linear transformations added by Manifold Constrained Hyper Connections (mHC) used in modern language models to solve the information bottleneck problem in the residual stream? Studied from geometric, eigenvalue, and other perspectives.",
+    "date": "2026-06-24",
+    "papers": 33,
+    "edges": 149,
+    "reportPath": "/research/mhc-residual-structures/report.html"
+  },
+  {
     "slug": "bpe-vs-char-tokenization",
     "title": "Why was BPE tokenization crucial?",
     "question": "We know BPE was crucial to get language models to learn anything. Why? It's all compression anyway \u2014 why couldn't character-level tokens reach the same level? Is char-level provably complete (would catch up with more training, just inefficient) or is there an unhobbling we gain from subword tokenization?",
