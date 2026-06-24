@@ -25,7 +25,7 @@
   --shadow-button:2px 3px 0 rgba(var(--shadow-rgb),0.22);
   --shadow-pop:3px 5px 0 rgba(var(--shadow-rgb),0.20);
   --s1:2px;--s2:4px;--s3:7px;--s4:10px;--s5:14px;--s6:20px;--s7:28px;--s8:40px;
-  --content-max:1180px;color-scheme:light;
+  --content-max:1180px;--content-width:1100px;color-scheme:light;
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -37,11 +37,11 @@ a:hover{text-decoration:underline}
 .cite{font-family:var(--mono);font-size:.84em;font-weight:600;color:var(--high);
   border-bottom:1.5px dashed var(--high);padding:0 1px;white-space:nowrap}
 .cite:hover{background:rgba(46,111,71,.12);text-decoration:none}
-.wrap{max-width:var(--content-max);margin-left:0;padding:0 32px var(--s8) 32px}
+.wrap{max-width:var(--content-width);margin:0 auto;padding:0 24px var(--s8)}
 
 /* header */
-header{background:var(--sage);padding:var(--s8) 32px var(--s7) 32px}
-header .inner{max-width:var(--content-max);margin-left:0}
+header{background:var(--sage);padding:var(--s8) 0 var(--s7)}
+header .inner{max-width:var(--content-width);margin:0 auto;padding:0 24px}
 .kicker{font-family:var(--mono);letter-spacing:.18em;text-transform:uppercase;
   color:var(--text2);font-size:11px;font-weight:700}
 h1{font-size:30px;line-height:1.22;margin:var(--s4) 0 var(--s5);max-width:920px;color:var(--bottle)}
@@ -59,8 +59,8 @@ h1{font-size:30px;line-height:1.22;margin:var(--s4) 0 var(--s5);max-width:920px;
 nav.snav{position:sticky;top:0;z-index:60;background:var(--sage);
   border-top:2px solid var(--bottle);border-bottom:2px solid var(--bottle);
   box-shadow:var(--shadow-paper)}
-nav.snav .row{max-width:var(--content-max);margin-left:0;display:flex;align-items:center;
-  gap:var(--s2);padding:var(--s3) 32px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+nav.snav .row{max-width:var(--content-width);margin:0 auto;display:flex;align-items:center;
+  gap:var(--s2);padding:var(--s3) 24px;overflow-x:auto;-webkit-overflow-scrolling:touch}
 nav.snav .arrow{flex:0 0 auto;width:30px;height:30px;border:1.5px solid var(--bottle);
   background:var(--surface);color:var(--bottle);border-radius:var(--r-sm);cursor:pointer;
   font-family:var(--mono);font-size:15px;line-height:1;display:grid;place-items:center;
@@ -79,7 +79,7 @@ nav.snav .pill.on .num{color:var(--sage)}
 
 /* sections */
 main{background:var(--sage)}
-section{max-width:var(--content-max);margin-left:0;padding:var(--s8) 32px;scroll-margin-top:64px}
+section{max-width:var(--content-width);margin:0 auto;padding:var(--s8) 24px;scroll-margin-top:64px}
 .shead{display:flex;align-items:baseline;gap:var(--s4);margin-bottom:var(--s2)}
 .shead .n{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--high)}
 h2{font-size:22px;margin:0;color:var(--bottle)}
@@ -217,7 +217,7 @@ ul.check .box{flex:0 0 auto;width:22px;height:22px;border:2px solid var(--bottle
 
 @media(max-width:680px){
   h1{font-size:23px}
-  section{padding:var(--s7) 32px}
+  section{padding:var(--s7) 24px}
   .quad{grid-template-columns:1fr}
   .carousel .stage{padding:var(--s5)}
 }
@@ -485,7 +485,7 @@ document.addEventListener('mouseout',e=>{
     .domain([0,d3.max(links,edgeQual)||1]).range([0.5,4]);
   const link=gLink.selectAll('line').data(links).join('line')
     .attr('stroke',NODE_STROKE)
-    .attr('stroke-width',d=>ewScale(edgeQual(d))).attr('stroke-opacity',.28)
+    .attr('stroke-width',d=>ewScale(edgeQual(d))).attr('stroke-opacity',.55)
     .attr('marker-end','url(#arr-edge)');
 
   const node=gNode.selectAll('g').data(nodes).join('g').style('cursor','pointer');
@@ -540,7 +540,7 @@ document.addEventListener('mouseout',e=>{
     })
     .on('mousemove',function(e,d){ if(hc.classList.contains('show')) showCard(d,e.clientX,e.clientY); })
     .on('mouseleave',function(){
-      node.style('opacity',1); link.style('opacity',.28);
+      node.style('opacity',1); link.style('opacity',.55);
       scheduleHideCard();
     })
     .on('dblclick',function(e,d){
@@ -686,7 +686,7 @@ document.addEventListener('mouseout',e=>{
       .attr('x1',d=>itById[d.a].top.sx).attr('y1',d=>itById[d.a].top.sy)
       .attr('x2',d=>itById[d.b].top.sx).attr('y2',d=>itById[d.b].top.sy)
       .attr('stroke',NODE_STROKE).attr('stroke-width',d=>tEwScale(tEdgeQual(d)))
-      .attr('stroke-opacity',.16);
+      .attr('stroke-opacity',.5);
 
     // ----- pillars + nodes, painter's order by camera depth -----
     const ordered=[...items].sort((a,b)=>a.top.depth-b.top.depth);

@@ -26,6 +26,11 @@
 }
 
 @theme inline {
+  /* Shared content width — single source of truth for the centered container
+     (used by the <Container> primitive via max-w-content). Keep in sync with the
+     report's --content-width token. */
+  --container-content: 1100px;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);

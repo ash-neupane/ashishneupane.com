@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { PERSONAL } from "@/data/resume";
+import { Container } from "@/components/container";
 
 const LINKS = [
   { href: "/", label: "About Me" },
@@ -19,7 +20,7 @@ export function Nav() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background">
-      <nav className="flex items-center justify-between px-8 py-4">
+      <Container as="nav" className="flex items-center justify-between py-4">
         <Link
           href="/"
           className="text-lg font-semibold tracking-tight text-ink transition-colors hover:text-accent"
@@ -45,7 +46,7 @@ export function Nav() {
             );
           })}
         </ul>
-      </nav>
+      </Container>
     </header>
   );
 }

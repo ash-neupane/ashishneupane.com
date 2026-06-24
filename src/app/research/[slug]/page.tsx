@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { RESEARCH } from "@/data/research";
+import { Container } from "@/components/container";
 
 export function generateStaticParams() {
   return RESEARCH.map((thread) => ({ slug: thread.slug }));
@@ -17,16 +18,18 @@ export default async function ReportPage({
 
   return (
     <div>
-      <header className="flex items-center gap-4 border-b border-border bg-background px-8 py-3">
-        <Link
-          href="/research"
-          className="font-mono text-sm text-muted transition-colors hover:text-ink"
-        >
-          ← Research Reading
-        </Link>
-        <span className="truncate text-sm font-medium text-ink">
-          {thread.title}
-        </span>
+      <header className="border-b border-border bg-background">
+        <Container className="flex items-center gap-4 py-3">
+          <Link
+            href="/research"
+            className="font-mono text-sm text-muted transition-colors hover:text-ink"
+          >
+            ← Research Reading
+          </Link>
+          <span className="truncate text-sm font-medium text-ink">
+            {thread.title}
+          </span>
+        </Container>
       </header>
       <iframe
         src={thread.reportPath}

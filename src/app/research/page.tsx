@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { RESEARCH } from "@/data/research";
+import { Container } from "@/components/container";
 
 function formatStats(papers: number | null, edges: number | null) {
   const parts: string[] = [];
@@ -11,16 +12,16 @@ function formatStats(papers: number | null, edges: number | null) {
 export default function ResearchIndex() {
   if (RESEARCH.length === 0) {
     return (
-      <div className="max-w-3xl px-8 py-16 space-y-6">
+      <Container className="py-16">
         <p className="rounded-[3px] border border-border bg-surface p-8 text-muted shadow-[var(--shadow-paper)]">
           No reports yet. Check back soon.
         </p>
-      </div>
+      </Container>
     );
   }
 
   return (
-    <div className="max-w-3xl px-8 py-16">
+    <Container className="py-16">
       <ul className="space-y-5">
         {RESEARCH.map((thread) => (
           <li key={thread.slug}>
@@ -43,6 +44,6 @@ export default function ResearchIndex() {
           </li>
         ))}
       </ul>
-    </div>
+    </Container>
   );
 }

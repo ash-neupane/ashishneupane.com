@@ -39,6 +39,23 @@ Components are Server Components by default. Add `"use client"` **only** when a 
 | read static content | import it from `src/data/*` at the top of the file |
 | run once at app load | do it at module scope |
 
+## Layout & design values — tokens + primitives, never magic numbers
+
+- **No repeated arbitrary values.** A one-off `class="max-w-[1100px]"` is fine *once*; the same
+  literal copied across files is a magic number with no source of truth. The moment a value is
+  shared, extract it.
+- **Shared dimensions are theme tokens.** Put them in `@theme` in `globals.css` (e.g.
+  `--container-content: 1100px` → use the generated `max-w-content` utility). Reference the
+  token, never the literal, at call sites.
+- **Shared layouts are components.** The centered page column lives in one `<Container>`
+  (`src/components/container.tsx`); the header, breadcrumb, pages, and the embedded report all
+  go through it so margins stay identical. Don't re-implement `mx-auto max-w-… px-…` per file.
+- **Colors/shadows/fonts** are the CSS-var tokens in `globals.css` (`--surface`, `--ink`,
+  `--shadow-paper`, …) surfaced through Tailwind theme colors — use `bg-surface`, `text-ink`,
+  never raw hexes in components.
+- Prefer Tailwind's built-in scale (`max-w-md`, `px-6`, `gap-5`) over arbitrary brackets; reach
+  for `[value]` only for genuinely one-off, unshared cases.
+
 ## Writing & content
 
 - **Crisp content.** Cut the fat. No redundant captions, subtitles, or scene-setting paragraphs — if the page is obviously a list of research threads, it doesn't need a header explaining that.
