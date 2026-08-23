@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Parameters vs. thinking tokens</title>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+<style>
+:root{
+  --sage:#a8ba9a; --surface:#c8d5bc; --raised:#d5e0ca; --ink:#0c2a1e; --bottle:#0c2a1e;
+  --text2:#2c4034; --muted:#4d5d46; --border:#8fa17c; --on-ink:#d5e0ca;
+  --background:var(--sage); --accent:var(--ink); --accent-text:var(--on-ink); --score:#2e6f47;
+  --angle-a:#2e6f47; --angle-b:#a9701b; --angle-c:#b23a2e; --angle-d:#6b4a6e;
+  --shadow-rgb:12,42,30;
+  --mono:ui-monospace,"SF Mono","SFMono-Regular",Menlo,Monaco,"Cascadia Mono","Roboto Mono","Courier New",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  --r-xs:2px; --r-sm:3px;
+  --shadow-paper:2px 3px 0 rgba(var(--shadow-rgb),0.16);
+  --shadow-button:2px 3px 0 rgba(var(--shadow-rgb),0.22);
+  --shadow-pop:3px 5px 0 rgba(var(--shadow-rgb),0.20);
+  --s1:2px;--s2:4px;--s3:7px;--s4:10px;--s5:14px;--s6:20px;--s7:28px;--s8:40px;
+  --content-width:1100px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--background);color:var(--ink);font-family:var(--sans);
+  font-size:15px;line-height:1.5;-webkit-text-size-adjust:100%}
+.wrap{max-width:var(--content-width);margin:0 auto;padding:0 24px}
+a{color:var(--ink)}
+h1{font-family:var(--sans);font-size:clamp(26px,4.4vw,42px);line-height:1.12;margin:0 0 var(--s5);
+  letter-spacing:-.02em;font-weight:700}
+h2{font-size:clamp(18px,2.6vw,23px);margin:0 0 var(--s5);letter-spacing:-.01em;font-weight:700}
+h3{font-size:16px;margin:0 0 var(--s4);font-weight:700}
+.mono{font-family:var(--mono)}
+
+header{padding:var(--s8) 0 var(--s6)}
+.qcard{background:var(--raised);border:1px solid var(--border);border-radius:var(--r-sm);
+  box-shadow:var(--shadow-paper);padding:var(--s5) var(--s6);color:var(--text2);font-size:14.5px}
+.statline{font-family:var(--mono);font-size:12.5px;color:var(--muted);margin-top:var(--s5);
+  letter-spacing:.02em}
+
+/* nav */
+.navbar{position:sticky;top:0;z-index:60;background:var(--sage);
+  border-bottom:1px solid var(--border);padding:var(--s3) 0}
+.navrow{display:flex;align-items:center;gap:var(--s3)}
+.pills{display:flex;gap:var(--s2);overflow-x:auto;scrollbar-width:none;flex:1;padding:2px 0}
+.pills::-webkit-scrollbar{display:none}
+.pill{flex:0 0 auto;font-family:var(--mono);font-size:11.5px;letter-spacing:.03em;
+  padding:5px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);
+  color:var(--text2);cursor:pointer;white-space:nowrap;
+  transition:background .28s ease,color .28s ease,box-shadow .28s ease,transform .28s ease}
+.pill:hover{background:var(--raised)}
+.pill.on{background:var(--ink);color:var(--on-ink);border-color:var(--ink);
+  box-shadow:var(--shadow-button);transform:translateY(-1px)}
+.pill .n{opacity:.55;margin-right:5px}
+.pill.on .n{opacity:.7}
+.arw{flex:0 0 auto;width:30px;height:28px;border:1px solid var(--border);background:var(--surface);
+  color:var(--ink);border-radius:var(--r-sm);cursor:pointer;font-size:14px;line-height:1;
+  display:flex;align-items:center;justify-content:center;font-family:var(--mono);
+  transition:background .2s ease,box-shadow .2s ease}
+.arw:hover{background:var(--raised);box-shadow:var(--shadow-button)}
+
+section{padding:var(--s8) 0 var(--s6);scroll-margin-top:56px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);
+  box-shadow:var(--shadow-paper);padding:var(--s6)}
+
+/* tldr */
+ul.log{list-style:none;margin:0;padding:0}
+ul.log>li{position:relative;padding-left:var(--s6);margin-bottom:var(--s4);font-size:15px}
+ul.log>li:before{content:"▪";position:absolute;left:2px;top:-1px;color:var(--score);font-size:13px}
+ul.log ul{list-style:none;margin:var(--s3) 0 0;padding:0;border-left:1px dashed var(--border);
+  margin-left:2px}
+ul.log ul li{position:relative;padding-left:var(--s5);margin-bottom:var(--s3);font-size:13.5px;
+  color:var(--text2)}
+ul.log ul li:before{content:"–";position:absolute;left:var(--s3);color:var(--muted)}
+
+/* cite chips */
+.cite{font-family:var(--mono);font-size:11px;padding:1px 5px;border:1px solid var(--border);
+  border-radius:var(--r-xs);background:var(--raised);color:var(--text2);text-decoration:none;
+  white-space:nowrap;display:inline-block;line-height:1.5;transition:background .18s ease}
+.cite:hover{background:var(--ink);color:var(--on-ink);border-color:var(--ink)}
+
+/* popover */
+.pop{position:absolute;z-index:200;width:340px;max-width:calc(100vw - 32px);background:var(--raised);
+  border:1px solid var(--ink);border-radius:var(--r-sm);box-shadow:var(--shadow-pop);
+  padding:var(--s5);display:none;font-size:13px;color:var(--text2)}
+.pop.show{display:block}
+.pop .t{font-weight:700;color:var(--ink);font-size:13.5px;line-height:1.3;margin-bottom:var(--s2)}
+.pop .m{font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:var(--s3)}
+.pop .c{font-size:12.5px;line-height:1.45;margin-bottom:var(--s4)}
+.pop a.go{font-family:var(--mono);font-size:11.5px;color:var(--ink);text-decoration:none;
+  border-bottom:1px solid var(--ink)}
+.tag{font-family:var(--mono);font-size:10px;padding:1px 5px;border-radius:var(--r-xs);
+  border:1px solid currentColor;letter-spacing:.03em}
+
+/* carousel */
+.caro{position:relative;min-height:250px}
+.slide{display:none}
+.slide.on{display:block;animation:fade .32s ease}
+@keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.dots{display:flex;gap:var(--s3);justify-content:center;align-items:center;margin-top:var(--s6)}
+.dot{width:9px;height:9px;border-radius:50%;border:1px solid var(--border);background:var(--raised);
+  cursor:pointer;padding:0;transition:background .25s ease,transform .25s ease,border-color .25s ease}
+.dot.on{background:var(--ink);border-color:var(--ink);transform:scale(1.35)}
+.crow{display:flex;align-items:center;justify-content:center;gap:var(--s5);margin-top:var(--s5)}
+
+/* viz */
+.viz{background:var(--raised);border:1px solid var(--border);border-radius:var(--r-sm);
+  box-shadow:var(--shadow-paper);position:relative;overflow:hidden}
+.viz svg{display:block;width:100%;touch-action:none}
+.hint{font-family:var(--mono);font-size:11px;color:var(--muted);padding:var(--s3) var(--s5);
+  border-top:1px dashed var(--border)}
+
+/* checklist */
+.chk{list-style:none;margin:0;padding:0}
+.chk li{display:flex;gap:var(--s4);align-items:flex-start;padding:var(--s4) 0;
+  border-bottom:1px dashed var(--border);font-size:14.5px}
+.chk li:last-child{border-bottom:0}
+.chk .box{flex:0 0 auto;width:15px;height:15px;border:1.5px solid var(--ink);border-radius:var(--r-xs);
+  margin-top:3px;background:var(--raised)}
+
+/* ideas */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:var(--s5)}
+.qcell{background:var(--raised);border:1px solid var(--border);border-radius:var(--r-sm);
+  padding:var(--s5);min-height:112px}
+.qcell h4{margin:0 0 var(--s3);font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--muted);font-weight:500}
+.qcell p{margin:0;font-size:13.5px;line-height:1.45;color:var(--text2)}
+.qcell.empty p{color:var(--muted);font-style:italic}
+.shuffle{display:block;margin:var(--s6) auto 0;font-family:var(--mono);font-size:14px;
+  letter-spacing:.06em;padding:var(--s4) var(--s7);background:var(--ink);color:var(--on-ink);
+  border:1px solid var(--ink);border-radius:var(--r-sm);box-shadow:var(--shadow-button);cursor:pointer;
+  transition:transform .18s ease,box-shadow .18s ease}
+.shuffle:active{transform:translate(2px,3px);box-shadow:none}
+
+/* quality bars */
+.qbar{display:grid;grid-template-columns:132px 1fr 30px;gap:var(--s4);align-items:center;
+  padding:var(--s3) 0;position:relative}
+.qbar .lab{font-family:var(--mono);font-size:11.5px;color:var(--text2);text-align:right}
+.qtrack{height:16px;background:var(--raised);border:1px solid var(--border);border-radius:var(--r-xs);
+  overflow:hidden}
+.qfill{height:100%;background:var(--score);opacity:.42;transition:width .5s ease}
+.qbar .val{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.qnote{display:none;position:absolute;left:140px;top:calc(100% - 4px);z-index:40;width:min(520px,86vw);
+  background:var(--raised);border:1px solid var(--ink);border-radius:var(--r-sm);
+  box-shadow:var(--shadow-pop);padding:var(--s4) var(--s5);font-size:12.5px;color:var(--text2)}
+.qbar:hover .qnote{display:block}
+
+/* accordions */
+.acc{border-bottom:1px dashed var(--border)}
+.acc:last-child{border-bottom:0}
+.accH{width:100%;text-align:left;background:none;border:0;padding:var(--s4) var(--s3);cursor:pointer;
+  display:flex;gap:var(--s4);align-items:baseline;color:var(--ink);font-family:inherit;font-size:14px}
+.accH:hover{background:var(--raised)}
+.accH .yr{font-family:var(--mono);font-size:11.5px;color:var(--muted);flex:0 0 40px}
+.accH .tt{flex:1;line-height:1.35}
+.accH .au{display:block;font-size:12px;color:var(--muted);margin-top:2px}
+.accH .cc{font-family:var(--mono);font-size:11.5px;color:var(--muted);flex:0 0 auto}
+.accB{display:none;padding:0 var(--s3) var(--s5) 46px;font-size:13.5px;color:var(--text2)}
+.acc.open .accB{display:block}
+.accB .meta{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:var(--s4);
+  display:flex;gap:var(--s4);flex-wrap:wrap;align-items:center}
+footer{padding:var(--s7) 0 var(--s8);border-top:1px dashed var(--border);
+  font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+@media(max-width:680px){
+  .wrap{padding:0 16px}
+  .grid2{grid-template-columns:1fr}
+  .qbar{grid-template-columns:96px 1fr 26px}
+  .qnote{left:0;width:100%}
+  .accB{padding-left:var(--s3)}
+  section{padding:var(--s7) 0 var(--s5)}
+}
+</style>
+</head>
+<body>
+
+<header>
+ <div class="wrap">
+  <h1 id="rtitle"></h1>
+  <div class="qcard" id="rquestion"></div>
+  <div class="statline" id="rstats"></div>
+ </div>
+</header>
+
+<nav class="navbar">
+ <div class="wrap navrow">
+  <button class="arw" id="navPrev" aria-label="Previous section">&#8592;</button>
+  <div class="pills" id="pills"></div>
+  <button class="arw" id="navNext" aria-label="Next section">&#8594;</button>
+ </div>
+</nav>
+
+<main>
+<section id="tldr" class="wrap"><h2>TLDR</h2>
+ <div class="card"><ul class="log" id="tldrList"></ul></div>
+</section>
+
+<section id="insights" class="wrap"><h2>Key insights</h2>
+ <div class="card">
+  <div class="caro" id="caro"></div>
+  <div class="crow">
+   <button class="arw" id="insPrev">&#8592;</button>
+   <div class="dots" id="insDots" style="margin-top:0"></div>
+   <button class="arw" id="insNext">&#8594;</button>
+  </div>
+ </div>
+</section>
+
+<section id="graph" class="wrap"><h2>Citation graph</h2>
+ <div class="viz"><svg id="mapsvg"></svg>
+  <div class="hint">Scroll to zoom &middot; drag to pan &middot; double-click a node to focus</div></div>
+</section>
+
+<section id="timeline" class="wrap"><h2>Timeline</h2>
+ <div class="viz"><svg id="tlsvg"></svg>
+  <div class="hint">Drag to orbit &middot; X time &middot; Y citations &middot; Z angle lanes A&ndash;D</div></div>
+</section>
+
+<section id="next" class="wrap"><h2>Next steps</h2>
+ <div class="card"><ul class="chk" id="stepsList"></ul></div>
+</section>
+
+<section id="ideas" class="wrap"><h2>Idea deck</h2>
+ <div class="card">
+  <div class="grid2" id="ideaGrid"></div>
+  <button class="shuffle" id="shuffleBtn">SHUFFLE &#8635;</button>
+ </div>
+</section>
+
+<section id="quality" class="wrap"><h2>Report quality</h2>
+ <div class="card" id="qualityBox"></div>
+</section>
+
+<section id="citations" class="wrap"><h2>Citations</h2>
+ <div class="card" id="accList" style="padding:var(--s3) var(--s4)"></div>
+</section>
+</main>
+
+<footer><div class="wrap"><span id="footdate"></span></div></footer>
+
+<div class="pop" id="pop"></div>
+
+<script>
+const PAPERS = [{"id":"merrill2024cot","title":"The Expressive Power of Transformers with Chain of Thought","authors":"William Merrill, Ashish Sabharwal","institutions":"NYU, Allen Institute for AI","year":2024,"venue":"ICLR 2024","citation_count":320,"url":"https://arxiv.org/abs/2310.07923","key_claim":"Characterizes fixed-depth transformers by CoT budget t(n): logarithmic steps add little beyond TC0; linear steps recognize exactly the regular languages and stay within context-sensitive; polynomial steps recognize exactly P.","relevance_to_question":"The canonical exchange-rate theorem: CoT length t(n) maps to a complexity class, so serial token budget buys computation time independent of parameter count.","angle":"complexity-theory","citation_count_estimated":true,"lat":40.73,"lon":-73.99,"org_type":"academia","cites":["li2024serial","feng2023mystery","turpin2023unfaithful","lanham2023faithfulness","dehghani2019universal","giannou2023looped"]},{"id":"li2024serial","title":"Chain of Thought Empowers Transformers to Solve Inherently Serial Problems","authors":"Zhiyuan Li, Hong Liu, Denny Zhou, Tengyu Ma","institutions":"TTIC, Stanford, Google DeepMind","year":2024,"venue":"ICLR 2024","citation_count":309,"url":"https://arxiv.org/abs/2402.12875","key_claim":"Constant-depth, constant-precision transformers with O(log n) embedding size and T CoT steps solve any problem computable by Boolean circuits of size T (poly CoT = P/poly). Without CoT they are confined to AC0, strictly inside TC0.","relevance_to_question":"Tightest resource-accounted equivalence: T CoT tokens buy circuit size T at fixed depth and log width; width/params cannot substitute for serial steps.","angle":"complexity-theory","citation_count_estimated":false,"lat":41.79,"lon":-87.6,"org_type":"academia","cites":["feng2023mystery","turpin2023unfaithful","lanham2023faithfulness","dehghani2019universal","giannou2023looped","merrill2023parallelism"]},{"id":"feng2023mystery","title":"Towards Revealing the Mystery behind Chain of Thought: A Theoretical Perspective","authors":"Guhao Feng, Bohang Zhang, Yuntian Gu, Haotian Ye, Di He, Liwei Wang","institutions":"Peking University, Stanford","year":2023,"venue":"NeurIPS 2023 (Outstanding Paper Honorable Mention)","citation_count":458,"url":"https://arxiv.org/abs/2305.15408","key_claim":"Bounded-depth transformers cannot answer iterated arithmetic / linear-equation tasks unless model size grows super-polynomially in input length; constant-size autoregressive transformers with CoT solve them and a general class of dynamic programs.","relevance_to_question":"Sharpest statement of asymmetry: CoT substitutes for super-polynomial parameter growth on concrete tasks.","angle":"complexity-theory","citation_count_estimated":false,"lat":39.99,"lon":116.31,"org_type":"academia","cites":["turpin2023unfaithful","lanham2023faithfulness","dehghani2019universal","perez2021turing"]},{"id":"merrill2023parallelism","title":"The Parallelism Tradeoff: Limitations of Log-Precision Transformers","authors":"William Merrill, Ashish Sabharwal","institutions":"NYU, Allen Institute for AI","year":2023,"venue":"TACL 11","citation_count":227,"url":"https://arxiv.org/abs/2207.00729","key_claim":"Transformers with O(log n) arithmetic precision are simulable by logspace-uniform constant-depth threshold circuits (uniform TC0).","relevance_to_question":"Baseline: one forward pass = O(1) serial steps regardless of N or d. Everything CoT adds is measured against this ceiling.","angle":"complexity-theory","citation_count_estimated":false,"lat":40.73,"lon":-73.99,"org_type":"academia","cites":["dehghani2019universal","giannou2023looped","perez2021turing","feng2023mystery"]},{"id":"merrill2025logdepth","title":"A Little Depth Goes a Long Way: The Expressive Power of Log-Depth Transformers","authors":"William Merrill, Ashish Sabharwal","institutions":"NYU, Allen Institute for AI","year":2025,"venue":"NeurIPS 2025","citation_count":56,"url":"https://arxiv.org/abs/2503.03961","key_claim":"Depth Theta(log n) transformers recognize regular languages and decide graph connectivity, impossible at fixed depth; argues depth scaling is more efficient than scaling width or CoT steps.","relevance_to_question":"Directly compares the two axes and claims depth beats CoT-step scaling for sequential reasoning \u2014 counterweight to a naive linear depth-times-tokens equivalence.","angle":"complexity-theory","citation_count_estimated":false,"lat":40.73,"lon":-73.99,"org_type":"academia","cites":["merrill2024cot","saunshi2025looped","sanford2024logdepth","dehghani2019universal","li2024serial","giannou2023looped"]},{"id":"sanford2024logdepth","title":"Transformers, Parallel Computation, and Logarithmic Depth","authors":"Clayton Sanford, Daniel Hsu, Matus Telgarsky","institutions":"Columbia University, NYU","year":2024,"venue":"ICML 2024","citation_count":77,"url":"https://arxiv.org/abs/2402.09268","key_claim":"k-hop pointer chasing is solvable in O(log k) depth via pointer doubling, so a depth-L transformer handles k up to roughly 2^L, confirmed empirically.","relevance_to_question":"Concrete non-linear exchange rate: one layer is worth a doubling of serial CoT steps (T ~ 2^L) on pointer-chasing tasks.","angle":"complexity-theory","citation_count_estimated":false,"lat":40.81,"lon":-73.96,"org_type":"academia","cites":["dehghani2019universal","li2024serial","giannou2023looped","merrill2023parallelism","petty2024depth","levine2020depthwidth"]},{"id":"saunshi2025looped","title":"Reasoning with Latent Thoughts: On the Power of Looped Transformers","authors":"Nikunj Saunshi, Nishanth Dikkala, Zhiyuan Li, Sanjiv Kumar, Sashank J. Reddi","institutions":"Google Research, TTIC","year":2025,"venue":"ICLR 2025","citation_count":195,"url":"https://arxiv.org/abs/2502.17416","key_claim":"A k-layer transformer looped L times nearly matches a kL-layer non-looped model on addition, p-hop induction and math; looped models can simulate T steps of CoT with T loops; scaling depends on effective depth rather than parameter count.","relevance_to_question":"Closest existing result to 'effective depth = L * T': equates loop count with both non-looped depth and CoT steps.","angle":"complexity-theory","citation_count_estimated":false,"lat":37.42,"lon":-122.08,"org_type":"industry","cites":["giannou2023looped","merrill2024cot","geiping2025recurrentdepth","dehghani2019universal","li2024serial","merrill2023parallelism"]},{"id":"giannou2023looped","title":"Looped Transformers as Programmable Computers","authors":"Angeliki Giannou, Shashank Rajput, Jy-Yong Sohn, Kangwook Lee, Jason D. Lee, Dimitris Papailiopoulos","institutions":"UW-Madison, KAIST, Princeton","year":2023,"venue":"ICML 2023","citation_count":231,"url":"https://arxiv.org/abs/2301.13196","key_claim":"A constant-depth transformer in a loop emulates a stored-program computer with a basic instruction set; iterative algorithms map to programs run by the looped network.","relevance_to_question":"Makes loop iterations literally clock cycles \u2014 the hand-constructed mechanism behind loop-count-as-serial-compute.","angle":"complexity-theory","citation_count_estimated":false,"lat":43.07,"lon":-89.41,"org_type":"academia","cites":["dehghani2019universal","perez2021turing","feng2023mystery"]},{"id":"perez2021turing","title":"Attention is Turing-Complete","authors":"Jorge Perez, Pablo Barcelo, Javier Marinkovic","institutions":"Universidad de Chile, PUC Chile, IMFD","year":2021,"venue":"JMLR 22(75)","citation_count":500,"url":"https://jmlr.org/papers/v22/20-302.html","key_claim":"Transformers with hard attention and unbounded decoding steps are Turing complete, relying on arbitrary-precision internal representations.","relevance_to_question":"Limiting case: as serial token budget goes to infinity the model-size axis collapses entirely \u2014 under a physically unrealizable precision assumption.","angle":"complexity-theory","lat":-33.46,"lon":-70.65,"org_type":"academia","cites":["levine2020depthwidth","dehghani2019universal"]},{"id":"qiu2025prompting","title":"Ask, and it shall be given: On the Turing completeness of prompting","authors":"Ruizhong Qiu, Zhe Xu, Wenxuan Bao, Hanghang Tong","institutions":"UIUC","year":2025,"venue":"ICLR 2025","citation_count":10,"url":"https://arxiv.org/abs/2411.01992","key_claim":"A single finite-size transformer is Turing complete under prompting: for any computable function there is a prompt making that fixed model compute it, with nearly the same complexity bounds as the class of all unbounded-size transformers.","relevance_to_question":"Extreme statement of parameter-for-tokens substitutability: fixed N plus enough context matches unbounded model size.","angle":"complexity-theory","citation_count_estimated":false,"lat":40.11,"lon":-88.23,"org_type":"academia","cites":["perez2021turing","turpin2023unfaithful","dehghani2019universal","feng2023mystery","li2024serial","giannou2023looped"]},{"id":"zhu2025superposition","title":"Reasoning by Superposition: A Theoretical Perspective on Chain of Continuous Thought","authors":"Hanlin Zhu, Shibo Hao, Zhiting Hu, Jiantao Jiao, Stuart Russell, Yuandong Tian","institutions":"UC Berkeley, UC San Diego, Meta AI (FAIR)","year":2025,"venue":"NeurIPS 2025","citation_count":76,"url":"https://arxiv.org/abs/2505.12514","key_claim":"A two-layer transformer with D steps of continuous CoT solves directed graph reachability (D = diameter) versus O(n^2) decoding steps for discrete CoT; continuous thoughts encode a superposition of BFS frontiers.","relevance_to_question":"The only verified quantitative bandwidth premium for latent over discrete tokens (n^2/D fewer steps).","angle":"complexity-theory","citation_count_estimated":false,"lat":37.87,"lon":-122.26,"org_type":"academia","cites":["feng2023mystery","lanham2023faithfulness","sprague2025cot","li2024serial","merrill2024cot","turpin2023unfaithful"]},{"id":"xu2025formalcomparison","title":"A Formal Comparison Between Chain of Thought and Latent Thought","authors":"Kevin Xu, Issei Sato","institutions":"University of Tokyo","year":2025,"venue":"ICML 2026 (arXiv:2509.25239)","citation_count":12,"url":"https://arxiv.org/abs/2509.25239","key_claim":"Two-sided separation: latent thought admits more efficient parallel computation than sequential CoT, while discrete CoT uniquely enables approximate counting and sampling through stochastic decoding.","relevance_to_question":"The latent-vs-discrete tradeoff is not one-directional, so no single scalar exchange rate between L and T can be complete.","angle":"complexity-theory","citation_count_estimated":false,"lat":35.71,"lon":139.76,"org_type":"academia","cites":["feng2023mystery","li2024serial","zhu2025superposition","amiri2025lowerbounds","merrill2024cot","turpin2023unfaithful"]},{"id":"amiri2025lowerbounds","title":"Lower Bounds for Chain-of-Thought Reasoning in Hard-Attention Transformers","authors":"Alireza Amiri, Xinting Huang, Mark Rofin, Michael Hahn","institutions":"Saarland University","year":2025,"venue":"ICML 2025","citation_count":31,"url":"https://arxiv.org/abs/2502.02393","key_claim":"Systematic lower bounds on the number of CoT steps required by hard-attention transformers, tight up to log factors (e.g. Omega(N) steps for multiplication).","relevance_to_question":"Necessary-direction bounds: serial steps are not free and required CoT length is problem-specific.","angle":"complexity-theory","citation_count_estimated":false,"lat":49.26,"lon":7.04,"org_type":"academia","cites":["li2024serial","zhu2025superposition","merrill2024cot","lanham2023faithfulness","sprague2025cot","feng2023mystery"]},{"id":"dehghani2019universal","title":"Universal Transformers","authors":"Mostafa Dehghani, Stephan Gouws, Oriol Vinyals, Jakob Uszkoreit, Lukasz Kaiser","institutions":"University of Amsterdam, Google Brain, Google DeepMind","year":2019,"venue":"ICLR 2019","citation_count":1012,"url":"https://arxiv.org/abs/1807.03819","key_claim":"Weight-shared transformer block applied recurrently in depth with Adaptive Computation Time halting; Turing complete under certain assumptions.","relevance_to_question":"Architectural ancestor of loop-as-serial-compute: recurrence in depth, not parameter count, adds computational universality.","angle":"complexity-theory","citation_count_estimated":false,"lat":52.36,"lon":4.89,"org_type":"academia","cites":[]},{"id":"snell2024","title":"Scaling LLM Test-Time Compute Optimally can be More Effective than Scaling Model Parameters","authors":"Charlie Snell, Jaehoon Lee, Kelvin Xu, Aviral Kumar","institutions":"UC Berkeley, Google DeepMind","year":2024,"venue":"arXiv:2408.03314 / ICLR 2025","citation_count":2073,"url":"https://arxiv.org/abs/2408.03314","key_claim":"Defines the exchange via X=6*N*D_pretrain vs Y=2*N*D_inference and R=D_inference/D_pretrain. FLOPs-matched, test-time compute beats a ~14x larger pretrained model when R<<1 and on easy/medium MATH bins; pretraining wins when R>>1 or on the hardest bin. Separately, compute-optimal allocation beats best-of-N with up to 4x less test-time compute. Model: PaLM 2-S*; benchmark MATH500.","relevance_to_question":"Canonical source for a quantified N-vs-T tradeoff, but yields a regime map parameterized by R, not an equation. Headline far narrower than its citations.","angle":"empirical-scaling","citation_count_estimated":false,"lat":37.87,"lon":-122.26,"org_type":"academia","cites":["kaplan2020scaling","hoffmann2022chinchilla"]},{"id":"brown2024monkeys","title":"Large Language Monkeys: Scaling Inference Compute with Repeated Sampling","authors":"Bradley Brown, Jordan Juravsky, Ryan Ehrlich, Ronald Clark, Quoc V. Le, Christopher Re, Azalia Mirhoseini","institutions":"Stanford University, University of Oxford, Google DeepMind","year":2024,"venue":"arXiv:2407.21787","citation_count":915,"url":"https://arxiv.org/abs/2407.21787","key_claim":"Fits coverage c vs samples k as an exponentiated power law log(c) ~ a*k^(-b). SWE-bench Lite 15.9% -> 56% over 250 samples; Llama-3-8B MATH coverage 79.8% -> 95.3% over 100 -> 10,000 while majority voting moves only 38.7% -> 39.8%. Within a model family, coverage curves on log-k axes share slope but differ by a horizontal offset.","relevance_to_question":"Clearest fitted functional form on the T axis; same-slope/different-offset is an implicit N-to-log-T exchange rate, never regressed against N.","angle":"empirical-scaling","citation_count_estimated":false,"lat":37.43,"lon":-122.17,"org_type":"academia","cites":["hoffmann2022chinchilla","snell2024","kaplan2020scaling"]},{"id":"wu2024inference","title":"Inference Scaling Laws: An Empirical Analysis of Compute-Optimal Inference for LLM Problem-Solving","authors":"Yangzhen Wu, Zhiqing Sun, Shanda Li, Sean Welleck, Yiming Yang","institutions":"Tsinghua University, Carnegie Mellon University","year":2024,"venue":"ICLR 2025","citation_count":207,"url":"https://arxiv.org/abs/2408.00724","key_claim":"Regresses optimal inference FLOPs C against model size N: log10(C) = 1.19*log10(N) + 2.03. REBASE tree search: Llemma-7B+REBASE dominates Llemma-34B at every FLOPs budget on MATH. Theorems 1-2: sampling+voting converges exponentially O(c^-n) to a ceiling set by the model's own distribution.","relevance_to_question":"Closest published thing to an explicit N-to-inference-compute equation, plus a proof that without an oracle verifier infinite T cannot substitute for N.","angle":"empirical-scaling","citation_count_estimated":false,"lat":40.0,"lon":116.33,"org_type":"academia","cites":["brown2024monkeys","kaplan2020scaling","hoffmann2022chinchilla","snell2024"]},{"id":"roberts2026t2","title":"Test-Time Scaling Makes Overtraining Compute-Optimal","authors":"Nicholas Roberts, Sungjun Cho, Zhiqi Gao, Tzu-Heng Huang, Albert Wu, Gabriel Orlanski, Avi Trost, Kelly Buchanan, Aws Albarghouthi, Frederic Sala","institutions":"University of Wisconsin-Madison, Stanford University","year":2026,"venue":"arXiv:2604.01411 (preprint, under review)","citation_count":1,"url":"https://arxiv.org/abs/2604.01411","key_claim":"Fits an additive joint law L(N,D,k) = E + A/N^alpha + B/D^beta + G/k^gamma, jointly optimizing model size, training tokens and inference samples k under a fixed end-to-end budget; accounting for inference cost shifts optimal pretraining radically into the overtraining regime. Models 5M-901M; 4 of 8 tasks synthetic; k = C_inf/(2N) prices one sample at one token's FLOPs.","relevance_to_question":"The only paper found that genuinely jointly optimizes over N, D and T \u2014 state of the art on the joint-law question, yet reports an optimizer rather than a substitution exponent.","angle":"empirical-scaling","citation_count_estimated":false,"lat":43.07,"lon":-89.41,"org_type":"academia","cites":["snell2024","setlur2025verifier","artofscaling2025","geiping2025recurrentdepth","gema2025inverse","muennighoff2025s1"]},{"id":"sardana2024beyond","title":"Beyond Chinchilla-Optimal: Accounting for Inference in Language Model Scaling Laws","authors":"Nikhil Sardana, Jacob Portes, Sasha Doubov, Jonathan Frankle","institutions":"MosaicML / Databricks","year":2024,"venue":"ICML 2024","citation_count":174,"url":"https://arxiv.org/abs/2401.00448","key_claim":"Modifies Chinchilla to include inference cost: at ~1B expected requests, train smaller and longer than Chinchilla-optimal. 47 models trained to validate, up to 10,000 tokens/parameter.","relevance_to_question":"Made inference a first-class term in the Chinchilla objective \u2014 but this is inference DEMAND (serving volume), not test-time reasoning depth; frequently miscited as the latter.","angle":"empirical-scaling","citation_count_estimated":false,"lat":37.78,"lon":-122.4,"org_type":"industry","cites":["wu2024inference","kaplan2020scaling","brown2024monkeys","hoffmann2022chinchilla","snell2024"]},{"id":"levi2024simple","title":"A Simple Model of Inference Scaling Laws","authors":"Noam Levi","institutions":"EPFL","year":2024,"venue":"ICML 2025","citation_count":38,"url":"https://arxiv.org/abs/2410.16377","key_claim":"A memorization-based statistical ansatz motivating the exponentiated-power-law form of pass@k; defines an inference loss with power-law decay in trials; states the framework 'sets the ground for incorporating inference scaling with other known scaling laws'.","relevance_to_question":"Theoretical justification for the T-axis functional form, and explicit evidence that a joint L(N,T) did not yet exist.","angle":"empirical-scaling","citation_count_estimated":false,"lat":46.52,"lon":6.57,"org_type":"academia","cites":["wu2024inference","sardana2024beyond","kaplan2020scaling","brown2024monkeys","allenzhu2024capacity","stroebl2024flaws"]},{"id":"schaeffer2025monkeypower","title":"How Do Large Language Monkeys Get Their Power (Laws)?","authors":"Rylan Schaeffer, Joshua Kazdan, John Hughes, Jordan Juravsky, Sara Price, Aengus Lynch, Erik Jones, Robert Kirk, Azalia Mirhoseini, Sanmi Koyejo","institutions":"Stanford University, UC Berkeley, UCL","year":2025,"venue":"ICML 2025","citation_count":40,"url":"https://arxiv.org/abs/2502.17578","key_claim":"Per-problem failure falls exponentially in attempts; the aggregate power law emerges only because the distribution of per-problem single-attempt success probabilities is heavy-tailed. Yields forecasting with an order of magnitude lower exponent error.","relevance_to_question":"Deflationary: the inference-scaling exponent is a property of the benchmark difficulty distribution, not an intrinsic model constant, so it is unstable as an exchange rate against N.","angle":"empirical-scaling","citation_count_estimated":false,"lat":37.43,"lon":-122.17,"org_type":"academia","cites":["brown2024monkeys","kaplan2020scaling","hoffmann2022chinchilla","wu2024inference","sardana2024beyond","levi2024simple"]},{"id":"setlur2025verifier","title":"Scaling Test-Time Compute Without Verification or RL is Suboptimal","authors":"Amrith Setlur, Nived Rajaraman, Sergey Levine, Aviral Kumar","institutions":"Carnegie Mellon University, UC Berkeley","year":2025,"venue":"ICML 2025","citation_count":95,"url":"https://arxiv.org/abs/2502.12118","key_claim":"Proves a separation between verifier-based and verifier-free test-time scaling: under heterogeneous correct-trace distributions and non-sharp rewards, verifier-free suboptimality scales strictly worse and the gap widens with test-time budget.","relevance_to_question":"The shape of the T axis depends on whether a verifier exists, so any N-vs-T exchange rate is conditional on verifiability.","angle":"empirical-scaling","citation_count_estimated":false,"lat":40.44,"lon":-79.94,"org_type":"academia","cites":["snell2024","geiping2025recurrentdepth","muennighoff2025s1","brown2024monkeys","wu2024inference","kaplan2020scaling"]},{"id":"muennighoff2025s1","title":"s1: Simple test-time scaling","authors":"Niklas Muennighoff, Zitong Yang, Weijia Shi, Xiang Lisa Li, Li Fei-Fei, Hannaneh Hajishirzi, Luke Zettlemoyer, Percy Liang, Emmanuel Candes, Tatsunori Hashimoto","institutions":"Stanford University, University of Washington, Allen Institute for AI, Contextual AI","year":2025,"venue":"EMNLP 2025","citation_count":1407,"url":"https://arxiv.org/abs/2501.19393","key_claim":"SFT on 1,000 curated examples plus budget forcing (appending 'Wait'); s1-32B exceeds o1-preview by up to 27% on competition math; budget forcing extrapolates AIME24 from 50% to 57%.","relevance_to_question":"Cleanest demonstration of the sequential token axis as a knob independent of N \u2014 but 7 points over ~1 order of magnitude of thinking tokens on 30 problems, and it saturates.","angle":"empirical-scaling","citation_count_estimated":false,"lat":37.43,"lon":-122.17,"org_type":"academia","cites":["snell2024","levi2024simple","kaplan2020scaling","brown2024monkeys","wu2024inference","sardana2024beyond"]},{"id":"deepseek2025r1","title":"DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning","authors":"DeepSeek-AI (Daya Guo, Dejian Yang, Haowei Zhang, et al.)","institutions":"DeepSeek-AI","year":2025,"venue":"Nature (2025); arXiv:2501.12948","citation_count":5556,"url":"https://arxiv.org/abs/2501.12948","key_claim":"Response length grows continuously during RL as accuracy rises. AIME24 pass@1: R1-Distill-Qwen-1.5B 28.9%, 7B 55.5%, 14B 69.7%, 32B 72.6% vs o1-mini 63.6%. Ablation: R1-Zero-Qwen-32B (RL directly on the small base) only matches QwQ-32B-Preview, while R1-Distill-Qwen-32B is far better.","relevance_to_question":"The reverse exchange rate \u2014 test-time compute from a large teacher compressed back into small weights. The RL-vs-distill ablation bounds how symmetric N/T substitution can be.","angle":"empirical-scaling","citation_count_estimated":false,"lat":31.23,"lon":121.47,"org_type":"industry","cites":["chen2024overthinking","lanham2023faithfulness","kaplan2020scaling","hoffmann2022chinchilla","snell2024","brown2024monkeys"]},{"id":"kimi2025k15","title":"Kimi k1.5: Scaling Reinforcement Learning with LLMs","authors":"Kimi Team (Moonshot AI)","institutions":"Moonshot AI","year":2025,"venue":"arXiv:2501.12599","citation_count":1052,"url":"https://arxiv.org/abs/2501.12599","key_claim":"Frames RL as a scaling axis that escapes the pretraining data ceiling; long-context scaling to 128k plus improved policy optimization without MCTS or process reward models; long-context capabilities distilled into short-context models.","relevance_to_question":"Industrial confirmation that thinking length is a scalable axis, but with no FLOPs-matched N-vs-T curve.","angle":"empirical-scaling","citation_count_estimated":false,"lat":39.9,"lon":116.4,"org_type":"industry","cites":["deepseek2025r1","kaplan2020scaling","snell2024","muennighoff2025s1","brown2024monkeys","wu2024inference"]},{"id":"hoffmann2022chinchilla","title":"Training Compute-Optimal Large Language Models","authors":"Jordan Hoffmann, Sebastian Borgeaud, Arthur Mensch, Elena Buchatskaya, Trevor Cai, Eliza Rutherford, Diego de Las Casas, et al.","institutions":"DeepMind","year":2022,"venue":"NeurIPS 2022","citation_count":3649,"url":"https://arxiv.org/abs/2203.15556","key_claim":"Fits L(N,D) = E + A/N^alpha + B/D^beta over 400+ models with alpha ~ 0.34, beta ~ 0.28, implying N ~ C^0.5, D ~ C^0.5.","relevance_to_question":"The baseline functional form every test-time paper implicitly tries to extend; its additive-power-law shape has NOT been successfully generalized to a test-time variable.","angle":"empirical-scaling","citation_count_estimated":false,"lat":51.53,"lon":-0.12,"org_type":"industry","cites":["kaplan2020scaling"]},{"id":"kaplan2020scaling","title":"Scaling Laws for Neural Language Models","authors":"Jared Kaplan, Sam McCandlish, Tom Henighan, Tom B. Brown, Benjamin Chess, Rewon Child, Scott Gray, Alec Radford, Jeffrey Wu, Dario Amodei","institutions":"OpenAI, Johns Hopkins University","year":2020,"venue":"arXiv:2001.08361","citation_count":8815,"url":"https://arxiv.org/abs/2001.08361","key_claim":"Non-embedding params N ~ 12*L*d^2; forward cost per token C ~ 2N + 2*L*n_ctx*d_attn; training ~6N per token. Power-law loss scaling in N, D, C over seven orders of magnitude, nearly independent of architectural shape.","relevance_to_question":"Supplies the base compute equation. The attention term is why generating T tokens costs 2NT + L*d*T^2 \u2014 the N-T exchange rate degrades quadratically in T.","angle":"empirical-scaling","citation_count_estimated":false,"lat":37.76,"lon":-122.41,"org_type":"industry","cites":[]},{"id":"wang2025plateau","title":"Scaling over Scaling: Exploring Test-Time Scaling Plateau in Large Reasoning Models","authors":"Jian Wang, Boyan Zhu, Chak Tou Leong, Yongqi Li, Wenjie Li","institutions":"The Hong Kong Polytechnic University","year":2025,"venue":"arXiv:2505.20522","citation_count":8,"url":"https://arxiv.org/abs/2505.20522","key_claim":"Derives a Test-Time Scaling Performance Model (TTSPM) for both parallel and sequential scaling, showing both admit a saturation point beyond which additional compute yields diminishing returns, with shared mathematical structure.","relevance_to_question":"If T saturates at a finite budget while N does not, the axes cannot be globally substitutable; any measured exchange rate is valid only below saturation.","angle":"empirical-scaling","citation_count_estimated":false,"lat":22.31,"lon":114.18,"org_type":"academia","cites":["geiping2025recurrentdepth","zhao2025knowledge","snell2024","muennighoff2025s1","setlur2025verifier","artofscaling2025"]},{"id":"levine2020depthwidth","title":"The Depth-to-Width Interplay in Self-Attention","authors":"Yoav Levine, Noam Wies, Or Sharir, Hofit Bata, Amnon Shashua","institutions":"Hebrew University of Jerusalem, AI21 Labs","year":2020,"venue":"NeurIPS 2020","citation_count":57,"url":"https://arxiv.org/abs/2006.12467","key_claim":"Depth-efficiency holds only while L < log3(d_x); the transition fits log(d_x) = a + b*L with a=5.039, b=5.55e-2, giving L_opt = Theta(log N). A 1T-param model should be L=95, d=30,100; GPT-3 is 'too deep for its size'.","relevance_to_question":"The only closed-form d_opt(N)/L_opt(N). Caps how much serial computation an architecture can usefully buy with layers.","angle":"architecture-compute","citation_count_estimated":false,"lat":31.79,"lon":35.2,"org_type":"academia","cites":[]},{"id":"geiping2025recurrentdepth","title":"Scaling up Test-Time Compute with Latent Reasoning: A Recurrent Depth Approach","authors":"Jonas Geiping, Sean McLeish, Neel Jain, John Kirchenbauer, Siddharth Singh, Brian R. Bartoldson, Bhavya Kailkhura, Abhinav Bhatele, Tom Goldstein","institutions":"ELLIS Institute Tubingen / MPI-IS, University of Maryland, LLNL","year":2025,"venue":"arXiv:2502.05171","citation_count":329,"url":"https://arxiv.org/abs/2502.05171","key_claim":"Huginn-3.5B: (l_P,l_R,l_C)=(2,4,2) at h=5280; unrolling r times gives effective depth 2+4r+2 and per-token cost ~ 2(N_P+N_C)+2r*N_R; performance improves up to a COMPUTATION LOAD equivalent to 50B parameters (a FLOPs-per-token accounting statement, not a capability claim).","relevance_to_question":"Cleanest large-scale experimental instantiation of 'depth = test-time compute', with a concrete N_effective(r) mapping.","angle":"architecture-compute","citation_count_estimated":false,"lat":48.52,"lon":9.06,"org_type":"academia","cites":["snell2024","muennighoff2025s1","brown2024monkeys","wu2024inference","hao2024coconut","allenzhu2024capacity"]},{"id":"schwethelm2026recurrence","title":"How Much Is One Recurrence Worth? Iso-Depth Scaling Laws for Looped Language Models","authors":"Kristian Schwethelm, Daniel Ruckert, Georgios Kaissis","institutions":"Technical University of Munich, Imperial College London, MCML","year":2026,"venue":"arXiv:2604.21106","citation_count":11,"url":"https://arxiv.org/abs/2604.21106","key_claim":"Fits L(N_once,N_rec,D,r) = E + A*(N_once + r^phi*N_rec)^(-alpha) + B*D^(-beta) with phi=0.459 [0.41,0.53], alpha=0.199, beta=0.369, E=1.57, R^2=0.9972 over 116 runs, 30M-1.1B non-embedding params, r in {1,2,4,8}, FineWeb-Edu validation loss. phi moves to 0.38 under truncated BPTT and 0.65 with hyperconnections. Authors: 'reasoning tasks are not resolvable at our compute budgets.'","relevance_to_question":"The most direct quantitative answer available: the depth-recurrence exchange is a sublinear power law with exponent ~1/2, not an identity.","angle":"architecture-compute","citation_count_estimated":false,"lat":48.15,"lon":11.57,"org_type":"academia","cites":["parcae2026looped","geiping2025recurrentdepth","allenzhu2024capacity","ouro2025looped","ludziejewski2025moe","kaplan2020scaling"]},{"id":"allenzhu2024capacity","title":"Physics of Language Models: Part 3.3, Knowledge Capacity Scaling Laws","authors":"Zeyuan Allen-Zhu, Yuanzhi Li","institutions":"Meta / FAIR Labs, MBZUAI","year":2024,"venue":"ICLR 2025 / arXiv:2404.05405","citation_count":158,"url":"https://arxiv.org/abs/2404.05405","key_claim":"Sufficiently trained transformers store ~2 bits of factual knowledge per parameter, robust to int8; a 32-expert MoE using 8.8% of parameters at inference loses only 1.3x capacity, so capacity tracks TOTAL parameters.","relevance_to_question":"The non-substitutable half of the tradeoff: tokens buy computation, never storage. Also resolves how N must be defined for MoE.","angle":"architecture-compute","citation_count_estimated":false,"lat":37.48,"lon":-122.15,"org_type":"industry","cites":["kaplan2020scaling","wu2024inference","sardana2024beyond","snell2024","brown2024monkeys","hao2024coconut"]},{"id":"latentsurvey2025","title":"A Survey on Latent Reasoning","authors":"Rui-Jie Zhu, Tianhao Peng, Tianhao Cheng, Xingwei Qu, Jinfa Huang, et al.","institutions":"UC Santa Cruz, M-A-P, multiple","year":2025,"venue":"arXiv:2507.06203","citation_count":46,"url":"https://arxiv.org/abs/2507.06203","key_claim":"Quantifies the CoT bandwidth bottleneck: a discrete token carries ~15 bits (log2|V|) while a 2560-dim FP16 hidden state carries ~40,960 bits \u2014 a ~2.7e3-fold gap.","relevance_to_question":"Gives explicit bits-per-step numbers to compare an external CoT token against an internal residual-stream step.","angle":"architecture-compute","citation_count_estimated":false,"lat":36.99,"lon":-122.06,"org_type":"academia","cites":["geiping2025recurrentdepth","ouro2025looped","saunshi2025looped","hao2024coconut","deepseek2025r1","yue2025rlvr"]},{"id":"hao2024coconut","title":"Training Large Language Models to Reason in a Continuous Latent Space (COCONUT)","authors":"Shibo Hao, Sainbayar Sukhbaatar, DiJia Su, Xian Li, Zhiting Hu, Jason Weston, Yuandong Tian","institutions":"Meta FAIR, UC San Diego","year":2024,"venue":"arXiv:2412.06769 / COLM 2025","citation_count":690,"url":"https://arxiv.org/abs/2412.06769","key_claim":"Feeds the last hidden state back as the next input embedding instead of decoding a token; continuous thoughts encode multiple alternative next steps enabling BFS-like search, outperforming CoT on logical reasoning with far fewer steps.","relevance_to_question":"'T tokens' is not a well-defined unit of reasoning effort across reasoning modalities.","angle":"architecture-compute","citation_count_estimated":false,"lat":37.48,"lon":-122.15,"org_type":"industry","cites":["hoffmann2022chinchilla","brown2024monkeys","levine2020depthwidth","bansal2022thinking"]},{"id":"petty2024depth","title":"The Impact of Depth on Compositional Generalization in Transformer Language Models","authors":"Jackson Petty, Sjoerd van Steenkiste, Ishita Dasgupta, Fei Sha, Dan Garrette, Tal Linzen","institutions":"New York University, Google DeepMind, Google Research","year":2024,"venue":"NAACL 2024","citation_count":90,"url":"https://aclanthology.org/2024.naacl-long.402/","key_claim":"At matched parameter counts (41M/134M/374M), deeper models generalize more compositionally and have better LM loss, but returns diminish very rapidly; recommends shallower models since latency is ~linear in L.","relevance_to_question":"Isolates depth from N experimentally and shows the depth benefit saturates; raises latency (not FLOPs) as the operative cost of depth.","angle":"architecture-compute","lat":40.73,"lon":-73.99,"org_type":"academia","cites":["levine2020depthwidth","hao2024coconut","allenzhu2024capacity","bansal2022thinking"]},{"id":"gromov2025layers","title":"The Unreasonable Ineffectiveness of the Deeper Layers","authors":"Andrey Gromov, Kushal Tirumala, Hassan Shapourian, Paolo Glorioso, Daniel A. Roberts","institutions":"Meta FAIR / University of Maryland, Cisco, Zyphra, MIT","year":2025,"venue":"ICLR 2025","citation_count":247,"url":"https://arxiv.org/abs/2403.17887","key_claim":"Pruning contiguous blocks chosen by representation similarity plus light QLoRA healing removes up to half the layers of open-weight LLMs with minimal degradation.","relevance_to_question":"Effective depth is materially less than nominal L, so any equation using L as the serial-computation term overstates it \u2014 and effective depth is not readable from the config.","angle":"architecture-compute","citation_count_estimated":false,"lat":37.48,"lon":-122.15,"org_type":"industry","cites":["hao2024coconut","geiping2025recurrentdepth","allenzhu2024capacity","petty2024depth","levine2020depthwidth","bansal2022thinking"]},{"id":"ludziejewski2025moe","title":"Joint MoE Scaling Laws: Mixture of Experts Can Be Memory Efficient","authors":"Jan Ludziejewski, Maciej Pioro, Jakub Krajewski, Maciej Stefaniak, Michal Krutul, Jan Malasnicki, Marek Cygan, Piotr Sankowski, Kamil Adamczewski, Piotr Milos, Sebastian Jaszczur","institutions":"University of Warsaw, IDEAS NCBR, Polish Academy of Sciences, Nomagic","year":2025,"venue":"ICML 2025","citation_count":30,"url":"https://arxiv.org/abs/2502.05172","key_claim":"Joint scaling laws over active parameters, dataset size, expert count and granularity, validated on 280+ runs up to 2.7B active / 5B total.","relevance_to_question":"Addresses 'how should N be defined' \u2014 MoE splits N into active (FLOPs) and total (capacity), so an N-T equivalence needs two parameter axes.","angle":"architecture-compute","citation_count_estimated":false,"lat":52.24,"lon":21.02,"org_type":"academia","cites":["allenzhu2024capacity","kaplan2020scaling","wu2024inference","sardana2024beyond","levi2024simple","geiping2025recurrentdepth"]},{"id":"bae2025mor","title":"Mixture-of-Recursions: Learning Dynamic Recursive Depths for Adaptive Token-Level Computation","authors":"Sangmin Bae, Yujin Kim, Reza Bayat, Sungnyun Kim, Jiyoun Ha, Tal Schuster, Adam Fisch, Hrayr Harutyunyan, Ziwei Ji, Aaron Courville, Se-Young Yun","institutions":"KAIST AI, Mila, Google DeepMind, Google Research","year":2025,"venue":"NeurIPS 2025","citation_count":107,"url":"https://arxiv.org/abs/2507.10524","key_claim":"A shared layer stack reused across recursion steps with lightweight routers assigning different recursion depths per token, with recursion-aware KV caching.","relevance_to_question":"Makes reasoning effort a per-token variable r(t), so the equivalence equation should be an integral over per-token depth allocation, not a scalar.","angle":"architecture-compute","citation_count_estimated":false,"lat":36.37,"lon":127.36,"org_type":"academia","cites":["sanford2024logdepth","hao2024coconut","geiping2025recurrentdepth","gromov2025layers","allenzhu2024capacity","ouro2025looped"]},{"id":"bansal2022thinking","title":"End-to-end Algorithm Synthesis with Recurrent Networks: Logical Extrapolation Without Overthinking","authors":"Arpit Bansal, Avi Schwarzschild, Eitan Borgnia, Zeyad Emam, Furong Huang, Micah Goldblum, Tom Goldstein","institutions":"University of Maryland, New York University","year":2022,"venue":"NeurIPS 2022","citation_count":29,"url":"https://arxiv.org/abs/2202.05826","key_claim":"Recurrent nets trained on small instances solve much larger ones by iterating more at test time, but degenerate under many iterations ('overthinking'); a recall architecture plus progressive training enables unbounded extrapolation.","relevance_to_question":"Earliest clean demonstration that test-time iterations substitute for trained depth, and the first identification of overthinking.","angle":"architecture-compute","citation_count_estimated":false,"lat":38.99,"lon":-76.94,"org_type":"academia","cites":["levine2020depthwidth"]},{"id":"sprague2025cot","title":"To CoT or not to CoT? Chain-of-thought helps mainly on math and symbolic reasoning","authors":"Zayne Sprague, Fangcong Yin, Juan Diego Rodriguez, Dongwei Jiang, Manya Wadhwa, Prasann Singhal, Xinyu Zhao, Xi Ye, Kyle Mahowald, Greg Durrett","institutions":"UT Austin, Johns Hopkins, Princeton","year":2025,"venue":"ICLR 2025","citation_count":354,"url":"https://arxiv.org/abs/2409.12183","key_claim":"Meta-analysis of 100+ papers plus 20 datasets x 14 models: CoT gains concentrate in math/symbolic tasks; on MMLU, direct answering matches CoT unless an '=' appears in the question or response.","relevance_to_question":"Strongest single argument against a universal exchange rate: on most of the task distribution the marginal reasoning token buys ~zero accuracy.","angle":"limits-failures","citation_count_estimated":false,"lat":30.29,"lon":-97.74,"org_type":"academia","cites":["lanham2023faithfulness","turpin2023unfaithful","feng2023mystery","li2024serial","merrill2024cot","yue2025rlvr"]},{"id":"gema2025inverse","title":"Inverse Scaling in Test-Time Compute","authors":"Aryo Pradipta Gema, Alexander Hagele, Runjin Chen, Andy Arditi, Jacob Goldman-Wetzler, Kit Fraser-Taliente, Henry Sleight, Linda Petrini, Julian Michael, Beatrice Alex, Pasquale Minervini, Yanda Chen, Joe Benton, Ethan Perez","institutions":"Anthropic, University of Edinburgh, EPFL, UT Austin","year":2025,"venue":"TMLR / arXiv:2507.14417","citation_count":50,"url":"https://arxiv.org/abs/2507.14417","key_claim":"Constructs tasks where accuracy DECREASES monotonically with reasoning length across four categories, with model-family-specific failure modes.","relevance_to_question":"The exchange rate can be negative, not merely saturating; a scalar equivalence assuming monotonicity is falsified outright.","angle":"limits-failures","citation_count_estimated":false,"lat":37.78,"lon":-122.4,"org_type":"industry","cites":["snell2024","geiping2025recurrentdepth","setlur2025verifier","zeng2025revisiting","muennighoff2025s1","brown2024monkeys"]},{"id":"zhao2025knowledge","title":"Test-Time Scaling in Reasoning Models Is Not Effective for Knowledge-Intensive Tasks Yet","authors":"James Xu Zhao, Bryan Hooi, See-Kiong Ng","institutions":"National University of Singapore","year":2025,"venue":"arXiv:2509.06861","citation_count":10,"url":"https://arxiv.org/abs/2509.06861","key_claim":"Across 14 reasoning models on two knowledge-intensive benchmarks, more test-time compute does not consistently improve accuracy and often increases hallucination; compute-only scaling is post-processing of a fixed model and cannot increase mutual information with the ground truth.","relevance_to_question":"Formal reason the exchange rate is undefined on recall tasks: parameters buy storage and computation, tokens buy only computation.","angle":"limits-failures","citation_count_estimated":false,"lat":1.3,"lon":103.77,"org_type":"academia","cites":["snell2024","geiping2025recurrentdepth","zeng2025revisiting","gema2025inverse","muennighoff2025s1","setlur2025verifier"]},{"id":"stroebl2024flaws","title":"Inference Scaling fLaws: The Limits of LLM Resampling with Imperfect Verifiers","authors":"Benedikt Stroebl, Sayash Kapoor, Arvind Narayanan","institutions":"Princeton University","year":2024,"venue":"arXiv:2411.17501","citation_count":42,"url":"https://arxiv.org/abs/2411.17501","key_claim":"With an imperfect verifier there is a nonzero false-positive rate that resampling cannot reduce, imposing a hard accuracy ceiling independent of compute budget.","relevance_to_question":"Most published test-time-scaling curves are oracle-assisted; verifier quality is an unreported free parameter in every equivalence claim.","angle":"limits-failures","citation_count_estimated":false,"lat":40.34,"lon":-74.66,"org_type":"academia","cites":["brown2024monkeys","wu2024inference","sardana2024beyond","kaplan2020scaling","snell2024","allenzhu2024capacity"]},{"id":"yue2025rlvr","title":"Does Reinforcement Learning Really Incentivize Reasoning Capacity in LLMs Beyond the Base Model?","authors":"Yang Yue, Zhiqi Chen, Rui Lu, Andrew Zhao, Zhaokai Wang, Shiji Song, Gao Huang","institutions":"Tsinghua University (LeapLab), Shanghai Jiao Tong University","year":2025,"venue":"NeurIPS 2025 / arXiv:2504.13837","citation_count":985,"url":"https://arxiv.org/abs/2504.13837","key_claim":"RLVR improves sampling efficiency at small k but base models achieve higher pass@k at large k; the reasoning capability boundary narrows as RLVR training progresses.","relevance_to_question":"Gains attributed to 'more thinking tokens' may be training-compute effects \u2014 a core confound in fitting a size-tokens equivalence.","angle":"limits-failures","citation_count_estimated":false,"lat":40.0,"lon":116.33,"org_type":"academia","cites":["deepseek2025r1","kimi2025k15","chen2024overthinking","lanham2023faithfulness","sardana2024beyond","allenzhu2024capacity"]},{"id":"shojaee2025illusion","title":"The Illusion of Thinking: Understanding the Strengths and Limitations of Reasoning Models via the Lens of Problem Complexity","authors":"Parshin Shojaee, Iman Mirzadeh, Keivan Alizadeh, Maxwell Horton, Samy Bengio, Mehrdad Farajtabar","institutions":"Apple","year":2025,"venue":"arXiv:2506.06941","citation_count":464,"url":"https://arxiv.org/abs/2506.06941","key_claim":"In controllable puzzle environments, large reasoning models show accuracy collapse beyond a complexity threshold and counterintuitively reduce reasoning-token expenditure as problems approach it.","relevance_to_question":"Proposes a complexity ceiling past which tokens cannot substitute for capability; the token-usage decline contradicts a smooth monotone exchange rate.","angle":"limits-failures","citation_count_estimated":false,"lat":37.33,"lon":-122.03,"org_type":"industry","cites":["yue2025rlvr","lanham2023faithfulness","deepseek2025r1","merrill2023parallelism","wu2024inference","turpin2023unfaithful"]},{"id":"lawsen2025comment","title":"Comment on 'The Illusion of Thinking'","authors":"A. Lawsen (with Claude Opus 4)","institutions":"Open Philanthropy","year":2025,"venue":"arXiv:2506.09250","citation_count":25,"url":"https://arxiv.org/abs/2506.09250","key_claim":"The reported collapse largely reflects experimental design: Tower-of-Hanoi failures coincide with output-token limits, River Crossing includes provably unsolvable instances scored as failures, and models succeed when asked for a generating function.","relevance_to_question":"Relocates rather than removes the limit \u2014 the output-token budget itself is a hard boundary on test-time compute per query.","angle":"limits-failures","citation_count_estimated":false,"lat":37.78,"lon":-122.4,"org_type":"independent","cites":["shojaee2025illusion","turpin2023unfaithful","yue2025rlvr","chen2024overthinking","lanham2023faithfulness","sprague2025cot"]},{"id":"turpin2023unfaithful","title":"Language Models Don't Always Say What They Think: Unfaithful Explanations in Chain-of-Thought Prompting","authors":"Miles Turpin, Julian Michael, Ethan Perez, Samuel R. Bowman","institutions":"New York University, Anthropic","year":2023,"venue":"NeurIPS 2023","citation_count":1525,"url":"https://arxiv.org/abs/2305.04388","key_claim":"CoT explanations systematically misrepresent the true cause of predictions; biasing features shift answers by up to 36% while the CoT never mentions the bias.","relevance_to_question":"If tokens are post-hoc rationalization rather than causal computation, token count overstates real test-time compute by an unmeasured factor.","angle":"limits-failures","citation_count_estimated":false,"lat":40.73,"lon":-73.99,"org_type":"academia","cites":[]},{"id":"lanham2023faithfulness","title":"Measuring Faithfulness in Chain-of-Thought Reasoning","authors":"Tamera Lanham, Anna Chen, Ansh Radhakrishnan, Benoit Steiner, Carson Denison, Danny Hernandez, Dustin Li, Esin Durmus, Evan Hubinger, Jackson Kernion, et al.","institutions":"Anthropic","year":2023,"venue":"arXiv:2307.13702","citation_count":534,"url":"https://arxiv.org/abs/2307.13702","key_claim":"Intervention-based measurement (early answering, adding mistakes, paraphrasing, filler-token substitution) shows CoT is often not causally load-bearing, and faithfulness varies non-monotonically with model scale.","relevance_to_question":"Provides the methodology for the missing conversion constant between tokens emitted and computation performed; the filler-token control is the cleanest falsifier.","angle":"limits-failures","citation_count_estimated":false,"lat":37.78,"lon":-122.4,"org_type":"industry","cites":["turpin2023unfaithful"]},{"id":"zeng2025revisiting","title":"Revisiting the Test-Time Scaling of o1-like Models: Do they Truly Possess Test-Time Scaling Capabilities?","authors":"Zhiyuan Zeng, Qinyuan Cheng, Zhangyue Yin, Yunhua Zhou, Xipeng Qiu","institutions":"Fudan University (OpenMOSS), Shanghai AI Laboratory","year":2025,"venue":"ACL 2025","citation_count":88,"url":"https://arxiv.org/abs/2502.12215","key_claim":"For QwQ, DeepSeek-R1 and LIMO, longer CoTs do not consistently improve accuracy; on the same question, correct solutions are frequently SHORTER than incorrect ones.","relevance_to_question":"Breaks the monotone token-accuracy assumption within a single model on a single question \u2014 token count is not even a valid ordinal proxy for useful compute.","angle":"limits-failures","citation_count_estimated":false,"lat":31.3,"lon":121.5,"org_type":"academia","cites":["snell2024","muennighoff2025s1","geiping2025recurrentdepth","setlur2025verifier","turpin2023unfaithful","chen2024overthinking"]},{"id":"liu2025serial","title":"The Serial Scaling Hypothesis","authors":"Yuxi Liu, Konpat Preechakul, Kananart Kuwaranancharoen, Yutong Bai","institutions":"UC Berkeley","year":2025,"venue":"arXiv:2507.12549","citation_count":11,"url":"https://arxiv.org/abs/2507.12549","key_claim":"Some problems are inherently serial: they require sequentially dependent steps that cannot be efficiently parallelized, so parallel-centric scaling cannot solve them regardless of budget.","relevance_to_question":"Serial reasoning tokens and parallel compute (including added parameters) are non-interchangeable axes, so a single scalar equivalence is ill-posed.","angle":"limits-failures","citation_count_estimated":false,"lat":37.87,"lon":-122.26,"org_type":"academia","cites":["zeng2025revisiting","gema2025inverse","stroebl2024flaws","kaplan2020scaling","snell2024","muennighoff2025s1"]},{"id":"chen2024overthinking","title":"Do NOT Think That Much for 2+3=? On the Overthinking of o1-Like LLMs","authors":"Xingyu Chen, Jiahao Xu, Tian Liang, Zhiwei He, Jianhui Pang, Dian Yu, Linfeng Song, Qiuzhi Liu, Mengfei Zhou, Zhuosheng Zhang, Rui Wang, Zhaopeng Tu, Haitao Mi, Dong Yu","institutions":"Tencent AI Lab, Shanghai Jiao Tong University","year":2024,"venue":"arXiv:2412.21187","citation_count":564,"url":"https://arxiv.org/abs/2412.21187","key_claim":"o1-like models spend large token budgets on trivial problems with negligible accuracy benefit; self-training cuts token usage substantially with no accuracy loss.","relevance_to_question":"The marginal value of a reasoning token varies by orders of magnitude with problem difficulty, so any exchange rate must be difficulty-conditional.","angle":"limits-failures","citation_count_estimated":false,"lat":22.54,"lon":114.06,"org_type":"industry","cites":["turpin2023unfaithful","bansal2022thinking","lanham2023faithfulness"]},{"id":"erdil2025economics","title":"Inference economics of language models","authors":"Ege Erdil","institutions":"Epoch AI","year":2025,"venue":"arXiv:2506.04645","citation_count":19,"url":"https://arxiv.org/abs/2506.04645","key_claim":"Models the trade-off between cost per token and serial generation speed under arithmetic, memory-bandwidth, network-throughput and latency constraints, producing speed-cost Pareto frontiers.","relevance_to_question":"Formalizes the cost asymmetry the equivalence framing hides: parameters are amortized once, reasoning tokens are paid per query with latency and quadratic attention penalties.","angle":"limits-failures","citation_count_estimated":false,"lat":37.78,"lon":-122.4,"org_type":"independent","cites":["stroebl2024flaws","brown2024monkeys","wu2024inference","sardana2024beyond","levi2024simple","turpin2023unfaithful"]},{"id":"ouro2025looped","title":"Scaling Latent Reasoning via Looped Language Models (Ouro)","authors":"Ouro Team","institutions":"multiple","year":2025,"venue":"arXiv:2510.25741","citation_count":115,"url":"https://arxiv.org/abs/2510.25741","key_claim":"Looped language models Ouro 1.4B and 2.6B reportedly match up to 12B SOTA LLMs on benchmarks \u2014 an implied 4-9x parameter equivalence from recurrence.","relevance_to_question":"Flatly irreconcilable with Schwethelm's phi=0.46 (~1.4x at r=4). The recurrence-to-parameter exchange rate estimates in the literature span an order of magnitude.","angle":"architecture-compute","citation_count_estimated":false,"lat":42.36,"lon":-71.09,"org_type":"independent","cites":["geiping2025recurrentdepth","saunshi2025looped","hao2024coconut","allenzhu2024capacity","kaplan2020scaling","deepseek2025r1"]},{"id":"parcae2026looped","title":"Parcae: Scaling Laws For Stable Looped Language Models","authors":"Parcae authors","institutions":"multiple","year":2026,"venue":"arXiv:2604.12946","citation_count":30,"url":"https://arxiv.org/abs/2604.12946","key_claim":"Derives power laws to scale FLOPs at fixed parameter count; reports predictable, saturating exponential decay for test-time looping; 1.3B Parcae reaches up to 87.5% of a Transformer twice its size.","relevance_to_question":"A second independent 2026 iso-depth fit to triangulate against Schwethelm; 'saturating exponential' contradicts a pure power-law reading of the depth-for-params trade.","angle":"architecture-compute","citation_count_estimated":false,"lat":42.36,"lon":-71.09,"org_type":"independent","cites":["allenzhu2024capacity","ouro2025looped","ludziejewski2025moe","kaplan2020scaling","wu2024inference","sardana2024beyond"]},{"id":"artofscaling2025","title":"The Art of Scaling Test-Time Compute","authors":"multiple","institutions":"multiple","year":2025,"venue":"arXiv:2512.02008","citation_count":11,"url":"https://arxiv.org/abs/2512.02008","key_claim":"Largest test-time-scaling study to date: 30B+ generated tokens, 8 models 7B-235B, 4 reasoning datasets. Finds no single TTS strategy dominates and no unified N-T law.","relevance_to_question":"Strongest empirical support for the negative thesis: at scale, the exchange rate does not resolve into a single law.","angle":"empirical-scaling","citation_count_estimated":false,"lat":42.36,"lon":-71.09,"org_type":"independent","cites":["snell2024","setlur2025verifier","geiping2025recurrentdepth","gema2025inverse","muennighoff2025s1","zeng2025revisiting"]}];
+const CONTENT = {"title":"Parameters vs. thinking tokens: is there an exchange rate?","question":"You can increase the amount an LLM thinks in two axes: by increasing the size of the model, or by increasing the number of tokens it outputs. Can we quantify the mathematical equivalence between the two? Given an architecture (depth, embed dim, param count), what's the equation that establishes the relationship between model size and reasoning effort (test-time compute)?","date":"2026-08-23","stats":{"papers":55,"edges":263},"tldr":["No such equation exists. Four partial laws describe different axes and do not compose.",{"point":"The four, and what each actually prices","sub":["Snell: a regime map keyed on R = D_inf/D_pre, not an equation [[snell2024]]","Wu: log10(C_opt) = 1.19*log10(N) + 2.03 \u2014 inference budget at which N is optimal, NOT a substitution rate [[wu2024inference]]","Roberts T-squared: L(N,D,k) = E + A/N^a + B/D^b + G/k^g \u2014 real third-axis fit, but k is parallel samples [[roberts2026t2]]","Schwethelm: L = E + A(N_once + r^0.46*N_rec)^-a + B/D^b \u2014 architectural recurrence, not tokens [[schwethelm2026recurrence]]"]},"Settled: the trade is asymmetric. Tokens replace super-polynomial param growth; params cannot manufacture serial depth [[feng2023mystery]] [[li2024serial]].","Settled: tokens never buy storage. ~2 bits/param capacity is a hard wall no CoT budget crosses [[allenzhu2024capacity]] [[zhao2025knowledge]].","Every quantitative anchor is fitted 3+ orders of magnitude below frontier, on val loss or synthetic tasks.","Closest thing to a direct answer is negative: no inference budget lets a weak model match a strong model's single-sample accuracy [[stroebl2024flaws]]."],"insights":[{"title":"The one fitted depth-for-params constant is not a constant","points":["phi = 0.46 [0.41, 0.53]: r=4 recurrences buy 4^0.46 ~ 1.89 blocks, 47% of identity [[schwethelm2026recurrence]]","Concave \u2014 2nd recurrence worth 0.38 blocks, 8th ~0.11. Marginal, not average.","Same paper: 0.38 under truncated BPTT, 0.65 with hyperconnections. Recipe-dependent.","Saunshi measures phi ~ 1 [[saunshi2025looped]]; Ouro claims 4-9x [[ouro2025looped]]. ~10x spread, unreconciled.","None of the three measures test-time tokens. All measure architectural recurrence."]},{"title":"Snell's 14x is narrower than its citation","points":["Conditional on R = D_inf/D_pre << 1 \u2014 the low-traffic regime, opposite of frontier serving [[snell2024]]","Only where the base model already has non-trivial success; on MATH level 5 no method makes progress","The separate 4x is vs a best-of-N baseline, not vs model size","\"3.8B + 256 samples matches 70B\" appears nowhere in the paper. Citation drift.","Largest study to date, 8 models 7B-235B: no strategy dominates, no unified law [[artofscaling2025]]"]},{"title":"The cleanest exchange rate in the data was never regressed","points":["Coverage fits log(c) ~ a*k^-b; within a family, curves share slope, differ by horizontal offset [[brown2024monkeys]]","That offset is the N-to-log-T rate. Never regressed against N.","FLOP-matched direction flips by task: small+samples wins MATH, large wins CodeContests","Coverage 79.8% -> 95.3% over 100 -> 10k, but majority voting moved 38.7% -> 39.8%","The gain lives in the verifier, not the tokens"]},{"title":"Additive separability is the hidden assumption in every joint fit","points":["T-squared is the only real third-axis fit [[roberts2026t2]] \u2014 and sets cross-partial dL/dNdk = 0 by construction","So it assumes the axes are independent, which is the question being asked","No CES / elasticity-of-substitution form fitted anywhere","Its k = C_inf/(2N) prices one sample at one token's FLOPs","Fit tops out at 901M params; 4 of 8 tasks synthetic"]},{"title":"The complexity ladder is existence, not learnability","points":["CoT budget t(n) -> class: log ~ TC0, linear = regular, poly = exactly P [[merrill2024cot]]","Preconditions usually dropped: linear needs projected pre-norm, poly needs generalized pre-norm","Constants unbounded \u2014 \"poly CoT = P\" could hide n^10","Turing completeness needs unbounded precision [[perez2021turing]] or an unbounded prompt [[qiu2025prompting]]","None of it constrains a 70B model on a 4k-token problem quantitatively"]},{"title":"On most tasks the marginal reasoning token buys nothing","points":["CoT gains concentrate in math/symbolic; on MMLU direct answering matches CoT absent an \"=\" [[sprague2025cot]]","14 reasoning models on knowledge tasks: more compute often raises hallucination [[zhao2025knowledge]]","Inverse scaling is real on constructed suites \u2014 accuracy deteriorates with length [[gema2025inverse]]","Correct solutions often shorter than incorrect ones on the same question [[zeng2025revisiting]]","A rate fitted on GSM8K/MATH/AIME is a benchmark artifact, not a law"]},{"title":"The token unit itself is unvalidated","points":["CoT misrepresents true causes; biasing features shift answers up to 36% unmentioned [[turpin2023unfaithful]]","Causal load-bearing varies by scale/task under truncation, corruption, filler controls [[lanham2023faithfulness]]","Every equivalence equation implicitly sets the faithfulness discount to 1","Nobody has measured that fraction as a function of N and task","It is the missing conversion constant between tokens and compute"]},{"title":"FLOPs is the wrong currency, but not for the usual reason","points":["C_gen(T) ~ 2NT + L*d_attn*T^2; terms equal at T = 24*d_model, ~98k tokens at d=4096","So the quadratic term is negligible in every regime the evidence covers [[kaplan2020scaling]]","Real asymmetry: decode is bandwidth-bound, params batch free, tokens are serial wall-clock [[erdil2025economics]]","o3 on ARC-AGI (ARC Prize figures): ~$17-20/task -> ~172x compute for 87.5%; cost estimates $2-3.4k up to ~$30k","MoE splits N: capacity tracks total params, FLOPs track active [[allenzhu2024capacity]] [[ludziejewski2025moe]]"]}],"next_steps":["Regress Brown's coverage-curve offset against N on Qwen2.5 0.5B-7B \u2014 the rate is already in published data","Reimplement the Schwethelm four-parameter form as a shared fitting harness before generating any data","Build the difficulty-binned eval asset (MATH/GSM8K/GPQA + tunable-depth synthetic + knowledge recall) with per-problem base pass@1","Implement the Lanham triple control (truncate / corrupt / filler) as a reusable eval","Pre-register the falsifier list so any fitted surface is tested against knowledge-recall and inverse-scaling suites first"],"ideas":[{"id":"D1","question":"Within a model family, how many log-k units of sampling does a doubling of N buy?","hypothesis":"Delta log k is proportional to log N, with slope positive on math and ~0 on knowledge tasks","experiment":"Coverage curves for Qwen2.5 0.5/1.5/3/7B on MATH, GSM8K, HumanEval, TriviaQA at k = 1..10^4; fit log(c) = a*k^-b per model; regress the fitted offset on log N","why":"Turns Brown's published same-slope/different-offset observation into the literal exchange rate with one regression. Best result-per-GPU-hour available."},{"id":"D2","question":"Is the N-T interaction additive, multiplicative, or CES?","hypothesis":"Non-separable \u2014 fitted gamma moves with N, so CES beats the additive form by AIC","experiment":"Pythia/Qwen ladder 70M-1.4B on GSM8K-easy, a synthetic tunable-depth arithmetic generator, and a knowledge-recall set; sweep budget-forced CoT 16->2048 and k 1->256; fit three functional forms","why":"Every published joint law assumes the cross-partial is zero. Nobody has tested it, and it is cheap below 1.5B."},{"id":"D3","question":"What fraction of emitted reasoning tokens is causally load-bearing?","hypothesis":"f << 1 and decreases with T; correcting T <- f*T flattens cross-model disagreement in the joint fit","experiment":"Lanham triple control on Qwen2.5 0.5B-7B: truncate-and-force at fraction p, corrupt a random span, replace n tokens with filler; define f as the truncation fraction where accuracy hits the no-CoT baseline","why":"This is the unmeasured constant every equivalence equation silently sets to 1."},{"id":"D4","question":"Does phi = 0.46 transfer from architectural recurrence to emitted CoT tokens?","hypothesis":"phi_CoT < 0.46 \u2014 a discrete token is a far narrower channel than a residual state","experiment":"Matched ~100-300M models at identical total compute: (a) L layers no CoT, (b) L/2 looped 2x, (c) L/2 + forced CoT length T; tasks all three can learn (multi-digit addition, p-hop induction, Dyck-k); fit Schwethelm's form with r -> T","why":"Tests whether the sharpest number in the literature is about recurrence specifically or serial compute generally."},{"id":"D5","question":"Why do the three published recurrence-equivalence estimates disagree by 10x?","hypothesis":"Metric. Loss-based fits give phi ~ 0.5; benchmark-based comparisons inflate it.","experiment":"One ladder, one recipe; evaluate both validation loss and downstream benchmarks; fit phi separately under each metric","why":"0.46 vs ~1 vs 4-9x on the single load-bearing constant is the field's biggest unaddressed discrepancy here."},{"id":"D6","question":"At what problem difficulty does more-tokens-smaller-model stop beating fewer-tokens-bigger-model?","hypothesis":"A clean crossover per family parameterized by base pass@1; below ~1-2% no budget closes the gap","experiment":"Bin MATH/AIME/GPQA by measured base pass@1 (0, <1%, 1-10%, 10-50%, >50%) across 0.5/1.5/3/7B at FLOP-matched budgets; plot the iso-performance frontier per bin, including the pass@1 = 0 bin most papers drop","why":"Snell reports the inversion exists; nobody has traced the boundary surface."},{"id":"D7","question":"How much of the measured exchange rate survives removing the oracle verifier?","hypothesis":"Most of it vanishes; majority-vote-only substitution rates are several-fold worse","experiment":"Same ladder under three selection regimes (oracle / trained PRM / majority vote), plus a deliberately noisy verifier with injected false-positive rate to trace the Stroebl ceiling empirically","why":"Every published substitution number is oracle-assisted. This is falsifier #3."},{"id":"D8","question":"At fixed N, should you train deeper or wider if you know you will spend T test-time tokens?","hypothesis":"Optimal depth falls as planned T rises \u2014 CoT substitutes for serial depth, so budget reallocates to width","experiment":"3x3 grid at fixed N ~ 150M: L in {8, 16, 32} with d matched to hold N constant, each evaluated at T in {0, 128, 1024}","why":"Nobody has measured the sign of this cross-partial, and it is a direct architectural decision."},{"id":"Q1","question":"Is the substitution elasticity constant, or regime-dependent?","why":"No elasticity-of-substitution form has been fitted anywhere, despite the economics analogy being obvious."},{"id":"Q2","question":"How do serial (long CoT) and parallel (best-of-N) tokens convert into each other?","why":"No published conversion exists, and the Serial Scaling Hypothesis argues they are non-interchangeable axes."},{"id":"Q3","question":"Is the inference power-law exponent a model property or a benchmark property?","why":"Schaeffer shows the aggregate law is an artifact of heavy-tailed per-problem success rates, so the exponent should move with benchmark composition."},{"id":"Q4","question":"What is the effective depth of a real model, and should L in any equation be that instead of nominal depth?","why":"Half the layers prune with minimal degradation after light healing, so nominal L overstates serial computation by an unmeasured, model-dependent factor."},{"id":"Q5","question":"How much of an RL-trained model's token count is training compute in disguise?","why":"R1-style models were trained to emit long chains, so their T is not a free test-time variable and comparisons price training as free."},{"id":"Q6","question":"Where does the substitution invert across domain and model family, not just difficulty?","why":"The inversion boundary surface has never been traced; it is the domain of validity of every claim in this area."}],"report_quality":{"verdict":"MEDIUM","verdict_note":"Negative thesis (no general equation) survives adversarial review and rates HIGH; the positive content does not hold the weight placed on it.","axes":[{"name":"Freshness","score":4,"note":"Through 2026-04 incl. both 2026 arXiv papers; three directly on-topic works were initially missed and added on review."},{"name":"Accuracy","score":3,"note":"All 55 records verified to exist; one central negative claim was falsified by a paper in the bibliography, plus three material overstatements corrected."},{"name":"Reproducibility","score":4,"note":"Every load-bearing number traced to an arXiv ID and independently re-verified; o3/ARC figures were mis-sourced and re-attributed."},{"name":"Bias / Completeness","score":3,"note":"Strong on the deflationary literature, but initially omitted the looped result contradicting its headline exponent."},{"name":"Causal rigor","score":4,"note":"Correctly isolates RL-vs-prompting, verifier quality and faithfulness as confounds."},{"name":"Scale-transfer","score":2,"note":"Both quantitative anchors fitted at <=1.1B and <=901M params, on validation loss or synthetic tasks. 3+ orders of magnitude below frontier."},{"name":"Falsifiability","score":5,"note":"Six specific, measurement-tied falsifiers that would actually kill a proposed law."}]}};
+</script>
+<script>
+const BY = new Map(PAPERS.map(p=>[p.id,p]));
+const ANGLE_KEY = {"complexity-theory":"A","empirical-scaling":"B","architecture-compute":"C","limits-failures":"D"};
+const ANGLE_COL = {A:"var(--angle-a)",B:"var(--angle-b)",C:"var(--angle-c)",D:"var(--angle-d)"};
+const ANGLE_HEX = {A:"#2e6f47",B:"#a9701b",C:"#b23a2e",D:"#6b4a6e"};
+const esc = s => String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const NODE_FILL="#d5e0ca", NODE_STROKE="#2e6f47", INK="#0c2a1e", LAND="#c8d5bc",
+      BORDER="#8fa17c", MUTED="#4d5d46";
+
+/* ---------- citation chips ---------- */
+function chips(text){
+  return esc(text).replace(/\[\[([a-zA-Z0-9_.\-]+)\]\]/g, (m,id)=>{
+    const p = BY.get(id);
+    if(!p) return id;
+    return `<a class="cite" data-cid="${id}" href="${esc(p.url)}" target="_blank" rel="noopener">${esc(id)}</a>`;
+  });
+}
+function popHTML(p){
+  const a = ANGLE_KEY[p.angle]||"A";
+  return `<div class="t">${esc(p.title)}</div>
+  <div class="m">${esc(p.authors)}</div>
+  <div class="m">${p.year} &middot; ${esc(p.venue||"preprint")} &middot; ${(p.citation_count||0).toLocaleString()} cites${p.citation_count_estimated?"~":""}</div>
+  <div class="c">${esc(p.key_claim)}</div>
+  <div class="m" style="display:flex;gap:10px;align-items:center;margin:0">
+    <span class="tag" style="color:${ANGLE_HEX[a]}">${a} ${esc(p.angle)}</span>
+    <a class="go" href="${esc(p.url)}" target="_blank" rel="noopener">open &rarr;</a></div>`;
+}
+const pop = document.getElementById("pop");
+let popT = null;
+function showPop(html, x, y){
+  clearTimeout(popT);
+  pop.innerHTML = html; pop.classList.add("show");
+  const w = pop.offsetWidth, h = pop.offsetHeight;
+  let left = x + 14, top = y + 14;
+  if(left + w > window.scrollX + document.documentElement.clientWidth - 8)
+    left = x - w - 14;
+  if(left < window.scrollX + 8) left = window.scrollX + 8;
+  if(top + h > window.scrollY + window.innerHeight - 8) top = y - h - 14;
+  pop.style.left = left+"px"; pop.style.top = top+"px";
+}
+function hidePopSoon(){ popT = setTimeout(()=>pop.classList.remove("show"), 280); }
+pop.addEventListener("mouseenter", ()=>clearTimeout(popT));
+pop.addEventListener("mouseleave", hidePopSoon);
+document.addEventListener("mouseover", e=>{
+  const c = e.target.closest("[data-cid]");
+  if(!c) return;
+  const p = BY.get(c.dataset.cid); if(!p) return;
+  const r = c.getBoundingClientRect();
+  showPop(popHTML(p), r.left + window.scrollX, r.bottom + window.scrollY - 8);
+});
+document.addEventListener("mouseout", e=>{
+  if(e.target.closest("[data-cid]") && !(e.relatedTarget && e.relatedTarget.closest("#pop"))) hidePopSoon();
+});
+
+/* ---------- header ---------- */
+document.getElementById("rtitle").textContent = CONTENT.title;
+document.getElementById("rquestion").textContent = CONTENT.question;
+document.getElementById("rstats").textContent =
+  `${CONTENT.stats.papers} papers · ${CONTENT.stats.edges} citation links`;
+document.getElementById("footdate").textContent = CONTENT.date;
+
+/* ---------- nav ---------- */
+const SECTIONS = [["tldr","TLDR"],["insights","Insights"],["graph","Citation graph"],
+  ["timeline","Timeline"],["next","Next steps"],["ideas","Idea deck"],
+  ["quality","Quality"],["citations","Citations"]];
+const pills = document.getElementById("pills");
+pills.innerHTML = SECTIONS.map(([id,label],i)=>
+  `<button class="pill" data-sec="${id}"><span class="n">${String(i+1).padStart(2,"0")}</span>${esc(label)}</button>`).join("");
+let curSec = 0;
+function goto(i){
+  curSec = Math.max(0, Math.min(SECTIONS.length-1, i));
+  document.getElementById(SECTIONS[curSec][0]).scrollIntoView({behavior:"smooth", block:"start"});
+}
+pills.addEventListener("click", e=>{
+  const b = e.target.closest(".pill"); if(!b) return;
+  goto(SECTIONS.findIndex(s=>s[0]===b.dataset.sec));
+});
+document.getElementById("navPrev").onclick = ()=>goto(curSec-1);
+document.getElementById("navNext").onclick = ()=>goto(curSec+1);
+function markActive(i){
+  curSec = i;
+  [...pills.children].forEach((el,j)=>el.classList.toggle("on", j===i));
+  const on = pills.children[i];
+  if(on) pills.scrollTo({left: on.offsetLeft - pills.clientWidth/2 + on.offsetWidth/2, behavior:"smooth"});
+}
+function onScroll(){
+  const probe = 90;
+  let idx = 0;
+  SECTIONS.forEach(([id],i)=>{
+    const el = document.getElementById(id);
+    if(el.getBoundingClientRect().top <= probe) idx = i;
+  });
+  if(idx !== curSec) markActive(idx);
+}
+window.addEventListener("scroll", onScroll, {passive:true});
+markActive(0);
+
+/* ---------- tldr ---------- */
+document.getElementById("tldrList").innerHTML = CONTENT.tldr.map(it=>{
+  if(typeof it === "string") return `<li>${chips(it)}</li>`;
+  const sub = (it.sub||[]).map(s=>`<li>${chips(s)}</li>`).join("");
+  return `<li>${chips(it.point)}<ul>${sub}</ul></li>`;
+}).join("");
+
+/* ---------- insights carousel ---------- */
+const INS = CONTENT.insights;
+document.getElementById("caro").innerHTML = INS.map((ins,i)=>
+  `<div class="slide${i?"":" on"}"><h3>${chips(ins.title)}</h3>
+   <ul class="log">${ins.points.map(p=>`<li>${chips(p)}</li>`).join("")}</ul></div>`).join("");
+document.getElementById("insDots").innerHTML = INS.map((_,i)=>
+  `<button class="dot${i?"":" on"}" data-i="${i}" aria-label="Insight ${i+1}"></button>`).join("");
+let insI = 0;
+function setIns(i){
+  insI = (i + INS.length) % INS.length;
+  document.querySelectorAll("#caro .slide").forEach((s,j)=>s.classList.toggle("on", j===insI));
+  document.querySelectorAll("#insDots .dot").forEach((d,j)=>d.classList.toggle("on", j===insI));
+}
+document.getElementById("insDots").addEventListener("click", e=>{
+  const d = e.target.closest(".dot"); if(d) setIns(+d.dataset.i);
+});
+document.getElementById("insPrev").onclick = ()=>setIns(insI-1);
+document.getElementById("insNext").onclick = ()=>setIns(insI+1);
+
+/* ---------- next steps ---------- */
+document.getElementById("stepsList").innerHTML = CONTENT.next_steps.map(s=>
+  `<li><span class="box"></span><span>${chips(s)}</span></li>`).join("");
+
+/* ---------- idea deck ---------- */
+const IDEAS = CONTENT.ideas;
+let ideaI = 0;
+function renderIdea(){
+  const d = IDEAS[ideaI];
+  const cells = [
+    ["Research question", d.question],
+    ["Hypothesis", d.hypothesis],
+    ["Experiment", d.experiment],
+    ["Why", d.why]
+  ];
+  document.getElementById("ideaGrid").innerHTML = cells.map(([h,v])=>
+    `<div class="qcell${v?"":" empty"}"><h4>${h}</h4><p>${v?chips(v):"&mdash; open"}</p></div>`).join("");
+}
+document.getElementById("shuffleBtn").onclick = ()=>{
+  let n = ideaI;
+  while(IDEAS.length > 1 && n === ideaI) n = Math.floor(Math.random()*IDEAS.length);
+  ideaI = n; renderIdea();
+};
+renderIdea();
+
+/* ---------- quality bars ---------- */
+document.getElementById("qualityBox").innerHTML = CONTENT.report_quality.axes.map(a=>
+  `<div class="qbar"><div class="lab">${esc(a.name)}</div>
+   <div class="qtrack"><div class="qfill" style="width:${a.score/5*100}%"></div></div>
+   <div class="val">${a.score}/5</div>
+   <div class="qnote">${esc(a.note)}</div></div>`).join("");
+
+/* ---------- citations accordions ---------- */
+const sorted = [...PAPERS].sort((a,b)=>(b.citation_count||0)-(a.citation_count||0));
+document.getElementById("accList").innerHTML = sorted.map(p=>{
+  const a = ANGLE_KEY[p.angle]||"A";
+  return `<div class="acc"><button class="accH">
+    <span class="yr">${p.year}</span>
+    <span class="tt">${esc(p.title)}<span class="au">${esc(p.authors)}</span></span>
+    <span class="cc">${(p.citation_count||0).toLocaleString()}${p.citation_count_estimated?"~":""}</span>
+   </button>
+   <div class="accB">${esc(p.key_claim)}
+    <div class="meta"><span class="tag" style="color:${ANGLE_HEX[a]}">${a} ${esc(p.angle)}</span>
+     <span>${esc(p.venue||"preprint")}</span><span>${esc(p.institutions||"")}</span>
+     <a class="go" href="${esc(p.url)}" target="_blank" rel="noopener" style="color:var(--ink);border-bottom:1px solid var(--ink);text-decoration:none">open &rarr;</a></div></div></div>`;
+}).join("");
+document.getElementById("accList").addEventListener("click", e=>{
+  const h = e.target.closest(".accH"); if(!h) return;
+  h.parentElement.classList.toggle("open");
+});
+
+/* ---------- shared node interactions ---------- */
+const maxCite = d3.max(PAPERS, p=>p.citation_count||1);
+const rScale = d3.scaleSqrt().domain([1, maxCite]).range([2.6, 8]).clamp(true);
+const eScale = d3.scaleSqrt().domain([1, maxCite]).range([0.35, 2.6]).clamp(true);
+const EDGES = [];
+PAPERS.forEach(p => (p.cites||[]).forEach(t => {
+  if(BY.has(t) && t !== p.id) EDGES.push({source:p.id, target:t,
+    w: eScale(Math.sqrt((p.citation_count||1) * (BY.get(t).citation_count||1)))});
+}));
+function nodePop(p, ev){
+  showPop(popHTML(p), ev.pageX, ev.pageY);
+}
+
+/* ---------- 5. citation graph on map ---------- */
+(function(){
+  const svg = d3.select("#mapsvg");
+  const W = 1000, H = 560;
+  svg.attr("viewBox", `0 0 ${W} ${H}`).style("height", "min(70vh, 560px)");
+  svg.append("defs").html(
+    `<marker id="arw" viewBox="0 -4 8 8" refX="8" refY="0" markerWidth="6" markerHeight="6"
+      orient="auto"><path d="M0,-3L7,0L0,3" fill="${INK}" fill-opacity="0.5"></path></marker>`);
+  const root = svg.append("g");
+  const gGeo = root.append("g");
+  const gLink = root.append("g");
+  const gNode = root.append("g");
+
+  const proj = d3.geoMercator().scale(W/6.2).translate([W/2, H/1.62]);
+  const path = d3.geoPath(proj);
+  gGeo.append("path").attr("d", path(d3.geoGraticule10()))
+    .attr("fill","none").attr("stroke",BORDER).attr("stroke-width",0.4).attr("stroke-opacity",0.6)
+    .attr("vector-effect","non-scaling-stroke");
+
+  const nodes = PAPERS.map(p=>{
+    const xy = proj([p.lon, p.lat]);
+    return Object.assign({}, p, {gx:xy[0], gy:xy[1],
+      x:xy[0]+(Math.random()-.5)*6, y:xy[1]+(Math.random()-.5)*6});
+  });
+  const links = EDGES.map(e=>Object.assign({}, e));
+
+  const zoom = d3.zoom().scaleExtent([0.7, 14]).on("zoom", ev=>{
+    root.attr("transform", ev.transform);
+    root.attr("stroke-width", 1/ev.transform.k);
+    gNode.selectAll("circle").attr("stroke-width", 1.1/Math.sqrt(ev.transform.k));
+  });
+  svg.call(zoom).on("dblclick.zoom", null);
+
+  const link = gLink.selectAll("line").data(links).join("line")
+    .attr("stroke", INK).attr("stroke-opacity", 0.24)
+    .attr("stroke-width", d=>d.w).attr("marker-end","url(#arw)")
+    .attr("vector-effect","non-scaling-stroke");
+
+  const node = gNode.selectAll("circle").data(nodes).join("circle")
+    .attr("r", d=>rScale(d.citation_count||1))
+    .attr("fill", NODE_FILL).attr("stroke", NODE_STROKE).attr("stroke-width", 1.1)
+    .style("cursor","pointer")
+    .on("mouseenter", (ev,d)=>nodePop(d, ev))
+    .on("mouseleave", hidePopSoon)
+    .on("dblclick", (ev,d)=>{
+      ev.stopPropagation();
+      svg.transition().duration(650).call(zoom.transform,
+        d3.zoomIdentity.translate(W/2, H/2).scale(6).translate(-d.x, -d.y));
+    });
+
+  // Nodes are anchored at their true projected institution coordinates; the only
+  // competing force is collision, just strong enough to fan out co-located labs.
+  const sim = d3.forceSimulation(nodes)
+    .force("link", d3.forceLink(links).id(d=>d.id).strength(0))
+    .force("x", d3.forceX(d=>d.gx).strength(0.7))
+    .force("y", d3.forceY(d=>d.gy).strength(0.7))
+    .force("collide", d3.forceCollide().radius(d=>rScale(d.citation_count||1)+1.5).strength(0.9))
+    .alpha(1).alphaDecay(0.06)
+    .on("tick", ()=>{
+      link.attr("x1",d=>d.source.x).attr("y1",d=>d.source.y)
+          .attr("x2",d=>d.target.x).attr("y2",d=>d.target.y);
+      node.attr("cx",d=>d.x).attr("cy",d=>d.y);
+    });
+
+  // Settle at true positions, then open framed on the dense N. America -> Europe belt.
+  // Asia, Israel and Chile sit outside this frame and are reached by panning or zooming out.
+  sim.stop();
+  for(let i=0;i<300;i++) sim.tick();
+  sim.alpha(0.15).restart();
+  const belt = nodes.filter(n=>n.lon>-125 && n.lon<16 && n.lat>25);
+  const pad = 46;
+  const x0 = d3.min(belt, n=>n.x)-pad, x1 = d3.max(belt, n=>n.x)+pad;
+  const y0 = d3.min(belt, n=>n.y)-pad, y1 = d3.max(belt, n=>n.y)+pad;
+  const k = Math.min(W/(x1-x0), H/(y1-y0));
+  svg.call(zoom.transform, d3.zoomIdentity.translate(W/2, H/2).scale(k)
+    .translate(-(x0+x1)/2, -(y0+y1)/2));
+
+  fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
+    .then(r=>r.json()).then(t=>{
+      const f = topojson.feature(t, t.objects.countries);
+      gGeo.insert("path", ":first-child").attr("d", path(f))
+        .attr("fill", LAND).attr("stroke", INK).attr("stroke-width", 1.4).attr("stroke-opacity", 1)
+        .attr("vector-effect","non-scaling-stroke");
+      gGeo.append("path").attr("d", path(topojson.mesh(t, t.objects.countries, (a,b)=>a!==b)))
+        .attr("fill","none").attr("stroke", INK).attr("stroke-width", 0.8).attr("stroke-opacity", 0.75)
+        .attr("vector-effect","non-scaling-stroke");
+    }).catch(()=>{});
+})();
+
+/* ---------- 6. 3-D timeline ---------- */
+(function(){
+  const svg = d3.select("#tlsvg");
+  const W = 1000, H = 600;
+  svg.attr("viewBox", `0 0 ${W} ${H}`).style("height","min(72vh, 600px)").style("cursor","grab");
+  const g = svg.append("g").attr("transform", `translate(${W*0.5},${H*0.62})`);
+  const gFloor = g.append("g"), gEdge = g.append("g"), gPill = g.append("g"), gNode = g.append("g");
+
+  const order = ["A","B","C","D"];
+  const years = d3.extent(PAPERS, p=>p.year);
+  const sx = d3.scaleLinear().domain(years).range([-330, 330]);
+  const sy = d3.scaleLog().domain([1, maxCite]).range([0, 300]).clamp(true);
+  const LZ = 78;
+  const sz = a => (order.indexOf(a) - 1.5) * LZ;
+
+  let yaw = -0.62, pitch = 0.52;
+  function P(x,y,z){
+    const cy = Math.cos(yaw), sn = Math.sin(yaw);
+    const xr = x*cy - z*sn, zr = x*sn + z*cy;
+    return [xr, -y*Math.cos(pitch) + zr*Math.sin(pitch)];
+  }
+  const items = PAPERS.map(p=>({p, x:sx(p.year), y:sy(p.citation_count||1), z:sz(ANGLE_KEY[p.angle]||"A")}));
+  const pos = new Map(items.map(it=>[it.p.id, it]));
+  const edges = EDGES.filter(e=>pos.has(e.source) && pos.has(e.target))
+    .map(e=>({a:pos.get(e.source), b:pos.get(e.target), w:e.w}));
+
+  const floorLines = [];
+  order.forEach(a=>{ const z = sz(a);
+    floorLines.push({p1:[sx(years[0]),0,z], p2:[sx(years[1]),0,z], lane:a}); });
+  const tickYears = d3.range(years[0], years[1]+1);
+  tickYears.forEach(yr=>{ const x = sx(yr);
+    floorLines.push({p1:[x,0,sz("A")-24], p2:[x,0,sz("D")+24], tick:yr}); });
+
+  const fl = gFloor.selectAll("line").data(floorLines).join("line")
+    .attr("stroke", INK).attr("stroke-opacity", d=>d.lane?0.4:0.18).attr("stroke-width", d=>d.lane?1.1:0.8);
+  const laneLab = gFloor.selectAll("text.lane").data(order).join("text").attr("class","lane")
+    .attr("font-family","var(--mono)").attr("font-size",11).attr("font-weight",700)
+    .attr("fill", d=>ANGLE_HEX[d]).text(d=>d);
+  const yrLab = gFloor.selectAll("text.yr").data(tickYears).join("text").attr("class","yr")
+    .attr("font-family","var(--mono)").attr("font-size",10).attr("fill",MUTED)
+    .attr("text-anchor","middle").text(d=>d);
+
+  const edge = gEdge.selectAll("line").data(edges).join("line")
+    .attr("stroke", INK).attr("stroke-opacity", 0.18).attr("stroke-width", d=>d.w);
+  const pill = gPill.selectAll("line").data(items).join("line")
+    .attr("stroke", NODE_STROKE).attr("stroke-opacity", 0.4).attr("stroke-width", 1.1);
+  const nd = gNode.selectAll("circle").data(items).join("circle")
+    .attr("r", d=>rScale(d.p.citation_count||1))
+    .attr("fill", NODE_FILL).attr("stroke", NODE_STROKE).attr("stroke-width", 1.1)
+    .style("cursor","pointer")
+    .on("mouseenter", (ev,d)=>nodePop(d.p, ev))
+    .on("mouseleave", hidePopSoon)
+    .on("click", (ev,d)=>window.open(d.p.url, "_blank"));
+
+  function render(){
+    fl.attr("x1",d=>P(...d.p1)[0]).attr("y1",d=>P(...d.p1)[1])
+      .attr("x2",d=>P(...d.p2)[0]).attr("y2",d=>P(...d.p2)[1]);
+    laneLab.attr("x",d=>P(sx(years[1])+22,0,sz(d))[0]).attr("y",d=>P(sx(years[1])+22,0,sz(d))[1]+4);
+    yrLab.attr("x",d=>P(sx(d),0,sz("D")+42)[0]).attr("y",d=>P(sx(d),0,sz("D")+42)[1]+4);
+    edge.attr("x1",d=>P(d.a.x,d.a.y,d.a.z)[0]).attr("y1",d=>P(d.a.x,d.a.y,d.a.z)[1])
+        .attr("x2",d=>P(d.b.x,d.b.y,d.b.z)[0]).attr("y2",d=>P(d.b.x,d.b.y,d.b.z)[1]);
+    pill.attr("x1",d=>P(d.x,0,d.z)[0]).attr("y1",d=>P(d.x,0,d.z)[1])
+        .attr("x2",d=>P(d.x,d.y,d.z)[0]).attr("y2",d=>P(d.x,d.y,d.z)[1]);
+    nd.attr("cx",d=>P(d.x,d.y,d.z)[0]).attr("cy",d=>P(d.x,d.y,d.z)[1]);
+  }
+  render();
+
+  let drag = null;
+  const start = e => { drag = {x:e.clientX, y:e.clientY, yaw, pitch}; svg.style("cursor","grabbing"); };
+  const move = e => {
+    if(!drag) return;
+    e.preventDefault();
+    yaw = drag.yaw + (e.clientX - drag.x) * 0.006;
+    pitch = Math.max(0.05, Math.min(1.35, drag.pitch + (e.clientY - drag.y) * 0.005));
+    render();
+  };
+  const end = () => { drag = null; svg.style("cursor","grab"); };
+  const node = svg.node();
+  node.addEventListener("pointerdown", start);
+  window.addEventListener("pointermove", move, {passive:false});
+  window.addEventListener("pointerup", end);
+})();
+</script>
+</body>
+</html>

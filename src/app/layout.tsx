@@ -3,11 +3,11 @@ import { Nav } from "@/components/nav";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Ashish Neupane — ML Systems Engineer",
+  title: "Ashish Neupane",
   description:
     "Machine Learning Systems Engineer building production ML pipelines at scale. Previously at Microsoft and Eight Sleep.",
   openGraph: {
-    title: "Ashish Neupane — ML Systems Engineer",
+    title: "Ashish Neupane",
     description:
       "Machine Learning Systems Engineer building production ML pipelines at scale.",
     type: "website",

@@ -1,5 +1,14 @@
 [
   {
+    "slug": "model-size-vs-test-time-compute",
+    "title": "Parameters vs. thinking tokens: is there an exchange rate?",
+    "question": "You can increase the amount an LLM thinks in two axes: by increasing the size of the model, or by increasing the number of tokens it outputs. Can we quantify the mathematical equivalence between the two? Given an architecture (depth, embed dim, param count), what's the equation that establishes the relationship between model size and reasoning effort (test-time compute)?",
+    "date": "2026-08-23",
+    "papers": 55,
+    "edges": 263,
+    "reportPath": "/research/model-size-vs-test-time-compute/report.html"
+  },
+  {
     "slug": "mhc-residual-structures",
     "title": "What structure lives inside mHC's residual-mixing matrices?",
     "question": "What kind of structures emerge in the linear transformations added by Manifold Constrained Hyper Connections (mHC) used in modern language models to solve the information bottleneck problem in the residual stream? Studied from geometric, eigenvalue, and other perspectives.",
