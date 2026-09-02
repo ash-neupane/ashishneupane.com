@@ -1,0 +1,536 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Looped Transformers &amp; Latent Chain-of-Thought</title>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+<style>
+:root {
+  --sage: #a8ba9a;
+  --surface: #c8d5bc;
+  --raised: #d5e0ca;
+  --ink: #0c2a1e; --bottle: #0c2a1e; --text2: #2c4034;
+  --muted: #4d5d46; --border: #8fa17c;
+  --on-ink: #d5e0ca;
+  --background: var(--sage); --accent: var(--ink); --accent-text: var(--on-ink);
+  --score: #2e6f47;
+  --angle-a: #2e6f47; --angle-b: #a9701b; --angle-c: #b23a2e; --angle-d: #6b4a6e;
+  --shadow-rgb: 12, 42, 30;
+  --mono: ui-monospace, "SF Mono", Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  --r-xs: 2px; --r-sm: 3px;
+  --shadow-paper: 2px 3px 0 rgba(var(--shadow-rgb), 0.16);
+  --shadow-button: 2px 3px 0 rgba(var(--shadow-rgb), 0.22);
+  --shadow-pop: 3px 5px 0 rgba(var(--shadow-rgb), 0.20);
+  --s1:2px;--s2:4px;--s3:7px;--s4:10px;--s5:14px;--s6:20px;--s7:28px;--s8:40px;
+  --content-width: 1100px;
+  color-scheme: light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--sage);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%}
+.wrap{max-width:var(--content-width);margin:0 auto;padding:0 24px}
+h1,h2,h3{margin:0;font-weight:650;letter-spacing:-0.01em}
+h1{font-size:clamp(28px,5vw,44px);line-height:1.1}
+h2{font-size:clamp(20px,3vw,26px);margin-bottom:var(--s5)}
+a{color:var(--ink)}
+header.top{padding:var(--s8) 0 var(--s6)}
+.qcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);box-shadow:var(--shadow-paper);padding:var(--s5) var(--s6);margin-top:var(--s6);font-size:17px;color:var(--text2)}
+.statline{margin-top:var(--s5);font-family:var(--mono);font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+nav.sticky{position:sticky;top:0;z-index:60;background:var(--sage);border-bottom:1px dashed var(--border);padding:var(--s3) 0}
+.navrow{display:flex;align-items:center;gap:var(--s3)}
+.pills{display:flex;gap:var(--s2);overflow-x:auto;scrollbar-width:none;flex:1;padding:2px 0}
+.pills::-webkit-scrollbar{display:none}
+.pill{flex:0 0 auto;font-family:var(--mono);font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;padding:6px 10px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--raised);color:var(--muted);cursor:pointer;white-space:nowrap;transition:background .25s ease,color .25s ease,box-shadow .25s ease,border-color .25s ease}
+.pill:hover{border-color:var(--ink)}
+.pill.on{background:var(--ink);color:var(--on-ink);border-color:var(--ink);box-shadow:var(--shadow-button)}
+.pill .n{opacity:.65;margin-right:5px}
+.arrow{flex:0 0 auto;width:30px;height:30px;border:1px solid var(--border);border-radius:var(--r-sm);background:var(--raised);color:var(--ink);cursor:pointer;font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow-button)}
+.arrow:active{transform:translate(1px,1px);box-shadow:none}
+section{padding:var(--s8) 0 var(--s6);scroll-margin-top:56px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);box-shadow:var(--shadow-paper);padding:var(--s6)}
+ul.tldr{list-style:none;margin:0;padding:0}
+ul.tldr>li{margin-bottom:var(--s5);padding-left:var(--s5);border-left:2px solid var(--ink)}
+ul.tldr>li>.pt{font-weight:640}
+ul.tldr ul{list-style:none;margin:var(--s3) 0 0;padding:0}
+ul.tldr ul li{color:var(--text2);font-size:15px;padding-left:var(--s5);position:relative;margin-bottom:var(--s2)}
+ul.tldr ul li:before{content:"–";position:absolute;left:0;color:var(--muted);font-family:var(--mono)}
+.cite{font-family:var(--mono);font-size:12px;background:var(--raised);border:1px solid var(--border);border-radius:var(--r-xs);padding:0 4px;text-decoration:none;color:var(--text2);white-space:nowrap;cursor:pointer}
+.cite:hover{background:var(--ink);color:var(--on-ink);border-color:var(--ink)}
+#pop{position:absolute;z-index:200;max-width:360px;background:var(--surface);border:1px solid var(--ink);border-radius:var(--r-sm);box-shadow:var(--shadow-pop);padding:var(--s5);display:none;font-size:13.5px;line-height:1.45}
+#pop .t{font-weight:640;margin-bottom:var(--s2)}
+#pop .m{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-bottom:var(--s3)}
+#pop .k{color:var(--text2)}
+#pop a.lk{display:inline-block;margin-top:var(--s3);font-family:var(--mono);font-size:11.5px;background:var(--ink);color:var(--on-ink);padding:3px 8px;border-radius:var(--r-xs);text-decoration:none}
+.carousel{position:relative;min-height:1px}
+.slide{display:none}
+.slide.on{display:block;animation:fade .3s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+.slide h3{font-size:20px;margin-bottom:var(--s4)}
+.slide ul{margin:0;padding-left:var(--s6);color:var(--text2)}
+.slide ul li{margin-bottom:var(--s3)}
+.dots{display:flex;justify-content:center;gap:var(--s3);margin-top:var(--s6);align-items:center}
+.dot{width:9px;height:9px;border-radius:50%;border:1px solid var(--ink);background:transparent;padding:0;cursor:pointer;transition:background .25s ease,transform .25s ease}
+.dot.on{background:var(--ink);transform:scale(1.35)}
+.crow{display:flex;align-items:center;justify-content:center;gap:var(--s5);margin-top:var(--s5)}
+.figbox{background:var(--raised);border:1px solid var(--border);border-radius:var(--r-sm);box-shadow:var(--shadow-paper);overflow:hidden}
+svg{display:block;width:100%;height:auto;touch-action:none}
+.hint{font-family:var(--mono);font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:var(--s3)}
+ul.check{list-style:none;margin:0;padding:0}
+ul.check li{display:flex;gap:var(--s4);align-items:flex-start;padding:var(--s3) 0;border-bottom:1px dashed var(--border);color:var(--text2);font-size:15px}
+ul.check li:last-child{border-bottom:0}
+.box{flex:0 0 auto;width:15px;height:15px;margin-top:3px;border:1.5px solid var(--ink);border-radius:var(--r-xs);background:var(--raised)}
+.deck{display:grid;grid-template-columns:1fr 1fr;gap:var(--s5)}
+.quad{background:var(--raised);border:1px solid var(--border);border-radius:var(--r-sm);padding:var(--s5)}
+.quad .lb{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:var(--s3)}
+.quad .bd{font-size:14.5px;color:var(--text2)}
+.quad.empty .bd{color:var(--muted);font-family:var(--mono)}
+.shuffle{margin-top:var(--s6);width:100%;padding:var(--s5);font-family:var(--mono);font-size:14px;letter-spacing:.1em;text-transform:uppercase;background:var(--ink);color:var(--on-ink);border:1px solid var(--ink);border-radius:var(--r-sm);box-shadow:var(--shadow-button);cursor:pointer}
+.shuffle:active{transform:translate(2px,3px);box-shadow:none}
+.qbar{display:grid;grid-template-columns:minmax(96px,150px) 1fr;gap:var(--s4);align-items:center;margin-bottom:var(--s4);position:relative}
+.qbar .nm{font-family:var(--mono);font-size:12px;color:var(--text2);text-transform:uppercase;letter-spacing:.03em}
+.track{height:20px;background:var(--raised);border:1px solid var(--border);border-radius:var(--r-xs);position:relative}
+.fill{height:100%;background:var(--sage);border-right:2px solid var(--score);transition:width .6s ease}
+.sc{position:absolute;right:6px;top:0;line-height:20px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.qnote{display:none;position:absolute;left:0;right:0;top:24px;background:var(--ink);color:var(--on-ink);padding:var(--s3) var(--s4);border-radius:var(--r-sm);font-size:12.5px;z-index:10;box-shadow:var(--shadow-pop)}
+.qbar:hover .qnote{display:block}
+.acc{border-bottom:1px dashed var(--border)}
+.acc:last-child{border-bottom:0}
+.acch{width:100%;text-align:left;background:transparent;border:0;padding:var(--s4) 0;cursor:pointer;display:flex;gap:var(--s4);align-items:baseline;color:var(--ink);font-family:inherit;font-size:15px}
+.acch .yr{font-family:var(--mono);font-size:12px;color:var(--muted);flex:0 0 auto}
+.acch .au{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
+.acch .tw{flex:1}
+.acch .ch{font-family:var(--mono);color:var(--muted)}
+.accb{display:none;padding:0 0 var(--s5) 42px;font-size:14px;color:var(--text2)}
+.accb.on{display:block}
+.accb .meta{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-top:var(--s3)}
+footer{padding:var(--s7) 0 var(--s8);border-top:1px dashed var(--border);margin-top:var(--s7);font-family:var(--mono);font-size:12px;color:var(--muted)}
+@media(max-width:700px){
+ .wrap{padding:0 16px}
+ .deck{grid-template-columns:1fr}
+ .qbar{grid-template-columns:1fr;gap:var(--s2)}
+ section{padding:var(--s7) 0 var(--s5)}
+ .card{padding:var(--s5)}
+}
+</style>
+</head>
+<body>
+<div id="pop"></div>
+
+<div class="wrap">
+<header class="top">
+  <h1>Looped Transformers &amp; Latent Chain-of-Thought</h1>
+  <div class="qcard" id="qcard"></div>
+  <div class="statline">58 papers · 295 citation links · Sep 2026</div>
+</header>
+</div>
+
+<nav class="sticky">
+  <div class="wrap navrow">
+    <button class="arrow" id="prevSec" aria-label="Previous section">&#8592;</button>
+    <div class="pills" id="pills"></div>
+    <button class="arrow" id="nextSec" aria-label="Next section">&#8594;</button>
+  </div>
+</nav>
+
+<div class="wrap">
+
+<section id="sec-tldr"><h2>TLDR</h2><div class="card"><ul class="tldr" id="tldr"></ul></div></section>
+
+<section id="sec-insights"><h2>Key insights</h2>
+  <div class="card">
+    <div class="carousel" id="insights"></div>
+    <div class="crow">
+      <button class="arrow" id="insPrev">&#8592;</button>
+      <div class="dots" id="insDots"></div>
+      <button class="arrow" id="insNext">&#8594;</button>
+    </div>
+  </div>
+</section>
+
+<section id="sec-graph"><h2>Citation graph</h2>
+  <div class="hint">drag to pan · scroll to zoom · double-click a node to focus</div>
+  <div class="figbox"><svg id="map" viewBox="0 0 1000 620"></svg></div>
+</section>
+
+<section id="sec-timeline"><h2>Timeline in three dimensions</h2>
+  <div class="hint">drag to orbit · x time · y citations · z angle</div>
+  <div class="figbox"><svg id="tl" viewBox="0 0 1000 600"></svg></div>
+</section>
+
+<section id="sec-next"><h2>Next steps</h2><div class="card"><ul class="check" id="next"></ul></div></section>
+
+<section id="sec-ideas"><h2>Idea deck</h2>
+  <div class="card">
+    <div class="deck" id="deck"></div>
+    <button class="shuffle" id="shuf">Shuffle</button>
+  </div>
+</section>
+
+<section id="sec-quality"><h2>Report quality</h2><div class="card" id="quality"></div></section>
+
+<section id="sec-citations"><h2>Citations</h2><div class="card" id="cits"></div></section>
+
+<footer>Looped transformers &amp; latent chain-of-thought · 2026-09-02</footer>
+</div>
+
+<script>
+const PAPERS = [{"id": "theinformation2026", "title": "OpenAI Technique in 'Astra' Model Sparks Security Concerns", "authors": "The Information (staff; unnamed source)", "institutions": "The Information", "year": 2026, "venue": "Trade press (paywalled)", "citation_count": 0, "url": "https://www.theinformation.com/articles/secret-technique-behind-openais-astra-model-sparks-security-concerns", "key_claim": "Unnamed source says Astra uses 'recurrent depth' — running text through the same layers repeatedly; improves cost/performance but obscures chain of thought.", "relevance_to_question": "The SOLE origin of the entire premise. Single-sourced, paywalled, anonymous. No OpenAI paper, blog, system card, patent or named employee corroborates it. Published 2026-09-01.", "angle": "architecture", "lat": 37.77, "lon": -122.42, "org_type": "industry", "cites": ["dehghani2018", "hao2024", "geiping2025", "banino2021", "zhang2025soft", "shen2025heima"]}, {"id": "pachocki2026", "title": "Public response on X regarding Astra computation depth and CoT monitorability", "authors": "Jakub Pachocki", "institutions": "OpenAI", "year": 2026, "venue": "X/Twitter (@merettm)", "citation_count": 0, "url": "https://x.com/merettm/status/2095023204993490967", "key_claim": "'The depth of the computation graph for our present frontier models, including Astra, is within a factor of two of GPT-4'; warns against 'a race into unmonitorability kicked off by confused reporting'.", "relevance_to_question": "Closest thing to an official comment. Rebuts the depth-explosion framing WITHOUT denying looping — neither confirms nor refutes the mechanism.", "angle": "architecture", "lat": 37.76, "lon": -122.41, "org_type": "industry", "cites": ["sanford2024parallel", "geiping2025", "pfau2024", "korbak2025", "bae2025", "merrill2025logdepth"]}, {"id": "raschka2026", "title": "OpenAI Astra and Looped Transformers", "authors": "Sebastian Raschka", "institutions": "independent", "year": 2026, "venue": "personal blog, 2026-09-02", "citation_count": 0, "url": "https://sebastianraschka.com/blog/2026/openai-astra-looped-transformers.html", "key_claim": "Layer reuse is 'a tiny architectural tweak': ~2x effective depth at ~2x compute, unchanged parameter storage. 'Reusing layers does not by itself suppress visible chain of thought.'", "relevance_to_question": "Best expert deflation of the media framing; correctly separates depth recurrence from latent CoT and grounds it in the verifiable Nanbeige4.2 case.", "angle": "architecture", "lat": 38.9, "lon": -77.04, "org_type": "independent", "cites": ["giannou2023", "saunshi2025", "fan2024looped", "labovich2026", "fan2026lotus", "adaptivedepth2026"]}, {"id": "nanbeige2026", "title": "Nanbeige4.2-3B: Unlocking Agentic Capabilities in a Compact Model", "authors": "Nanbeige LLM Lab", "institutions": "Nanbeige", "year": 2026, "venue": "arXiv 2607.22083", "citation_count": 1, "url": "https://arxiv.org/abs/2607.22083", "key_claim": "22-layer decoder stack run twice with shared weights (num_loops: 2) for 44 effective layers at 3B params; retains ~75% of standard token efficiency.", "relevance_to_question": "The only open-weights, config-verifiable production model doing what Astra is rumored to do. The concrete reference point for the claim.", "angle": "architecture", "citation_count_estimated": false, "lat": 39.9, "lon": 116.4, "org_type": "industry", "cites": ["zhang2025soft", "zou2026", "dehghani2018", "hao2024", "geiping2025", "banino2021"]}, {"id": "dehghani2018", "title": "Universal Transformers", "authors": "Mostafa Dehghani, Stephan Gouws, Oriol Vinyals, Jakob Uszkoreit, Lukasz Kaiser", "institutions": "Google Brain; DeepMind; University of Amsterdam", "year": 2018, "venue": "ICLR 2019 (arXiv 1807.03819)", "citation_count": 1025, "url": "https://arxiv.org/abs/1807.03819", "key_claim": "Weight-tied recurrent-in-depth transformer with optional per-position ACT halting; interpolates between fixed-depth transformers and gated recurrent architectures.", "relevance_to_question": "Direct ancestor of everything now called a looped transformer. Astra-as-described would be a 2018 idea made stable and scalable, not a new paradigm.", "angle": "architecture", "citation_count_estimated": false, "lat": 37.42, "lon": -122.08, "org_type": "industry", "cites": []}, {"id": "geiping2025", "title": "Scaling up Test-Time Compute with Latent Reasoning: A Recurrent Depth Approach", "authors": "Jonas Geiping, Sean McLeish, Neel Jain, John Kirchenbauer, Siddharth Singh, Brian R. Bartoldson, Bhavya Kailkhura, Abhinav Bhatele, Tom Goldstein", "institutions": "ELLIS Institute Tübingen / MPI-IS; University of Maryland; LLNL", "year": 2025, "venue": "arXiv 2502.05171", "citation_count": 347, "url": "https://arxiv.org/abs/2502.05171", "key_claim": "Huginn-0125: 3.5B params, 800B tokens, prelude/recurrent-core/coda unrolled to r=32 at test time. r=32: GSM8k-CoT 34.80%, ARC-C 38.23%, HellaSwag 65.21%, MMLU 31.38%, HumanEval 23.17%. Trained with log-normal Poisson sampled recurrence (mean 32) and truncated BPTT through only k=8 steps.", "relevance_to_question": "Canonical recurrent-depth paper — the one the Astra reporting most closely matches. Also the best documented FAILURE log: run 1 collapsed to token-correlation 1.0; run 2 had identical perplexity at r=1 vs r=32 (loop ignored). Open weights/code/data (Apache-2.0, github.com/seal-rg/recurrent-pretraining). Note its 3.5B params cost ~32B-transformer-equivalent training FLOPs, and it loses to OLMo-2-7B on GSM8k (66.72%).", "angle": "architecture", "citation_count_estimated": false, "lat": 37.69, "lon": -121.71, "org_type": "academia", "cites": ["hao2024", "lanham2023", "sanford2024parallel", "dehghani2018", "banino2021"]}, {"id": "ouro2025", "title": "Scaling Latent Reasoning via Looped Language Models (Ouro)", "authors": "Rui-Jie Zhu, Zixuan Wang, Kai Hua et al. (ByteDance Seed)", "institutions": "ByteDance Seed; UC Santa Cruz", "year": 2025, "venue": "arXiv 2510.25741", "citation_count": 119, "url": "https://arxiv.org/abs/2510.25741", "key_claim": "Ouro 1.4B/2.6B, 7.7T tokens, T=4 with entropy-regularized learned exit gate. 1.4B vs Qwen3-4B: GSM8K 78.92 vs 72.86, MATH500 82.40 vs 59.60. 2.6B vs Qwen3-8B: MMLU-Pro 55.73 vs 53.72, MATH500 90.85 vs 62.30. Controlled study: looping does NOT increase knowledge capacity (~2 bits/param either way); it improves knowledge MANIPULATION.", "relevance_to_question": "Strongest 'small model matches much larger' claim AND the cleanest evidence the benefit is serial/compositional not memory. Comparisons are iso-PARAMETER not iso-FLOP. Degrades extrapolating T=4 to T=5-8. Open weights Apache-2.0; loop count settable via total_ut_steps.", "angle": "empirical", "citation_count_estimated": false, "lat": 39.98, "lon": 116.31, "org_type": "industry", "cites": ["saunshi2025", "geiping2025", "hao2024", "lanham2023", "giannou2023", "jolicoeurmartineau2025"]}, {"id": "bae2025", "title": "Mixture-of-Recursions: Learning Dynamic Recursive Depths for Adaptive Token-Level Computation", "authors": "Sangmin Bae, Yujin Kim, Reza Bayat, Sungnyun Kim, Jiyoun Ha, Tal Schuster, Adam Fisch, Hrayr Harutyunyan, Ziwei Ji, Aaron Courville, Se-Young Yun", "institutions": "KAIST AI; Mila; Google DeepMind; Google Research", "year": 2025, "venue": "NeurIPS 2025 (arXiv 2507.10524)", "citation_count": 111, "url": "https://arxiv.org/abs/2507.10524", "key_claim": "Token-level routers assign per-token recursion depth over a shared layer stack. At matched 16.5e18 training FLOPs a 167M MoR beats a 315M vanilla (val NLL 2.7511 vs 2.7824; few-shot 43.1% vs 42.3%), across 135M-1.7B.", "relevance_to_question": "One of the very few genuinely ISO-FLOP comparisons where recursion wins, and the reference for per-token adaptive depth. All evidence well under 2B params. Official code at github.com/raymin0223/mixture_of_recursions.", "angle": "empirical", "citation_count_estimated": false, "lat": 45.53, "lon": -73.61, "org_type": "academia", "cites": ["pfau2024", "jolicoeurmartineau2025", "sanford2024parallel", "zelikman2024quietstar", "goyal2023pause", "shen2025codi"]}, {"id": "parcae2026", "title": "Parcae: Scaling Laws For Stable Looped Language Models", "authors": "Hayden Prairie, Zachary Novack, Taylor Berg-Kirkpatrick, Daniel Y. Fu", "institutions": "UC San Diego; Together AI", "year": 2026, "venue": "LIT Workshop @ ICLR 2026 (arXiv 2604.12946)", "citation_count": 32, "url": "https://arxiv.org/abs/2604.12946", "key_claim": "Divergent looped runs learn recurrent spectral radius rho >= 1; fixes are a negative-diagonal (ZOH-discretized) parameterization with spectral-norm constraint, prelude input normalization, and per-sequence (not per-microbatch) depth sampling. At 1.3B: +2.99 CORE over param-matched, 87.5% of a 2x-size Transformer. Test-time looping follows a saturating exponential L(T)=L_inf+Z e^(-zT) plateauing near training depth.", "relevance_to_question": "The cleanest ablation table for stability tricks at reproducible scale (100M-1.3B), plus a quantitative law for diminishing returns of test-time loops. Warns truncating BPTT on backward recurrence hurts extrapolation.", "angle": "pathologies", "citation_count_estimated": false, "lat": 37.77, "lon": -122.42, "org_type": "industry", "cites": ["ouro2025", "fan2024looped", "geiping2025", "giannou2023", "saunshi2025", "jolicoeurmartineau2025"]}, {"id": "schwethelm2026", "title": "How Much Is One Recurrence Worth? Iso-Depth Scaling Laws for Looped Language Models", "authors": "Kristian Schwethelm, Daniel Rueckert, Georgios Kaissis", "institutions": "Technical University of Munich; Helmholtz Munich; Imperial College London", "year": 2026, "venue": "arXiv 2604.21106", "citation_count": 12, "url": "https://arxiv.org/abs/2604.21106", "key_claim": "116 pretraining runs, 30-100M params, r in {1,2,4,8}. Recurrence-equivalence exponent phi=0.46: at r=4 a 410M looped model performs on par with a 580M non-looped model but incurs the training cost of a 1B one. TRUNCATED BPTT LOWERS phi TO 0.38 — 'the loop mechanism is poorly trained under truncation, even though validation loss decreases.' Hyperconnections raise phi to 0.65, a genuine capacity gain.", "relevance_to_question": "The most direct answer to compute-fairness, AND the source of the single most important practical caveat: truncation degrades the loop while loss still improves, so loss alone cannot tell you the loop is trained.", "angle": "empirical", "citation_count_estimated": false, "lat": 48.15, "lon": 11.57, "org_type": "academia", "cites": ["parcae2026", "ouro2025", "geiping2025", "saunshi2025", "giannou2023", "fan2024looped"]}, {"id": "blayney2026", "title": "A Mechanistic Analysis of Looped Reasoning Language Models", "authors": "Hugh Blayney, Alvaro Arroyo, Johan Obando-Ceron, Pablo Samuel Castro, Aaron Courville, Michael M. Bronstein, Xiaowen Dong", "institutions": "Oxford; Mila; Google DeepMind; Universite de Montreal", "year": 2026, "venue": "arXiv 2604.11791", "citation_count": 18, "url": "https://arxiv.org/abs/2604.11791", "key_claim": "Each layer in the recurrent block converges to a distinct fixed point giving a consistent cyclic latent trajectory; attention equilibrates; loops largely REPEAT reasoning stages already present in feedforward models.", "relevance_to_question": "Evidence that looping is not qualitatively new hidden reasoning — it re-runs known stages. Undermines the 'chain-of-thought relocated into embedding space' interpretation.", "angle": "architecture", "citation_count_estimated": false, "lat": 45.53, "lon": -73.61, "org_type": "academia", "cites": ["saunshi2025", "ouro2025", "geiping2025", "zhang2025soft", "shen2025heima", "chen2025survey"]}, {"id": "melt2026", "title": "Memory-Efficient Looped Transformer: Decoupling Compute from Memory in Looped Language Models", "authors": "Victor Conchello Vendrell, Arnau Padres Masdemont, Niccolo Grillo, Jordi Ros-Giralt, Arash Behboodi, Fabio Valerio Massoli", "institutions": "Qualcomm AI Research", "year": 2026, "venue": "arXiv 2605.07721", "citation_count": 5, "url": "https://arxiv.org/abs/2605.07721", "key_claim": "Looped KV cache grows O(N*L*T) with reasoning depth; one per-layer cache updated by an element-wise gated momentum rule makes it O(N*L). MELT-1.6B (from Ouro-1.4B): 6.29GB vs Ouro's 25.17GB at 32k tokens.", "relevance_to_question": "Definitive statement of the KV-cache-when-looping gotcha, and the serving cost that decides whether deep looping is deployable at frontier scale. Code announced but NOT confirmed available.", "angle": "pathologies", "citation_count_estimated": false, "lat": 32.9, "lon": -117.2, "org_type": "industry", "cites": ["fan2024looped", "parcae2026", "geiping2025", "giannou2023", "pfau2024", "deng2024icot"]}, {"id": "mcleish2025", "title": "Teaching Pretrained Language Models to Think Deeper with Retrofitted Recurrence", "authors": "Sean McLeish, Ang Li, John Kirchenbauer, Dayal Singh Kalra, Brian R. Bartoldson, Bhavya Kailkhura, Avi Schwarzschild, Jonas Geiping, Tom Goldstein, Micah Goldblum", "institutions": "University of Maryland; Columbia; LLNL; ELLIS Tübingen", "year": 2025, "venue": "arXiv 2511.07384", "citation_count": 28, "url": "https://arxiv.org/abs/2511.07384", "key_claim": "Converts existing non-recurrent pretrained LMs into depth-recurrent ones via a curriculum of increasing recurrences; beats continued pretraining of the original at matched compute on math.", "relevance_to_question": "Shows a lab could retrofit looping onto an existing checkpoint without pretraining from scratch — makes the Astra rumor operationally plausible and explains how depth could stay 'within 2x of GPT-4'.", "angle": "architecture", "citation_count_estimated": false, "lat": 37.69, "lon": -121.71, "org_type": "academia", "cites": ["turpin2023", "zelikman2024quietstar", "goyal2023pause", "pfau2024", "dehghani2018", "hao2024"]}, {"id": "stars2026", "title": "Stabilizing Recurrent Dynamics for Test-Time Scalable Latent Reasoning in Looped Language Models", "authors": "Yang, Han, Zhang, Wei, Shao, Guo, Li", "institutions": "Nanjing University (LAMDA)", "year": 2026, "venue": "arXiv 2605.26733", "citation_count": 2, "url": "https://github.com/njuyxw/STARS", "key_claim": "Looped LMs show unreliable test-time depth scaling: performance peaks at some iteration count then COLLAPSES with further recurrence. Regularizing the recurrent dynamics preserves quality as iterations grow.", "relevance_to_question": "Open code; directly targets the 'more loops makes it worse' problem you hit when extrapolating past training depth. Author list unverified.", "angle": "pathologies", "lat": 32.06, "lon": 118.79, "org_type": "academia", "cites": ["geiping2025", "saunshi2025", "ouro2025", "fan2026lotus", "loopthink2026", "flt2026"]}, {"id": "flt2026", "title": "Simply Stabilizing the Loop via Fully Looped Transformer", "authors": "Fu, Yang, Zhang, Ma, Chen, Li, Chang", "institutions": "Hong Kong Baptist University; Jilin University", "year": 2026, "venue": "arXiv 2605.18797", "citation_count": 3, "url": "https://arxiv.org/abs/2605.18797", "key_claim": "Looped transformer instability has exactly two sources — gradient oscillation and residual explosion — fixed by two parameter-free changes: distributing inter-loop signal across all layers, and reusing the existing attention block for injection.", "relevance_to_question": "Parameter-free, so trivially droppable into a nanoGPT-scale loop; independent confirmation of Parcae's residual-explosion diagnosis.", "angle": "pathologies", "citation_count_estimated": false, "lat": 22.34, "lon": 114.18, "org_type": "academia", "cites": ["melt2026", "fan2024looped", "parcae2026", "loopthink2026", "giannou2023", "pfau2024"]}, {"id": "hao2024", "title": "Training Large Language Models to Reason in a Continuous Latent Space (COCONUT)", "authors": "Shibo Hao, Sainbayar Sukhbaatar, DiJia Su, Xian Li, Zhiting Hu, Jason Weston, Yuandong Tian", "institutions": "Meta FAIR; UC San Diego", "year": 2024, "venue": "COLM 2025 (arXiv 2412.06769)", "citation_count": 702, "url": "https://arxiv.org/abs/2412.06769", "key_claim": "Feeds the last hidden state back as the NEXT INPUT EMBEDDING instead of decoding it, with a staged curriculum replacing CoT tokens one step at a time. GPT-2: GSM8k 34.1% vs CoT 42.9% (a LOSS); ProsQA 97.0% vs 77.5%; ProntoQA 99.8% vs 98.8%; 8.2 vs 25.0 generated tokens.", "relevance_to_question": "This — not recurrent depth — is literally 'CoT moved from decoded English into embedding space'. The head-to-head benchmark: loses ~9 pts on arithmetic-chain math, wins ~20 pts on planning/search. Win is fragile: without the curriculum GSM8k falls to 14.4% and ProntoQA to 52.4%; 'pause as thought' recovers 96.6% on ProsQA. Repo: github.com/facebookresearch/coconut.", "angle": "architecture", "citation_count_estimated": false, "lat": 37.48, "lon": -122.15, "org_type": "industry", "cites": ["goyal2023pause", "dehghani2018", "banino2021"]}, {"id": "zhang2025soft", "title": "Soft Thinking: Unlocking the Reasoning Potential of LLMs in Continuous Concept Space", "authors": "Zhen Zhang et al.", "institutions": "UC Santa Barbara; UC Santa Cruz; UCLA; Purdue", "year": 2025, "venue": "arXiv 2505.15778", "citation_count": 112, "url": "https://arxiv.org/abs/2505.15778", "key_claim": "Training-free: each 'thought' is a probability-weighted MIXTURE of token embeddings rather than one sampled token; +2.48 pass@1 and up to 22.4% fewer tokens on math/code.", "relevance_to_question": "The cheapest form of latent CoT — no retraining, no architecture change. Shows 'reasoning in embedding space' need not imply any looped architecture at all.", "angle": "architecture", "citation_count_estimated": false, "lat": 40.42, "lon": -86.92, "org_type": "academia", "cites": ["hao2024", "shen2025codi", "geiping2025", "lanham2023", "saunshi2025", "jolicoeurmartineau2025"]}, {"id": "shen2025heima", "title": "Efficient Reasoning with Hidden Thinking (Heima)", "authors": "Xuan Shen et al.", "institutions": "Northeastern University; Oracle", "year": 2025, "venue": "arXiv 2501.19201", "citation_count": 57, "url": "https://arxiv.org/abs/2501.19201", "key_claim": "Encoder condenses each intermediate CoT stage into a single compact 'thinking token'; a separate decoder reconstructs variable-length text resembling the original CoT.", "relevance_to_question": "Latent CoT with an explicit decoder — the design that keeps latent reasoning auditable. Directly relevant to the monitorability debate the Astra story triggered.", "angle": "architecture", "citation_count_estimated": false, "lat": 42.34, "lon": -71.09, "org_type": "academia", "cites": ["zhang2025soft", "geiping2025", "lanham2023", "pfau2024", "saunshi2025", "jolicoeurmartineau2025"]}, {"id": "tack2025cocomix", "title": "LLM Pretraining with Continuous Concepts (CoCoMix)", "authors": "Jihoon Tack, Jack Lanchantin, Jane Yu, Andrew Cohen, Ilia Kulikov, Janice Lan, Shibo Hao, Yuandong Tian, Jason Weston, Xian Li", "institutions": "Meta FAIR; KAIST", "year": 2025, "venue": "ICLR 2026 (arXiv 2502.08524)", "citation_count": 27, "url": "https://arxiv.org/abs/2502.08524", "key_claim": "Predicts SAE-derived continuous concepts and interleaves them into hidden states alongside next-token prediction; more sample-efficient than NTP, distillation and pause tokens, and the predicted concept is inspectable and steerable.", "relevance_to_question": "Latent computation introduced at PRETRAINING and deliberately interpretable — the counterexample to 'latent reasoning necessarily means opaque'.", "angle": "architecture", "citation_count_estimated": false, "lat": 36.37, "lon": 127.36, "org_type": "academia", "cites": ["hao2024", "zhang2025soft", "shen2025codi", "zhu2025superposition", "dehghani2018", "geiping2025"]}, {"id": "shen2025codi", "title": "CODI: Compressing Chain-of-Thought into Continuous Space via Self-Distillation", "authors": "Zhenyi Shen, Hanqi Yan, Linhai Zhang, Zhanghao Hu, Yali Du, Yulan He", "institutions": "King's College London; The Alan Turing Institute", "year": 2025, "venue": "EMNLP 2025 (arXiv 2502.21074)", "citation_count": 227, "url": "https://arxiv.org/abs/2502.21074", "key_claim": "Self-distillation aligning teacher (explicit CoT) and student (implicit CoT) hidden states at a designated token. First implicit-CoT method to MATCH explicit CoT on GSM8k at GPT-2 scale, 3.1x compression.", "relevance_to_question": "The parity point for latent CoT — and it holds only at GPT-2 scale, exactly the claim LOTUS shows breaks down by 3B.", "angle": "empirical", "citation_count_estimated": false, "lat": 51.51, "lon": -0.12, "org_type": "academia", "cites": ["turpin2023", "hao2024", "lanham2023", "feng2023mystery", "li2024serial", "merrill2024cot"]}, {"id": "wei2025simcot", "title": "SIM-CoT: Supervised Implicit Chain-of-Thought", "authors": "Xilin Wei, Xiaoran Liu, Yuhang Zang, Xiaoyi Dong, Pan Zhang, Yuhang Cao, Jian Tong, Haodong Duan, Qipeng Guo, Jiaqi Wang, Xipeng Qiu, Dahua Lin", "institutions": "Shanghai AI Laboratory; Fudan University; CUHK", "year": 2025, "venue": "arXiv 2509.20317", "citation_count": 46, "url": "https://arxiv.org/abs/2509.20317", "key_claim": "Diagnoses latent instability: as more implicit reasoning tokens are added, training destabilizes and latents collapse into homogeneous, semantically undifferentiated states. Fixes it with an auxiliary decoder giving step-level supervision to each latent; plugs into both COCONUT and CODI.", "relevance_to_question": "Documents the training-failure mode of scaling latent-thought count, and shows latent tokens need explicit-CoT supervision to work — undermining the 'reasoning that words cannot express' motivation.", "angle": "empirical", "citation_count_estimated": false, "lat": 31.23, "lon": 121.47, "org_type": "industry", "cites": ["shen2025codi", "turpin2023", "lanham2023", "feng2023mystery", "li2024serial", "merrill2024cot"]}, {"id": "fan2026lotus", "title": "Bridging the Gap Between Latent and Explicit Reasoning with Looped Transformers (LOTUS)", "authors": "Ying Fan, Anej Svete, Kangwook Lee", "institutions": "UW-Madison; ETH Zurich; Microsoft Research; KRAFTON", "year": 2026, "venue": "arXiv 2606.31779", "citation_count": 4, "url": "https://arxiv.org/abs/2606.31779", "key_claim": "States that beyond ~1B params NO prior latent method matches explicit CoT on math and the gap WIDENS with scale (GPT-2: CODI+SIM-CoT 42.6 vs CoT 42.7; 3B: 62.3 vs 71.5). LOTUS — looped padded transformer, K latent blocks in parallel, per-latent CoT-step cross-entropy — reaches 70.0 GSM8K vs 71.5 in-domain and 63.9 vs 62.1 OOD at Llama-3.2-3B, with 2.5x-6.9x thought-phase latency reduction.", "relevance_to_question": "The paper that actually UNIFIES the two mechanisms the Astra rumor conflates: depth recurrence PLUS supervised latent steps. Nearest published blueprint to the user's description, and the clearest scale-dependent negative finding for latent CoT.", "angle": "empirical", "citation_count_estimated": false, "lat": 47.38, "lon": 8.55, "org_type": "academia", "cites": ["saunshi2025", "ouro2025", "labovich2026", "geiping2025", "giannou2023", "fan2024looped"]}, {"id": "saunshi2025", "title": "Reasoning with Latent Thoughts: On the Power of Looped Transformers", "authors": "Nikunj Saunshi, Nishanth Dikkala, Zhiyuan Li, Sanjiv Kumar, Sashank J. Reddi", "institutions": "Google Research; Toyota Technological Institute at Chicago", "year": 2025, "venue": "ICLR 2025 (arXiv 2502.17416)", "citation_count": 205, "url": "https://arxiv.org/abs/2502.17416", "key_claim": "A k-layer block looped L times nearly matches a kL-layer non-looped model on addition, p-hop induction and math, at k-layer parameter cost; looped models can simulate T steps of CoT with T loops. Depth drives reasoning; parameters drive memorization.", "relevance_to_question": "The paper the question is built around. The CoT-simulation is one-directional and the EASY direction; the converse fails (see xu2026formal). The kL-equivalence is empirical on synthetic tasks, not a theorem, and is contradicted quantitatively by schwethelm2026.", "angle": "empirical", "citation_count_estimated": false, "lat": 37.42, "lon": -122.08, "org_type": "industry", "cites": ["geiping2025", "merrill2024cot", "giannou2023", "fan2024looped", "dehghani2018", "hao2024"]}, {"id": "zou2026", "title": "Capabilities and Fundamental Limits of Latent Chain-of-Thought", "authors": "Jiaxuan Zou, Yaozhong Xiong, Yong Liu", "institutions": "Renmin University of China (unverified)", "year": 2026, "venue": "arXiv 2602.01148", "citation_count": 3, "url": "https://arxiv.org/abs/2602.01148", "key_claim": "Explains the COCONUT split (ProsQA 97.0% vs GSM8K 34.1%) via 'decisional certainty': low commitment enables superposed exploration but amplifies numerical error; high certainty stabilizes execution but kills search. Continuous states have no discrete RESET, so error grows monotonically with steps. Proves curriculum learning is necessary — direct training provably fails from distributional mismatch.", "relevance_to_question": "The best account of WHERE latent CoT wins and loses, grounded on the exact benchmarks in question. Predicts latent CoT is structurally unsuited to precise multi-step computation. Tells you which task to pick for a small-scale demo.", "angle": "empirical", "citation_count_estimated": false, "lat": 39.95, "lon": 116.32, "org_type": "academia", "cites": ["chen2025survey", "zhang2025latent", "xu2026formal", "shen2025codi", "wei2025simcot", "turpin2023"]}, {"id": "gao2026loopie", "title": "Loop the Loopies!", "authors": "Zitian Gao, Yilong Chen, Yihao Xiao, Xinyu Yang, Ran Tao, Joey Zhou, Bryan Dai", "institutions": "IQuest Research", "year": 2026, "venue": "arXiv 2607.16051", "citation_count": 1, "url": "https://arxiv.org/abs/2607.16051", "key_claim": "Loopie: looped MoE at 20B-A2B and 6B-A0.6B with only 2 loop steps, wall-clock-compute-matched to Qwen3-30B-A3B on 800B tokens. UNDERPERFORMS the baseline until ~600B tokens then overtakes. Concedes the standing rule: given Nx more pretraining compute, Nx more parameters usually beats Nx looping.", "relevance_to_question": "The ONLY looped-LM evidence above 10B total params, and it uses a compute-matched protocol. But it uses just 2 loops — halving stored depth, not deep recurrence — so weak evidence for deep latent reasoning.", "angle": "empirical", "citation_count_estimated": false, "lat": 31.23, "lon": 121.47, "org_type": "industry", "cites": ["loopthink2026", "flt2026", "zelikman2024quietstar", "goyal2023pause", "shen2025codi", "deng2024icot"]}, {"id": "sahoo2026", "title": "When Shallow Wins: Silent Failures and the Depth-Accuracy Paradox in Latent Reasoning", "authors": "Subramanyam Sahoo, Aman Chadha, Vinija Jain, Divya Chaudhary", "institutions": "unconfirmed", "year": 2026, "venue": "arXiv 2603.03475", "citation_count": 2, "url": "https://arxiv.org/abs/2603.03475", "key_claim": "Reports a depth-accuracy paradox and 'silent failures' in EXPLICIT reasoning with Qwen2.5-Math-7B — not in looped models.", "relevance_to_question": "DOWNWEIGHTED by adversarial review: wrong architecture class (explicit CoT, not looped), and self-admits its evidence base is ~6% of GSM8K with r=-0.21 plus a binary-threshold artifact. Retained as a footnote only; do NOT cite as looped-transformer counter-evidence.", "angle": "empirical", "citation_count_estimated": false, "lat": 38.9, "lon": -77.04, "org_type": "independent", "cites": ["geiping2025", "saunshi2025", "ouro2025", "fan2026lotus", "chen2025survey", "zhu2025survey"]}, {"id": "labovich2026", "title": "Stability and Generalization in Looped Transformers", "authors": "Asher Labovich", "institutions": "Brown University (unverified)", "year": 2026, "venue": "arXiv 2604.15259", "citation_count": 7, "url": "https://arxiv.org/abs/2604.15259", "key_claim": "Fixed-point framework (reachability / input-dependence / geometry) on chess, sudoku and prefix-sums. Key result: RECALL plus OUTER NORMALIZATION is what enables test-time depth extrapolation; loops WITHOUT recall have countable fixed points and cannot achieve input-dependence at any spectral regime.", "relevance_to_question": "A concrete, small-scale-testable architectural prescription: if you want your loop to extrapolate past training depth, it needs recall (input re-injection) and outer normalization. Belongs on the load-bearing list.", "angle": "empirical", "citation_count_estimated": false, "lat": 41.83, "lon": -71.4, "org_type": "academia", "cites": ["fan2024looped", "saunshi2025", "giannou2023", "ouro2025", "schwethelm2026", "dehghani2018"]}, {"id": "fan2024looped", "title": "Looped Transformers for Length Generalization", "authors": "Ying Fan, Yilun Du, Kannan Ramchandran, Kangwook Lee", "institutions": "UW-Madison; MIT; UC Berkeley", "year": 2024, "venue": "ICLR 2025 (arXiv 2409.15647)", "citation_count": 81, "url": "https://arxiv.org/abs/2409.15647", "key_claim": "Looped transformers trained on RASP-L-expressible algorithmic tasks with an adaptive stopping criterion generalize to substantially longer inputs than non-looped transformers of equal or greater depth, by simulating the iterative algorithm step-for-step.", "relevance_to_question": "The best STARTING REPO for a minimum-viable experiment: github.com/UW-Madison-Lee-Lab/looped-tf, nanoGPT backbone, tasks already implemented for parity, copy, binary addition, multiplication, sorting. Trains at tiny scale on one GPU. Also the origin of the 'overthinking' failure mode.", "angle": "pathologies", "citation_count_estimated": false, "lat": 37.87, "lon": -122.27, "org_type": "academia", "cites": ["giannou2023", "dehghani2018", "li2024serial", "merrill2024cot", "merrill2023parallelism"]}, {"id": "merrill2023parallelism", "title": "The Parallelism Tradeoff: Limitations of Log-Precision Transformers", "authors": "William Merrill, Ashish Sabharwal", "institutions": "New York University; Allen Institute for AI", "year": 2023, "venue": "TACL (arXiv 2207.00729)", "citation_count": 235, "url": "https://arxiv.org/abs/2207.00729", "key_claim": "Log-precision transformers (O(log n) bits per activation, any attention) are simulable by uniform constant-depth threshold circuits, i.e. uniform TC0.", "relevance_to_question": "The baseline ceiling both CoT and looping are trying to escape. The safe log-precision citation, not an unbounded-precision idealization.", "angle": "theory", "citation_count_estimated": false, "lat": 40.73, "lon": -73.99, "org_type": "academia", "cites": ["dehghani2018", "turpin2023", "lanham2023", "feng2023mystery", "perez2019turing"]}, {"id": "merrill2024cot", "title": "The Expressive Power of Transformers with Chain of Thought", "authors": "William Merrill, Ashish Sabharwal", "institutions": "New York University; Allen Institute for AI", "year": 2024, "venue": "ICLR 2024 (arXiv 2310.07923)", "citation_count": 300, "url": "https://arxiv.org/abs/2310.07923", "key_claim": "t(n) CoT steps with a log-precision decoder correspond to time-t(n) computation: log steps stay in L, linear steps within context-sensitive languages, polynomial steps yield exactly P.", "relevance_to_question": "The canonical statement of what a decoded token buys: SERIAL TIME. Supplies the CoT side of the k-loops-vs-k-tokens comparison under explicit log-precision assumptions.", "angle": "theory", "citation_count_estimated": true, "lat": 40.73, "lon": -73.99, "org_type": "academia", "cites": ["li2024serial", "turpin2023", "lanham2023", "feng2023mystery", "merrill2023parallelism", "giannou2023"]}, {"id": "li2024serial", "title": "Chain of Thought Empowers Transformers to Solve Inherently Serial Problems", "authors": "Zhiyuan Li, Hong Liu, Denny Zhou, Tengyu Ma", "institutions": "TTIC; Stanford University; Google DeepMind", "year": 2024, "venue": "ICLR 2024 (arXiv 2402.12875)", "citation_count": 310, "url": "https://arxiv.org/abs/2402.12875", "key_claim": "Constant-depth, CONSTANT-PRECISION decoder-only transformers with T CoT steps simulate boolean circuits of size T; polynomially many steps give P/poly, while without CoT constant-depth models are confined to TC0.", "relevance_to_question": "Strongest 'CoT adds serial computation' result, and it holds at constant precision — more robust than the looped Turing-completeness constructions.", "angle": "theory", "citation_count_estimated": false, "lat": 37.42, "lon": -122.08, "org_type": "industry", "cites": ["turpin2023", "lanham2023", "feng2023mystery", "merrill2023parallelism", "giannou2023", "dehghani2018"]}, {"id": "feng2023mystery", "title": "Towards Revealing the Mystery behind Chain of Thought: A Theoretical Perspective", "authors": "Guhao Feng, Bohang Zhang, Yuntian Gu, Haotian Ye, Di He, Liwei Wang", "institutions": "Peking University; Stanford University", "year": 2023, "venue": "NeurIPS 2023 (arXiv 2305.15408)", "citation_count": 460, "url": "https://arxiv.org/abs/2305.15408", "key_claim": "Bounded-depth transformers cannot directly output correct answers to arithmetic and linear-equation tasks unless model size grows super-polynomially; constant-size autoregressive transformers WITH CoT solve them and a general class of dynamic-programming problems.", "relevance_to_question": "The lower-bound half: width cannot substitute for serial steps. Establishes CoT as buying something parameter scaling cannot.", "angle": "theory", "citation_count_estimated": false, "lat": 39.99, "lon": 116.31, "org_type": "academia", "cites": ["turpin2023", "lanham2023", "perez2019turing"]}, {"id": "sanford2024parallel", "title": "Transformers, Parallel Computation, and Logarithmic Depth", "authors": "Clayton Sanford, Daniel Hsu, Matus Telgarsky", "institutions": "Columbia University; New York University", "year": 2024, "venue": "ICML 2024 (arXiv 2402.09268)", "citation_count": 77, "url": "https://arxiv.org/abs/2402.09268", "key_claim": "A constant number of self-attention layers simulates and is simulated by a constant number of Massively Parallel Computation rounds; k-hop pointer chasing needs only O(log k) DEPTH.", "relevance_to_question": "The conceptual pivot: depth is PARALLEL time, CoT tokens are SERIAL time. Precisely why k loops are not k CoT tokens.", "angle": "theory", "citation_count_estimated": false, "lat": 40.73, "lon": -73.99, "org_type": "academia", "cites": ["li2024serial", "merrill2024cot", "merrill2023parallelism", "giannou2023", "pfau2024", "dehghani2018"]}, {"id": "merrill2025logdepth", "title": "A Little Depth Goes a Long Way: The Expressive Power of Log-Depth Transformers", "authors": "William Merrill, Ashish Sabharwal", "institutions": "New York University; Allen Institute for AI", "year": 2025, "venue": "NeurIPS 2025 (arXiv 2503.03961)", "citation_count": 57, "url": "https://arxiv.org/abs/2503.03961", "key_claim": "Theta(log n)-depth transformers recognize regular languages (state tracking) and solve graph connectivity, neither expressible by fixed-depth transformers under standard conjectures; depth scaling is argued more efficient than scaling width or CoT steps.", "relevance_to_question": "The most direct theoretical case that growing depth (which looping approximates) beats growing CoT steps for a class of multi-step reasoning tasks.", "angle": "theory", "citation_count_estimated": false, "lat": 40.73, "lon": -73.99, "org_type": "academia", "cites": ["merrill2024cot", "sanford2024parallel", "saunshi2025", "li2024serial", "merrill2023parallelism", "giannou2023"]}, {"id": "xu2026formal", "title": "A Formal Comparison Between Chain of Thought and Latent Thought", "authors": "Kevin Xu, Issei Sato", "institutions": "University of Tokyo", "year": 2026, "venue": "ICML 2026 (arXiv 2509.25239)", "citation_count": 12, "url": "https://arxiv.org/abs/2509.25239", "key_claim": "Under LOG-PRECISION: Loop[log^k n, poly(n), 1] = TC^k, whereas CoT[log^k n, poly(n), log n] is contained in TC^{k-1} — a strict separation FAVORING latent thought in the polylogarithmic regime. Conversely, CoT with STOCHASTIC DECODING admits an FPRAS for a self-reducible counting relation that no poly-iteration latent thought can approximate, and can sample distributions latent thought cannot represent.", "relevance_to_question": "THE central paper. Answers both directions: loops win on parallel depth; discrete decoding wins because SAMPLING IS A COMPUTATIONAL RESOURCE. Explicitly log-precision, so it smuggles in no unbounded precision. Directly refutes any k-loops = k-tokens equivalence.", "angle": "theory", "citation_count_estimated": false, "lat": 35.71, "lon": 139.76, "org_type": "academia", "cites": ["chen2025survey", "zhang2025latent", "turpin2023", "lanham2023", "feng2023mystery", "li2024serial"]}, {"id": "giannou2023", "title": "Looped Transformers as Programmable Computers", "authors": "Angeliki Giannou, Shashank Rajput, Jy-yong Sohn, Kangwook Lee, Jason D. Lee, Dimitris Papailiopoulos", "institutions": "UW-Madison; Yonsei University; Princeton University", "year": 2023, "venue": "ICML 2023 (arXiv 2301.13196)", "citation_count": 235, "url": "https://arxiv.org/abs/2301.13196", "key_claim": "A constant number of encoder layers in a loop, with the input as a punchcard, emulates program counters, conditional branches, function calls, a calculator, a linear-algebra library, and in-context backpropagation.", "relevance_to_question": "Strongest 'loops are universal' construction and the most OVER-CLAIMED. PRECISION FLAG: relies on unbounded/high-precision real arithmetic; a statement about an idealized machine, not bf16 hardware.", "angle": "theory", "citation_count_estimated": false, "lat": 37.57, "lon": 126.94, "org_type": "academia", "cites": ["dehghani2018", "turpin2023", "lanham2023", "feng2023mystery", "perez2019turing"]}, {"id": "perez2019turing", "title": "On the Turing Completeness of Modern Neural Network Architectures", "authors": "Jorge Perez, Javier Marinkovic, Pablo Barcelo", "institutions": "Universidad de Chile; IMFD Chile", "year": 2019, "venue": "ICLR 2019 (arXiv 1901.03429)", "citation_count": 186, "url": "https://arxiv.org/abs/1901.03429", "key_claim": "The Transformer and Neural GPU are Turing complete GIVEN arbitrary-precision rational internal representations; recurrent/Universal-Transformer-style models simulate any Turing machine when recurrent steps grow with input length.", "relevance_to_question": "Origin of the Universal Transformer Turing-completeness claim cited in favor of looping. PRECISION FLAG: fixed-precision transformers are NOT Turing complete. The single most over-claimed result in this literature.", "angle": "theory", "citation_count_estimated": false, "lat": -33.46, "lon": -70.65, "org_type": "academia", "cites": []}, {"id": "zhu2025superposition", "title": "Reasoning by Superposition: A Theoretical Perspective on Chain of Continuous Thought", "authors": "Hanlin Zhu, Shibo Hao, Zhiting Hu, Jiantao Jiao, Stuart Russell, Yuandong Tian", "institutions": "UC Berkeley; UC San Diego; Meta FAIR", "year": 2025, "venue": "NeurIPS 2025 (arXiv 2505.12514)", "citation_count": 77, "url": "https://arxiv.org/abs/2505.12514", "key_claim": "A two-layer transformer with D steps of continuous CoT solves directed-graph reachability for an n-vertex diameter-D graph, where discrete CoT needs O(n^2) decoding steps; continuous thought vectors encode multiple search frontiers simultaneously (parallel BFS), while discrete decoding must COLLAPSE the superposition to one sampled path.", "relevance_to_question": "The one place the BFS/superposition claim is actually PROVEN, and the sharpest statement of what discreteness costs. Caveat: existence construction, one problem, hand-set weights; precision assumptions not explicit.", "angle": "theory", "citation_count_estimated": false, "lat": 37.48, "lon": -122.15, "org_type": "industry", "cites": ["feng2023mystery", "lanham2023", "shen2025codi", "turpin2023", "li2024serial", "merrill2024cot"]}, {"id": "zhu2025emergence", "title": "Emergence of Superposition: Unveiling the Training Dynamics of Chain of Continuous Thought", "authors": "Hanlin Zhu, Shibo Hao, Zhiting Hu, Jiantao Jiao, Stuart Russell, Yuandong Tian", "institutions": "UC Berkeley; UC San Diego; Meta FAIR", "year": 2025, "venue": "arXiv 2509.23365", "citation_count": 18, "url": "https://arxiv.org/abs/2509.23365", "key_claim": "Superposition emerges from gradient-based training in two stages (thought-generation and prediction) without explicit supervision, on a simplified two-layer transformer solving directed-graph reachability.", "relevance_to_question": "Upgrades superposition from 'a construction exists' to 'gradient descent finds it' — but only in the same simplified single-problem setting.", "angle": "theory", "citation_count_estimated": false, "lat": 37.48, "lon": -122.15, "org_type": "industry", "cites": ["zhu2025superposition", "shen2025codi", "turpin2023", "lanham2023", "feng2023mystery", "li2024serial"]}, {"id": "gozeten2026cot2", "title": "Continuous Chain of Thought Enables Parallel Exploration and Reasoning", "authors": "Halil Alperen Gozeten, M. Emrullah Ildiz, Xuechen Zhang, Hrayr Harutyunyan, Ankit Singh Rawat, Samet Oymak", "institutions": "University of Michigan; Google Research", "year": 2026, "venue": "arXiv 2505.23648 (v3)", "citation_count": 33, "url": "https://arxiv.org/abs/2505.23648", "key_claim": "Proposes CoT2 (continuously-valued thought tokens) with theoretical guarantees and training algorithms, and QUANTIFIES the achievable parallelism — how many discrete traces can be tracked simultaneously — and its inference-efficiency benefit.", "relevance_to_question": "The rigorous version of the raw bandwidth argument (17 bits/token vs d_model x precision). Bounds how many superposed traces a latent state actually carries rather than assuming bits convert to branches.", "angle": "theory", "citation_count_estimated": false, "lat": 37.42, "lon": -122.08, "org_type": "industry", "cites": ["zhu2025superposition", "lanham2023", "zhu2025emergence", "shen2025codi", "chen2025survey", "zhang2025latent"]}, {"id": "rizvi2026illusion", "title": "The Illusion of Superposition? A Principled Analysis of Latent Thinking in Language Models", "authors": "Michael Rizvi-Martel, Guillaume Rabusseau, Marius Mosbach", "institutions": "Mila; Universite de Montreal; McGill University", "year": 2026, "venue": "LIT Workshop @ ICLR 2026 (arXiv 2604.06374)", "citation_count": 3, "url": "https://arxiv.org/abs/2604.06374", "key_claim": "Across training-free (Soft Thinking), fine-tuned (COCONUT) and from-scratch regimes, Logit Lens and entity probing show ONLY from-scratch models exhibit signs of superposition; claimed superposition collapses within the first few layers. A fine-tuned COCONUT model reaches 96.6% accuracy with ZERO latent tokens, with no step-by-step reasoning detectable during latent computation.", "relevance_to_question": "The essential skeptical counterweight — tests whether the proven-in-construction BFS claim holds in real trained models and largely finds it does not. The 96.6%-without-latent-tokens result suggests COCONUT's gains may not come from latent reasoning at all. Reusable small-scale setup (GPT-2, Llama-1B, Qwen-4B).", "angle": "theory", "citation_count_estimated": false, "lat": 45.53, "lon": -73.61, "org_type": "academia", "cites": ["zhu2025superposition", "zhu2025emergence", "xu2026formal", "hao2024", "geiping2025", "saunshi2025"]}, {"id": "pfau2024", "title": "Let's Think Dot by Dot: Hidden Computation in Transformer Language Models", "authors": "Jacob Pfau, William Merrill, Samuel R. Bowman", "institutions": "New York University", "year": 2024, "venue": "COLM 2024 (arXiv 2404.15758)", "citation_count": 223, "url": "https://arxiv.org/abs/2404.15758", "key_claim": "Transformers solve algorithmic tasks using MEANINGLESS filler tokens ('......') that they cannot solve answering immediately; learning to use them requires dense supervision. Usefulness characterized by the quantifier depth of a first-order formula.", "relevance_to_question": "Crucial for both crux and monitorability: the discrete token's value can be purely extra computation, decoupled from readable content — so 'discreteness makes intermediate state readable' already fails for ordinary CoT. Latent reasoning removes a channel that was already unreliable.", "angle": "theory", "citation_count_estimated": false, "lat": 40.73, "lon": -73.99, "org_type": "academia", "cites": ["turpin2023", "zelikman2024quietstar", "goyal2023pause", "lanham2023", "feng2023mystery", "li2024serial"]}, {"id": "korbak2025", "title": "Chain of Thought Monitorability: A New and Fragile Opportunity for AI Safety", "authors": "Tomek Korbak, Mikita Balesni, Elizabeth Barnes, Yoshua Bengio, Joe Benton, Neel Nanda, Evan Hubinger, Ethan Perez, Bowen Baker, Rohin Shah, Vlad Mikulik et al. (40+)", "institutions": "UK AI Security Institute; Apollo Research; Redwood Research; Mila; Anthropic; OpenAI; Google DeepMind; METR", "year": 2025, "venue": "arXiv 2507.11473", "citation_count": 214, "url": "https://arxiv.org/abs/2507.11473", "key_claim": "CoT gives an imperfect and FRAGILE window into model cognition; frontier developers should evaluate how architecture and training pressure affect monitorability, explicitly naming 'novel architectures that reason in opaque latent spaces' as a threat.", "relevance_to_question": "The safety case the Astra coverage invokes. Its warning targets HORIZONTAL latent CoT; applying it to depth looping is the category error at the heart of the story.", "angle": "theory", "citation_count_estimated": false, "lat": 45.53, "lon": -73.61, "org_type": "academia", "cites": ["turpin2023", "lanham2023", "feng2023mystery", "li2024serial", "merrill2024cot", "shen2025codi"]}, {"id": "padded2026", "title": "Revisiting Padded Transformer Expressivity: Which Architectural Choices Matter and Which Don't", "authors": "Anej Svete, William Merrill, Ryan Cotterell, Ashish Sabharwal", "institutions": "ETH Zurich; New York University; Allen Institute for AI", "year": 2026, "venue": "arXiv 2605.30523", "citation_count": 3, "url": "https://arxiv.org/abs/2605.30523", "key_claim": "Looping gives a PRECISION-DEPENDENT hierarchy: log^d N-looped constant-precision transformers reach FO-uniform AC^d, growing-precision ones reach FO-uniform TC^d. Precision and depth are what matter; attention type, width and uniformity largely do not.", "relevance_to_question": "The cleanest statement of why precision assumptions dominate. Any 'k loops give you TC^k' claim silently assumes GROWING precision — at constant precision you only get AC^k, strictly weaker. FLAG: authors/venue unverified.", "angle": "theory", "citation_count_estimated": false, "lat": 47.38, "lon": 8.55, "org_type": "academia", "cites": ["pfau2024", "melt2026", "turpin2023", "lanham2023", "feng2023mystery", "li2024serial"]}, {"id": "zhang2026memorybudget", "title": "Chain-of-Thought and Compressed Looped Transformers: A Memory-Budget Separation", "authors": "Haozhou Zhang", "institutions": "unconfirmed", "year": 2026, "venue": "arXiv 2605.30757", "citation_count": 1, "url": "https://arxiv.org/abs/2605.30757", "key_claim": "Compressed looped transformers cannot decide problems P-complete under logspace reductions (under a standard assumption), while poly-length CoT can. SCOPE: the separation applies only to COMPRESSED loops; full sequence-state loops 'live in a memory-rich regime closer to explicit scratchpads'.", "relevance_to_question": "The memory-budget account of what a token buys: CoT's growing KV cache is unbounded read-write memory. CRITICAL SCOPE LIMIT: Huginn, Ouro and Parcae are full sequence-state loops, so this bound does NOT apply to them.", "angle": "theory", "citation_count_estimated": true, "lat": 38.9, "lon": -77.04, "org_type": "independent", "cites": ["li2024serial", "merrill2024cot", "turpin2023", "lanham2023", "feng2023mystery", "giannou2023"]}, {"id": "chen2025survey", "title": "Reasoning Beyond Language: A Comprehensive Survey on Latent Chain-of-Thought Reasoning", "authors": "Xinghao Chen et al.", "institutions": "multi-institution consortium", "year": 2025, "venue": "arXiv 2505.16782", "citation_count": 55, "url": "https://arxiv.org/abs/2505.16782", "key_claim": "Taxonomy along two axes: token-wise HORIZONTAL methods replacing discrete tokens with continuous counterparts, and layer-wise VERTICAL methods propagating latent state across transformer depth.", "relevance_to_question": "The exact horizontal/vertical distinction that dissolves the question's premise. Astra is reported as vertical; 'CoT moved into embedding space' is horizontal.", "angle": "architecture", "citation_count_estimated": false, "lat": 38.9, "lon": -77.04, "org_type": "academia", "cites": ["lanham2023", "zhu2025superposition", "geiping2025", "turpin2023", "feng2023mystery", "li2024serial"]}, {"id": "zhu2025survey", "title": "A Survey on Latent Reasoning", "authors": "Rui-Jie Zhu et al.", "institutions": "UC Santa Cruz; M-A-P", "year": 2025, "venue": "arXiv 2507.06203", "citation_count": 47, "url": "https://arxiv.org/abs/2507.06203", "key_claim": "Divides latent reasoning into VERTICAL recurrence (expanding computational depth) and HORIZONTAL recurrence (increasing sequential/state capacity), covering activation-based recurrence, hidden-state propagation and infinite-depth limits.", "relevance_to_question": "Second independent survey converging on the same split — confirming the taxonomy is field consensus, not our framing.", "angle": "architecture", "citation_count_estimated": false, "lat": 39.9, "lon": 116.4, "org_type": "industry", "cites": ["chen2025survey", "geiping2025", "saunshi2025", "ouro2025", "hao2024", "zhang2025soft"]}, {"id": "banino2021", "title": "PonderNet: Learning to Ponder", "authors": "Andrea Banino, Jan Balaguer, Charles Blundell", "institutions": "DeepMind", "year": 2021, "venue": "ICML 2021 Workshop (arXiv 2107.05407)", "citation_count": 167, "url": "https://arxiv.org/abs/2107.05407", "key_claim": "Reformulates ACT halting as a probabilistic model with a principled halting loss, giving unbiased low-variance gradients; ACT itself is 'notably unstable and sensitive' to its halting hyperparameter.", "relevance_to_question": "Defines the third, ORTHOGONAL axis: adaptive computation is a halting policy, not a place where recurrence lives. Loop-count budgeting is this family, not the looping itself.", "angle": "architecture", "citation_count_estimated": false, "lat": 51.53, "lon": -0.12, "org_type": "industry", "cites": ["dehghani2018"]}, {"id": "arcprize2025", "title": "The Hidden Drivers of HRM's Performance on ARC-AGI", "authors": "ARC Prize Foundation", "institutions": "ARC Prize Foundation", "year": 2025, "venue": "ARC Prize blog + analysis repo", "citation_count": 40, "url": "https://arcprize.org/blog/hrm-analysis", "key_claim": "HRM's hierarchical planner/worker split contributes almost NOTHING versus a same-size plain transformer; the outer refinement loop and ~300 task augmentations drive the score (verified 32% ARC-AGI-1, 2% ARC-AGI-2 semi-private).", "relevance_to_question": "The best worked example of load-bearing vs incidental in this literature, with runnable ablation code — and a direct warning about attributing gains to architecture rather than to the loop or the data.", "angle": "pathologies", "lat": 37.77, "lon": -122.42, "org_type": "industry", "cites": ["pfau2024", "shen2025heima", "jolicoeurmartineau2025", "fan2024looped"]}, {"id": "jolicoeurmartineau2025", "title": "Less is More: Recursive Reasoning with Tiny Networks (TRM)", "authors": "Alexia Jolicoeur-Martineau", "institutions": "Samsung SAIL Montreal", "year": 2025, "venue": "arXiv 2510.04871", "citation_count": 150, "url": "https://arxiv.org/abs/2510.04871", "key_claim": "A single 2-layer, 7M-parameter network recursing up to 16 improvement steps over (question x, answer y, latent z) reaches 45% ARC-AGI-1 and 8% ARC-AGI-2, beating HRM and most LLMs.", "relevance_to_question": "The strongest existence proof that meaningful looped-reasoning research is doable at 7M params on modest hardware. Open code. Template for 'recursively refine an answer' rather than 'recurse a hidden state'.", "angle": "pathologies", "lat": 45.5, "lon": -73.57, "org_type": "industry", "cites": ["lanham2023", "geiping2025", "saunshi2025", "fan2024looped"]}, {"id": "loopthink2026", "title": "Loop, Think, & Generalize: Implicit Reasoning in Recurrent-Depth Transformers", "authors": "Kohli, Parthasarathy, Sun, Yao", "institutions": "Ohio State University (OSU-NLP)", "year": 2026, "venue": "arXiv 2604.07822", "citation_count": 22, "url": "https://arxiv.org/abs/2604.07822", "key_claim": "A 4-layer R=2 recurrent transformer systematically generalizes on multi-hop knowledge-graph reachability where an 8-layer DEPTH-MATCHED vanilla transformer fails; OOD gains stop past ~15 iterations ('overthinking') with confidence degrading.", "relevance_to_question": "Essentially the minimum viable experiment already run and open-sourced, INCLUDING the depth-matched baseline. Tasks (2000 entities / 200 relations, up to 40 hops) are single-GPU or smaller.", "angle": "pathologies", "citation_count_estimated": false, "lat": 40.0, "lon": -83.02, "org_type": "academia", "cites": ["geiping2025", "saunshi2025", "sanford2024parallel", "merrill2025logdepth", "jolicoeurmartineau2025", "fan2024looped"]}, {"id": "adaptivedepth2026", "title": "Adaptive Depth in Looped Transformers: Diagnosing Learned Halting Gates and Trajectory Readouts", "authors": "Popescu, Saez de Ocariz Borde, Lio", "institutions": "University of Cambridge", "year": 2026, "venue": "arXiv 2607.20519", "citation_count": 2, "url": "https://arxiv.org/abs/2607.20519", "key_claim": "Learned halting gates conflate trajectory shaping (per-depth loss weighting) with the inference stopping rule; simple post-hoc readouts (entropy, top-1 confidence, logit margin) MATCH OR BEAT learned gates on parity, modular arithmetic, and on Ouro-1.4B/2.6B across MMLU/ARC/HellaSwag.", "relevance_to_question": "Says: don't build ACT/PonderNet first. Use a confidence readout and treat adaptive depth as a cheap post-hoc add-on.", "angle": "pathologies", "citation_count_estimated": false, "lat": 52.2, "lon": 0.12, "org_type": "academia", "cites": ["fan2024looped", "loopthink2026", "giannou2023", "saunshi2025", "sanford2024parallel", "merrill2025logdepth"]}, {"id": "zhang2025latent", "title": "Do Latent Tokens Think? A Causal and Adversarial Analysis of Chain-of-Continuous-Thought", "authors": "Yuyi Zhang, Boyu Tang, Tianjie Ju, Sufeng Duan, Gongshen Liu", "institutions": "Shanghai Jiao Tong University", "year": 2025, "venue": "arXiv 2512.21711", "citation_count": 17, "url": "https://arxiv.org/abs/2512.21711", "key_claim": "Causal and adversarial probing of whether COCONUT-style latent tokens are actually used, across Llama-2/3, Qwen-2.5, Falcon-3 on ProntoQA, MMLU, HotpotQA, AdvBench.", "relevance_to_question": "Supplies the INTERVENTIONAL protocol (ablate/perturb individual latent steps) needed to prove a loop isn't decorative. FLAG: full-text extraction incomplete; specific numbers unverified.", "angle": "pathologies", "citation_count_estimated": false, "lat": 31.2, "lon": 121.43, "org_type": "academia", "cites": ["turpin2023", "shen2025codi", "zhu2025superposition", "chen2025survey", "zhu2025emergence", "hao2024"]}, {"id": "turpin2023", "title": "Language Models Don't Always Say What They Think: Unfaithful Explanations in Chain-of-Thought Prompting", "authors": "Miles Turpin, Julian Michael, Ethan Perez, Samuel R. Bowman", "institutions": "New York University; Anthropic", "year": 2023, "venue": "NeurIPS 2023 (arXiv 2305.04388)", "citation_count": 1572, "url": "https://arxiv.org/abs/2305.04388", "key_claim": "CoT explanations systematically misrepresent the true reason for a model's prediction: biasing features the model is demonstrably sensitive to go unmentioned in its stated reasoning.", "relevance_to_question": "Empirical backbone for 'the monitorability channel was already only partially faithful' — with ordinary DISCRETE tokens. Latent reasoning degrades a channel that was never fully trustworthy.", "angle": "theory", "citation_count_estimated": false, "lat": 37.78, "lon": -122.4, "org_type": "industry", "cites": ["perez2019turing"]}, {"id": "lanham2023", "title": "Measuring Faithfulness in Chain-of-Thought Reasoning", "authors": "Tamera Lanham, Anna Chen, Ansh Radhakrishnan, Benoit Steiner, Carson Denison et al.", "institutions": "Anthropic", "year": 2023, "venue": "arXiv 2307.13702", "citation_count": 553, "url": "https://arxiv.org/abs/2307.13702", "key_claim": "Models often reach the same answer with corrupted or truncated CoT, showing the stated reasoning is frequently post-hoc rather than causal; faithfulness varies with task and inversely with model size.", "relevance_to_question": "The quantitative version of the unfaithfulness problem, and directly relevant to designing the 'is the loop decorative?' intervention — the same corrupt-and-recheck protocol applies to latent steps.", "angle": "theory", "citation_count_estimated": false, "lat": 37.78, "lon": -122.4, "org_type": "industry", "cites": ["turpin2023", "perez2019turing"]}, {"id": "goyal2023pause", "title": "Think before you speak: Training Language Models With Pause Tokens", "authors": "Sachin Goyal, Ziwei Ji, Ankit Singh Rawat, Aditya Krishna Menon, Sanjiv Kumar, Vaishnavh Nagarajan", "institutions": "Carnegie Mellon University; Google Research", "year": 2023, "venue": "ICLR 2024 (arXiv 2310.02226)", "citation_count": 317, "url": "https://arxiv.org/abs/2310.02226", "key_claim": "Appending learnable <pause> tokens delays the model's answer and gives it extra forward-pass compute per output; gains require pause tokens in BOTH pretraining and finetuning.", "relevance_to_question": "The direct precursor to COCONUT's 'pause as thought' ablation — the baseline that recovers 96.6% on ProsQA. Shows extra compute alone, with no latent content, explains much of the claimed latent-reasoning gain.", "angle": "empirical", "citation_count_estimated": false, "lat": 37.42, "lon": -122.08, "org_type": "industry", "cites": ["turpin2023"]}, {"id": "deng2024icot", "title": "From Explicit CoT to Implicit CoT: Learning to Internalize CoT Step by Step", "authors": "Yuntian Deng, Yejin Choi, Stuart Shieber", "institutions": "Harvard University; University of Washington; Allen Institute for AI", "year": 2024, "venue": "arXiv 2405.14838", "citation_count": 221, "url": "https://arxiv.org/abs/2405.14838", "key_claim": "Stepwise internalization: progressively remove CoT tokens from the front while finetuning, until the model solves the task with no explicit chain. GPT-2 small reaches 30.0% on GSM8k.", "relevance_to_question": "The iCoT baseline quoted in COCONUT's own table, and the origin of the staged-removal curriculum COCONUT depends on. Establishes that the curriculum, not continuous representation, may be the active ingredient.", "angle": "empirical", "citation_count_estimated": false, "lat": 42.38, "lon": -71.12, "org_type": "academia", "cites": ["zelikman2024quietstar", "goyal2023pause"]}, {"id": "zelikman2024quietstar", "title": "Quiet-STaR: Language Models Can Teach Themselves to Think Before Speaking", "authors": "Eric Zelikman, Georges Harik, Yijia Shao, Varuna Jayasiri, Nick Haber, Noah D. Goodman", "institutions": "Stanford University; Notbad AI", "year": 2024, "venue": "COLM 2024 (arXiv 2403.09629)", "citation_count": 336, "url": "https://arxiv.org/abs/2403.09629", "key_claim": "Generates rationales after every token to explain future text, learning with REINFORCE which thoughts help prediction; zero-shot GSM8K improves 5.9%->10.9% with no task-specific finetuning.", "relevance_to_question": "The self-supervised alternative to a hand-built latent curriculum — learn WHICH internal thoughts pay off rather than distilling from explicit CoT. Relevant to the open question of supervising latent steps.", "angle": "empirical", "citation_count_estimated": false, "lat": 37.43, "lon": -122.17, "org_type": "academia", "cites": ["goyal2023pause", "turpin2023"]}];
+const C = {"id": "looped-transformers-latent-cot", "title": "Looped transformers & latent chain-of-thought", "question": "OpenAI claims to be running Astra as a Looped Transformer with chain of thought replaced from decode to english to embedding representation. I'd like to learn and play around with this in small models. Find all modern reputable research that take a stab at this and prepare my report.", "date": "2026-09-02", "stats": {"papers": 58, "edges": 295}, "tldr": [{"point": "The Astra premise is single-sourced on the mechanism — not verified", "sub": ["Whole story traces to one paywalled, anonymous article, 2026-09-01 [[theinformation2026]]", "No OpenAI paper, system card, model card or patent describes the architecture", "Named OpenAI staff engaged without denying; Pachocki rebutted the depth framing, not the loop [[pachocki2026]]", "Counter-signal: AEI reports \"not quite what is happening\"; the source itself said OpenAI is \"limiting the use\""]}, {"point": "The question conflates two orthogonal mechanisms — field consensus splits them", "sub": ["VERTICAL: weight-tied depth recurrence, same layers re-run within one token's pass [[dehghani2018]] [[geiping2025]]", "HORIZONTAL: hidden state fed back as the next input embedding [[hao2024]]", "Astra was reported as vertical; \"CoT in embedding space\" describes horizontal", "Only horizontal destroys a readable trace — layer reuse suppresses nothing [[raschka2026]]"]}, {"point": "Vertical looping works; latent CoT as a CoT replacement does not", "sub": ["Looping is a real iso-parameter win on reasoning/manipulation [[saunshi2025]] [[ouro2025]] [[bae2025]]", "Beyond ~1B params no latent method matches explicit CoT on math — gap WIDENS with scale [[fan2026lotus]]", "Looping adds no knowledge capacity (~2 bits/param either way); it buys manipulation [[ouro2025]]"]}, {"point": "Under honest compute-matching the looping story gets much weaker", "sub": ["phi=0.46 — one recurrence is worth ~half a unique block [[schwethelm2026]]", "At r=4: a 410M looped model equals a 580M dense one but costs like training a 1B", "Most headline claims are iso-PARAMETER; looping k times costs k times the FLOPs/token"]}, {"point": "Open: whether the advantage survives at scale, and whether latent gains are causal at all [[rizvi2026illusion]]"}], "insights": [{"title": "Depth is parallel time; CoT tokens are serial time", "points": ["Log-precision transformers sit in uniform TC0 regardless of attention [[merrill2023parallelism]]", "t(n) CoT steps ~ time-t(n) Turing computation; poly steps = P [[merrill2024cot]] [[li2024serial]]", "k-hop needs O(log k) DEPTH, not k serial steps [[sanford2024parallel]]", "\"k loops = k CoT tokens\" is false in both directions. Different currencies."]}, {"title": "Discreteness buys randomness — the most underrated result", "points": ["Loop[log^k n] = TC^k beats CoT[log^k n] in TC^(k-1) — latent wins on parallel depth [[xu2026formal]]", "But CoT with stochastic decoding gets an FPRAS no deterministic latent thought can approximate", "The decoding step is a sampling oracle — a computational resource, not a UI", "Asymptotic only: says nothing about a 50M model at r=4 on binary addition"]}, {"title": "The bandwidth argument is intuition, not a theorem", "points": ["One token ~ 17 bits; one hidden state ~ d x precision ~ 65k bits. Three to four orders of magnitude", "That gap does NOT convert into unbounded advantage [[xu2026formal]]", "CoT2 is the rigorous version — it bounds how many traces a latent state actually tracks [[gozeten2026cot2]]"]}, {"title": "Superposition is proven in construction, deflated in practice", "points": ["Proven: 2-layer transformer, D continuous steps solves diameter-D reachability; discrete needs O(n^2) [[zhu2025superposition]]", "Gradient descent finds the mechanism [[zhu2025emergence]] — but on one hand-built problem", "Superposition appears only in from-scratch models and collapses in early layers [[rizvi2026illusion]]", "A fine-tuned COCONUT hit 96.6% with ZERO latent tokens. \"It reasons in latent space\" needs its own ablation"]}, {"title": "The loop is often decorative, and almost nobody checks", "points": ["Geiping logged a run where perplexity was identical at r=1 and r=32 — the model no-op'd the loop [[geiping2025]]", "Mandatory metric: accuracy vs test-time r. Flat curve = decoration", "Loops converge to cyclic fixed points, largely REPEATING feedforward stages [[blayney2026]]", "Same failure from the halting side: unregularized exit gates collapse to always-T_max [[ouro2025]]"]}, {"title": "Latent CoT loses at math, wins at planning", "points": ["COCONUT: GSM8k 34.1 vs CoT 42.9 — but ProsQA 97.0 vs 77.5 [[hao2024]]", "Continuous states have no discrete RESET, so numeric error grows monotonically [[zou2026]]", "Much of the win is the staged curriculum: without it ProntoQA falls 99.8 to 52.4", "\"Pause as thought\" recovers 96.6% on ProsQA — extra compute, no latent content [[goyal2023pause]]"]}, {"title": "Truncated BPTT is the affordability trick that quietly breaks the loop", "points": ["Geiping backprops through k=8 of a mean-32 recurrence; memory constant in depth", "But truncation drops phi from 0.46 to 0.38 — the loop trains poorly WHILE LOSS IMPROVES [[schwethelm2026]]", "So loss alone cannot tell you the loop is trained. Report the r-extrapolation curve", "Hyperconnections raise phi to 0.65 — a genuine capacity gain, not just stability"]}, {"title": "Stability: a weight-tied loop is a dynamical system you backprop through", "points": ["Divergent runs learn spectral radius rho >= 1; signature is residual explosion + late loss spikes [[parcae2026]]", "Independently confirmed, with parameter-free fixes [[flt2026]]", "Free fix: sample depth PER SEQUENCE, not per microbatch", "Loops without recall + outer normalization provably cannot achieve input-dependence [[labovich2026]]"]}, {"title": "Beware attributing gains to architecture", "points": ["HRM's \"hierarchy\" is not load-bearing — the planner/worker split ~ a plain same-size transformer [[arcprize2025]]", "Real drivers were the outer refinement loop and ~300 augmentations per task", "Cashed out by a 7M-param, 2-layer recursive net at 45% ARC-AGI-1 [[jolicoeurmartineau2025]]", "Learned halting gates also mostly dead weight — post-hoc confidence readouts match them [[adaptivedepth2026]]"]}, {"title": "Monitorability was already leaky before latent reasoning", "points": ["Meaningless filler \"......\" tokens recover hidden computation — discrete tokens need not be faithful [[pfau2024]]", "CoT explanations systematically misrepresent the true cause of a prediction [[turpin2023]] [[lanham2023]]", "Korbak et al. name \"architectures that reason in opaque latent spaces\" as the threat [[korbak2025]]", "Latent reasoning removes a channel that was already only partially faithful"]}], "ideas": [{"id": "D1", "question": "Is a trained loop actually used, or has the model learned to no-op it?", "hypothesis": "With a naive recipe (injection at step 0 only, no sandwich norm), accuracy vs test-time r is flat — the loop is decorative.", "experiment": "UW-Madison-Lee-Lab/looped-tf, ~10M nanoGPT, parity n=32-64. Four arms: full recipe / injection-at-step-0 / no sandwich norm / fixed vs sampled r. Train at mean r=8, eval r in 1..24. Log ||h_t|| and cos(h_t,h_t-1). ~2-4 GPU-hrs; M2-Pro feasible.", "why": "The diagnostic most papers skip. Falsifiable number: the r=1 vs r=8 delta. Highest value-per-hour experiment here."}, {"id": "D2", "question": "Do vertical depth recurrence and horizontal latent CoT buy the SAME thing on the same task?", "hypothesis": "No. Vertical wins on fixed-parallel-depth tasks (parity, small-k hops); horizontal wins where unbounded serial state is needed (multi-digit carries, long chains), because KV grows per latent step.", "experiment": "One ~30M backbone, three heads on identical data at matched FLOPs: (A) looped r=8 vertical, (B) COCONUT-style horizontal 8 latent steps, (C) explicit CoT 8 tokens. Tasks: parity, n-hop reachability (n=4-12), 8-digit addition. Sweep OOD hop/digit count. ~1 A100-day.", "why": "Directly falsifies the vertical/horizontal media conflation with your own numbers. The money experiment."}, {"id": "D3", "question": "Does looping still win once you stop cheating on compute?", "hypothesis": "Replicates phi~0.46 — one recurrence worth about half a unique block, with compute-matched loops trailing and the gap growing in r.", "experiment": "30M backbone, honest four-way baseline: depth-matched (LxR real layers) / param-matched / iso-FLOP / same looped model at r=1. Tasks: addition and p-hop induction, plus a small LM run. Fit your own phi at r in {2,4,8}. ~6-10 GPU-hrs.", "why": "Teaches you to read every looping paper's headline number correctly, permanently."}, {"id": "D4", "question": "Do COCONUT's latent tokens carry computation, or is the gain curriculum plus pause tokens?", "hypothesis": "Largely the latter — a fine-tuned COCONUT reached 96.6% with zero latent tokens, and pause-as-thought recovers most of ProsQA.", "experiment": "GPT-2-small on ProsQA/ProntoQA. Arms: full COCONUT / latents replaced by fixed learned pause embeddings / latents shuffled across examples at test time / curriculum removed. Probe latent state for the correct next node across layers. Hours on a 4090.", "why": "The most-cited latent-CoT result may be a training-schedule effect. Finding that yourself beats reading it."}, {"id": "D5", "question": "In a shipped looped model, how much does the second pass actually do?", "hypothesis": "Setting num_loops 2 to 1 degrades reasoning substantially but leaves factual recall nearly intact.", "experiment": "Pull Nanbeige4.2-3B (fits a 4090 in bf16/8-bit). Eval at num_loops in {1,2,3,4} on math, multi-hop QA, and pure recall (TriviaQA/MMLU). Logit-lens the two passes to see if pass 2 repeats pass 1's stages. Inference only, a few GPU-hrs.", "why": "The only config-verifiable production instance of what Astra is rumored to do. Audit the premise directly instead of citing journalism."}, {"id": "D6", "question": "Can you predict loop divergence before it happens from the spectral radius?", "hypothesis": "Yes — divergent runs drift to rho >= 1 well before the loss spike.", "experiment": "30M looped model in a deliberately unstable config (no norm constraint, per-microbatch depth sampling). Log power-iteration rho every 100 steps alongside ||residual|| and loss. Then flip to per-sequence sampling + negative-diagonal parameterization and confirm spikes vanish. ~8 GPU-hrs.", "why": "Turns \"training is unstable\" into an instrument you own, and verifies a free fix yourself."}, {"id": "D7", "question": "Why does test-time r past training r peak then collapse?", "hypothesis": "The loop converges to a cyclic fixed point; collapse is the state leaving the training manifold, visible as cos(h_t,h_t-1) to 1 and ||h|| drift.", "experiment": "Train at r=4 on n-hop reachability (OSU-NLP-Group/Loop-Think-Generalize). Eval r in 1..64, tracking fixed-point convergence, ||h||, per-hop accuracy. Retrain with r sampled from a wide distribution; see if the cliff moves or only the plateau. ~1 A100-day.", "why": "\"Test-time scaling by turning up r\" is the headline promise. Tests whether it is real or a saturating exponential that plateaus at training depth."}, {"id": "D8", "question": "Is a learned halting gate worth anything over a post-hoc confidence readout?", "hypothesis": "No — entropy / top-1 / logit margin match or beat learned gates, and unregularized gates collapse to T_max.", "experiment": "Reuse the D1 parity/addition checkpoints. Add (a) PonderNet gate, (b) gate + entropy regularizer, (c) no gate, threshold on output entropy per r. Plot accuracy vs AVERAGE iterations used. ~3 GPU-hrs.", "why": "Adaptive compute is the whole practical pitch for looping — find out if the learned part is dead weight."}, {"id": "Q1", "question": "Does the looping advantage survive honest iso-FLOP matching AT SCALE?", "why": "The crux, and genuinely unresolved: Schwethelm says no at 30-100M, Parcae says yes at 1.3B, Loopie says only past a late-training crossover. Nothing published above 10B except Loopie."}, {"id": "Q2", "question": "What does a loop iteration compute that feedforward depth cannot?", "why": "No mechanistic account exists of a loop learning something depth can't. Blayney finds loops mostly replay stages already present in the feedforward stack."}, {"id": "Q3", "question": "Is the right account the information bottleneck or the memory budget?", "why": "CoT's growing KV cache is unbounded read-write memory while a compressed loop must recompress to fixed width. But the proven separation applies ONLY to compressed loops — Huginn/Ouro/Parcae are memory-rich and escape it."}, {"id": "Q4", "question": "Which precision regime do real bf16 models live in?", "why": "\"Loops give you TC^k\" silently assumes GROWING precision; at constant precision you only get AC^d. The entire expressivity case for looping hinges on which side real hardware sits."}, {"id": "Q5", "question": "Is there an error-correcting-projection benefit to decoding back to a token?", "why": "The intuition that discretization snaps the state back onto the data manifold is widely repeated and has zero theorems behind it."}], "next_steps": ["Clone UW-Madison-Lee-Lab/looped-tf — nanoGPT backbone, parity/addition/copy/sorting already implemented. Read the task generators first", "Clone OSU-NLP-Group/Loop-Think-Generalize — R=2 4-layer beats depth-matched 8-layer vanilla on multi-hop reachability; your OOD testbed", "First run, today, on the M2 Pro: ~10M model, parity n=32, mean r=8, full Geiping recipe. Sweep r in 1..24 and plot accuracy vs r", "Build the logging harness BEFORE scaling: acc-vs-r curve, ||h_t||, cos(h_t,h_t-1), token correlation, loss-spike counter. Every later experiment reuses it", "Deliberately break it: injection-at-step-0, no sandwich norm, per-microbatch depth sampling. Produce a decorative loop on demand — that is the lesson", "Only then rent the A100. First rented run: the four-way iso-FLOP baseline set at 30M", "In parallel, inference-only: download Nanbeige4.2-3B and sweep num_loops. Closest you can get to auditing the Astra claim yourself", "If you truncate BPTT, report the r-extrapolation curve — never validation loss alone", "Do NOT start with GSM8k: saturated, contaminated, teaches nothing about the mechanism", "Read in this order, only after running something: Geiping's appendix, Schwethelm, Xu & Sato, Rizvi-Martel"], "report_quality": {"verdict": "MEDIUM", "verdict_note": "Citation base is clean — all 50 arXiv IDs verified real, zero fabrications. Conclusions survived. Three papers were mischaracterized and one precision contradiction found; all corrected.", "axes": [{"name": "Freshness", "score": 5, "note": "Covers to arXiv 2607.* (Jul 2026) plus 2026-09-01/02 press and blog. Nothing material newer found."}, {"name": "Accuracy", "score": 4, "note": "All IDs real with matching titles and authors; three citations initially summarized beyond what their sources support, now fixed."}, {"name": "Reproducibility", "score": 4, "note": "Named runnable repos, concrete model sizes and hardware, explicit metric list and four-way baseline set."}, {"name": "Bias/Completeness", "score": 3, "note": "Good negative-result coverage; initially omitted CoT-unfaithfulness, pause tokens, Quiet-STaR and iCoT — since added."}, {"name": "Causal rigor", "score": 4, "note": "Ablation-vs-correlation distinction enforced throughout: HRM hierarchy, COCONUT curriculum, superposition deflation."}, {"name": "Scale-transfer", "score": 3, "note": "Correctly flags the >10B evidence void, but leaned asymptotic circuit results toward practical guidance; an explicit firewall was added."}, {"name": "Falsifiability", "score": 5, "note": "\"Flat accuracy-vs-r curve means the loop is decorative\" is a crisp, cheap, pre-registered kill criterion."}]}};
+const byId = new Map(PAPERS.map(p => [p.id, p]));
+
+/* ---------- citation chips + popover ---------- */
+const pop = document.getElementById('pop');
+let popTimer = null, popOwner = null;
+function popHTML(p){
+  return '<div class="t">'+esc(p.title)+'</div>'+
+    '<div class="m">'+esc(p.authors)+' · '+p.year+' · '+esc(p.venue)+' · '+p.citation_count+' cites</div>'+
+    '<div class="k">'+esc(p.key_claim)+'</div>'+
+    '<a class="lk" href="'+p.url+'" target="_blank" rel="noopener">Open paper &#8599;</a>';
+}
+function esc(s){return String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+function showPop(p, x, y){
+  clearTimeout(popTimer); popOwner = p.id;
+  pop.innerHTML = popHTML(p); pop.style.display='block';
+  const w = pop.offsetWidth, h = pop.offsetHeight;
+  let left = x - w/2, top = y + 14;
+  left = Math.max(8, Math.min(left, window.scrollX + document.documentElement.clientWidth - w - 8));
+  if (top + h > window.scrollY + window.innerHeight - 8) top = y - h - 16;
+  pop.style.left = left+'px'; pop.style.top = Math.max(8, top)+'px';
+}
+function hidePop(){ popTimer = setTimeout(()=>{ pop.style.display='none'; popOwner=null; }, 320); }
+pop.addEventListener('mouseenter', ()=>clearTimeout(popTimer));
+pop.addEventListener('mouseleave', hidePop);
+
+function attachPop(el, p){
+  el.addEventListener('mouseenter', e => {
+    const r = el.getBoundingClientRect();
+    showPop(p, window.scrollX + r.left + r.width/2, window.scrollY + r.bottom);
+  });
+  el.addEventListener('mouseleave', hidePop);
+}
+function renderCites(text){
+  const frag = document.createDocumentFragment();
+  const re = /\[\[([^\]]+)\]\]/g; let last = 0, m;
+  while ((m = re.exec(text))) {
+    if (m.index > last) frag.appendChild(document.createTextNode(text.slice(last, m.index)));
+    const p = byId.get(m[1]);
+    if (p) {
+      const a = document.createElement('a');
+      a.className='cite'; a.href=p.url; a.target='_blank'; a.rel='noopener'; a.textContent=p.id;
+      attachPop(a, p); frag.appendChild(a);
+    } else frag.appendChild(document.createTextNode(m[0]));
+    last = m.index + m[0].length;
+  }
+  if (last < text.length) frag.appendChild(document.createTextNode(text.slice(last)));
+  return frag;
+}
+
+/* ---------- header ---------- */
+document.getElementById('qcard').textContent = C.question;
+
+/* ---------- nav ---------- */
+const SECTIONS = [
+  ['sec-tldr','TLDR'],['sec-insights','Insights'],['sec-graph','Graph'],['sec-timeline','Timeline'],
+  ['sec-next','Next steps'],['sec-ideas','Ideas'],['sec-quality','Quality'],['sec-citations','Citations']
+];
+const pills = document.getElementById('pills');
+SECTIONS.forEach(([id,label], i) => {
+  const b = document.createElement('button');
+  b.className = 'pill'; b.dataset.target = id;
+  b.innerHTML = '<span class="n">'+String(i+1).padStart(2,'0')+'</span>'+label;
+  b.onclick = () => document.getElementById(id).scrollIntoView({behavior:'smooth', block:'start'});
+  pills.appendChild(b);
+});
+let active = 0;
+function setActive(i){
+  active = i;
+  [...pills.children].forEach((b,j)=>b.classList.toggle('on', j===i));
+  const el = pills.children[i];
+  if (el) pills.scrollTo({left: el.offsetLeft - pills.clientWidth/2 + el.offsetWidth/2, behavior:'smooth'});
+}
+function go(d){
+  const i = Math.max(0, Math.min(SECTIONS.length-1, active + d));
+  document.getElementById(SECTIONS[i][0]).scrollIntoView({behavior:'smooth', block:'start'});
+}
+document.getElementById('prevSec').onclick = ()=>go(-1);
+document.getElementById('nextSec').onclick = ()=>go(1);
+function onScroll(){
+  let cur = 0;
+  SECTIONS.forEach(([id],i)=>{ if (document.getElementById(id).getBoundingClientRect().top <= 80) cur = i; });
+  if (cur !== active) setActive(cur);
+}
+window.addEventListener('scroll', onScroll, {passive:true});
+setActive(0);
+
+/* ---------- tldr ---------- */
+const tl = document.getElementById('tldr');
+C.tldr.forEach(item => {
+  const li = document.createElement('li');
+  const pt = document.createElement('div'); pt.className='pt';
+  pt.appendChild(renderCites(item.point)); li.appendChild(pt);
+  if (item.sub && item.sub.length) {
+    const ul = document.createElement('ul');
+    item.sub.forEach(s => { const l = document.createElement('li'); l.appendChild(renderCites(s)); ul.appendChild(l); });
+    li.appendChild(ul);
+  }
+  tl.appendChild(li);
+});
+
+/* ---------- insights carousel ---------- */
+const insWrap = document.getElementById('insights'), insDots = document.getElementById('insDots');
+C.insights.forEach((ins,i)=>{
+  const d = document.createElement('div'); d.className='slide'+(i===0?' on':'');
+  const h = document.createElement('h3'); h.textContent = ins.title; d.appendChild(h);
+  const ul = document.createElement('ul');
+  ins.points.forEach(p=>{ const li=document.createElement('li'); li.appendChild(renderCites(p)); ul.appendChild(li); });
+  d.appendChild(ul); insWrap.appendChild(d);
+  const dot = document.createElement('button'); dot.className='dot'+(i===0?' on':'');
+  dot.setAttribute('aria-label','Insight '+(i+1));
+  dot.onclick = ()=>setIns(i); insDots.appendChild(dot);
+});
+let insI = 0;
+function setIns(i){
+  insI = (i + C.insights.length) % C.insights.length;
+  [...insWrap.children].forEach((s,j)=>s.classList.toggle('on', j===insI));
+  [...insDots.children].forEach((s,j)=>s.classList.toggle('on', j===insI));
+}
+document.getElementById('insPrev').onclick = ()=>setIns(insI-1);
+document.getElementById('insNext').onclick = ()=>setIns(insI+1);
+
+/* ---------- next steps ---------- */
+const nx = document.getElementById('next');
+C.next_steps.forEach(s=>{
+  const li = document.createElement('li');
+  const b = document.createElement('span'); b.className='box';
+  const t = document.createElement('span'); t.appendChild(renderCites(s));
+  li.appendChild(b); li.appendChild(t); nx.appendChild(li);
+});
+
+/* ---------- idea deck ---------- */
+const deck = document.getElementById('deck');
+let ideaI = Math.floor(Math.random()*C.ideas.length);
+function quad(label, body){
+  const d = document.createElement('div');
+  d.className = 'quad' + (body ? '' : ' empty');
+  d.innerHTML = '<div class="lb">'+label+'</div>';
+  const bd = document.createElement('div'); bd.className='bd';
+  if (body) bd.appendChild(renderCites(body)); else bd.textContent = '—';
+  d.appendChild(bd); return d;
+}
+function drawIdea(){
+  const it = C.ideas[ideaI];
+  deck.innerHTML = '';
+  deck.appendChild(quad('Research question', it.question));
+  deck.appendChild(quad('Hypothesis', it.hypothesis));
+  deck.appendChild(quad('Experiment', it.experiment));
+  deck.appendChild(quad('Why', it.why));
+}
+document.getElementById('shuf').onclick = ()=>{
+  let j = ideaI; while (j === ideaI && C.ideas.length > 1) j = Math.floor(Math.random()*C.ideas.length);
+  ideaI = j; drawIdea();
+};
+drawIdea();
+
+/* ---------- quality bars ---------- */
+const q = document.getElementById('quality');
+C.report_quality.axes.forEach(ax=>{
+  const row = document.createElement('div'); row.className='qbar';
+  row.innerHTML = '<div class="nm">'+esc(ax.name)+'</div>'+
+    '<div class="track"><div class="fill" style="width:'+(ax.score/5*100)+'%"></div><span class="sc">'+ax.score+'/5</span>'+
+    '<div class="qnote">'+esc(ax.note)+'</div></div>';
+  q.appendChild(row);
+});
+
+/* ---------- citations accordion ---------- */
+const cits = document.getElementById('cits');
+[...PAPERS].sort((a,b)=> b.year-a.year || b.citation_count-a.citation_count).forEach(p=>{
+  const w = document.createElement('div'); w.className='acc';
+  const h = document.createElement('button'); h.className='acch';
+  h.innerHTML = '<span class="yr">'+p.year+'</span><span class="tw">'+esc(p.title)+
+    '<span class="au">'+esc(p.authors)+'</span></span><span class="ch">+</span>';
+  const b = document.createElement('div'); b.className='accb';
+  b.innerHTML = esc(p.key_claim) +
+    '<div class="meta">'+esc(p.venue)+' · '+p.citation_count+' cites · '+esc(p.angle)+' · '+esc(p.institutions)+'</div>'+
+    '<a class="lk" href="'+p.url+'" target="_blank" rel="noopener" style="display:inline-block;margin-top:7px;font-family:var(--mono);font-size:11.5px;background:var(--ink);color:var(--on-ink);padding:3px 8px;border-radius:2px;text-decoration:none">Open paper &#8599;</a>';
+  h.onclick = ()=>{ const on = b.classList.toggle('on'); h.querySelector('.ch').textContent = on ? '−' : '+'; };
+  w.appendChild(h); w.appendChild(b); cits.appendChild(w);
+});
+
+/* ---------- shared scales ---------- */
+const maxCC = d3.max(PAPERS, p=>p.citation_count) || 1;
+const rOf = p => 2.0 + 3.2 * Math.sqrt(p.citation_count) / Math.sqrt(maxCC);
+const EDGES = [];
+PAPERS.forEach(s => (s.cites||[]).forEach(tid => {
+  const t = byId.get(tid); if (!t) return;
+  EDGES.push({s, t, q: Math.sqrt((s.citation_count+1) * (t.citation_count+1))});
+}));
+const maxQ = d3.max(EDGES, e=>e.q);
+const wOf = e => 0.25 + 1.9 * Math.pow(e.q / maxQ, 0.6);
+
+/* ---------- map graph ---------- */
+(function(){
+  const svg = d3.select('#map'), W = 1000, H = 620;
+  const defs = svg.append('defs');
+  defs.append('marker').attr('id','arw').attr('viewBox','0 0 10 10')
+    .attr('refX',9).attr('refY',5).attr('markerWidth',5).attr('markerHeight',5)
+    .attr('markerUnits','strokeWidth').attr('orient','auto-start-reverse')
+    .append('path').attr('d','M0,1L10,5L0,9Z').attr('fill','#0c2a1e').attr('opacity',0.55);
+  const g = svg.append('g');
+  const gLand = g.append('g'), gEdge = g.append('g'), gNode = g.append('g');
+
+  const proj = d3.geoMercator().center([-55, 45]).scale(300).translate([W/2, H/2]);
+  const path = d3.geoPath(proj);
+
+  const nodes = PAPERS.map(p => {
+    const xy = proj([p.lon, p.lat]) || [W/2, H/2];
+    return {p, gx: xy[0], gy: xy[1], x: xy[0], y: xy[1], r: rOf(p)};
+  });
+  const nmap = new Map(nodes.map(n=>[n.p.id, n]));
+  d3.forceSimulation(nodes)
+    .force('x', d3.forceX(d=>d.gx).strength(0.85))
+    .force('y', d3.forceY(d=>d.gy).strength(0.85))
+    .force('collide', d3.forceCollide(d=>d.r + 1.4).strength(0.9))
+    .stop().tick(160);
+
+  const link = gEdge.selectAll('line').data(EDGES).join('line')
+    .attr('stroke','#0c2a1e').attr('stroke-opacity',0.2)
+    .attr('stroke-width', wOf).attr('marker-end','url(#arw)')
+    .attr('vector-effect','non-scaling-stroke');
+  function place(){
+    link.each(function(e){
+      const a = nmap.get(e.s.id), b = nmap.get(e.t.id);
+      const dx = b.x-a.x, dy = b.y-a.y, L = Math.hypot(dx,dy) || 1;
+      const off = b.r + 2.2;
+      d3.select(this).attr('x1',a.x).attr('y1',a.y)
+        .attr('x2', b.x - dx/L*off).attr('y2', b.y - dy/L*off);
+    });
+  }
+  const circ = gNode.selectAll('circle').data(nodes).join('circle')
+    .attr('cx',d=>d.x).attr('cy',d=>d.y).attr('r',d=>d.r)
+    .attr('fill','#c8d5bc').attr('stroke','#0c2a1e').attr('stroke-width',0.8)
+    .attr('vector-effect','non-scaling-stroke').style('cursor','pointer');
+  place();
+
+  circ.on('mouseenter', function(ev,d){
+      d3.select(this).attr('fill','#0c2a1e');
+      showPop(d.p, window.scrollX + ev.clientX, window.scrollY + ev.clientY + 6);
+    })
+    .on('mouseleave', function(ev,d){ d3.select(this).attr('fill','#c8d5bc'); hidePop(); })
+    .on('dblclick', (ev,d)=>{
+      ev.stopPropagation();
+      svg.transition().duration(650).call(zoom.transform,
+        d3.zoomIdentity.translate(W/2, H/2).scale(6).translate(-d.x, -d.y));
+    });
+
+  const zoom = d3.zoom().scaleExtent([0.5, 40]).on('zoom', ev=>{
+    g.attr('transform', ev.transform);
+    const k = ev.transform.k;
+    circ.attr('r', d => d.r / Math.pow(k, 0.75));
+    gLand.attr('stroke-width', 0.9 / k);
+  });
+  svg.call(zoom).on('dblclick.zoom', null);
+
+  function drawLand(feat){
+    if (!feat) return;
+    gLand.attr('fill','#b9c9ac').attr('stroke','#0c2a1e').attr('stroke-width',1.1)
+      .selectAll('path').data(feat.features).join('path').attr('d', path);
+    gLand.lower();
+  }
+  fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json')
+    .then(r=>r.json()).then(t=>drawLand(topojson.feature(t, t.objects.countries)))
+    .catch(()=>{});
+})();
+
+/* ---------- 3-D timeline ---------- */
+(function(){
+  const svg = d3.select('#tl'), W = 1000, H = 600;
+  const g = svg.append('g');
+  const gAx = g.append('g'), gPil = g.append('g'), gEdge = g.append('g'), gNode = g.append('g'), gLab = g.append('g');
+
+  const ANGLES = ['architecture','empirical','theory','pathologies'];
+  const years = PAPERS.map(p=>p.year);
+  const x3 = d3.scaleLinear().domain([d3.min(years), d3.max(years)]).range([-330, 330]);
+  const y3 = d3.scaleSqrt().domain([0, maxCC]).range([0, 250]);
+  const z3 = d3.scalePoint().domain(ANGLES).range([-130, 130]);
+
+  let yaw = -0.62, pitch = 0.44;
+  const cx = W/2, cy = H/2 + 110;
+  function proj(x,y,z){
+    const cyw = Math.cos(yaw), syw = Math.sin(yaw);
+    const xr = x*cyw - z*syw, zr = x*syw + z*cyw;
+    const cp = Math.cos(pitch), sp = Math.sin(pitch);
+    const yr = y*cp - zr*sp, depth = y*sp + zr*cp;
+    return [cx + xr, cy - yr, depth];
+  }
+  const nodes = PAPERS.map(p=>({p, X:x3(p.year), Y:y3(p.citation_count), Z:z3(p.angle), r:rOf(p)}));
+  const nmap = new Map(nodes.map(n=>[n.p.id, n]));
+
+  function draw(){
+    const P = new Map();
+    nodes.forEach(n => P.set(n.p.id, proj(n.X, n.Y, n.Z)));
+
+    // axes: floor lanes per angle + year ticks + citation axis
+    const ax = [];
+    ANGLES.forEach(a=>{
+      const z = z3(a);
+      ax.push({type:'line', a: proj(x3.range()[0], 0, z), b: proj(x3.range()[1], 0, z)});
+      ax.push({type:'text', at: proj(x3.range()[1] + 26, 0, z), t: a, anchor:'start'});
+    });
+    const yrs = [2018, 2021, 2023, 2024, 2025, 2026].filter(y=>y>=x3.domain()[0] && y<=x3.domain()[1]);
+    yrs.forEach(y=>{
+      ax.push({type:'line', a: proj(x3(y), 0, -160), b: proj(x3(y), 0, 160), faint:true});
+      ax.push({type:'text', at: proj(x3(y), -22, -175), t: String(y), anchor:'middle'});
+    });
+    ax.push({type:'line', a: proj(x3.range()[0], 0, -160), b: proj(x3.range()[0], 250, -160)});
+    [0, 400, 800, 1500].filter(v=>v<=maxCC).forEach(v=>{
+      ax.push({type:'text', at: proj(x3.range()[0]-24, y3(v), -160), t: String(v), anchor:'end'});
+    });
+
+    gAx.selectAll('line').data(ax.filter(d=>d.type==='line')).join('line')
+      .attr('x1',d=>d.a[0]).attr('y1',d=>d.a[1]).attr('x2',d=>d.b[0]).attr('y2',d=>d.b[1])
+      .attr('stroke','#0c2a1e').attr('stroke-opacity',d=>d.faint?0.16:0.45).attr('stroke-width',1);
+    gLab.selectAll('text').data(ax.filter(d=>d.type==='text')).join('text')
+      .attr('x',d=>d.at[0]).attr('y',d=>d.at[1]).attr('text-anchor',d=>d.anchor)
+      .attr('font-family','ui-monospace, Menlo, monospace').attr('font-size',10)
+      .attr('fill','#4d5d46').text(d=>d.t);
+
+    gPil.selectAll('line').data(nodes).join('line')
+      .attr('x1',d=>proj(d.X,0,d.Z)[0]).attr('y1',d=>proj(d.X,0,d.Z)[1])
+      .attr('x2',d=>P.get(d.p.id)[0]).attr('y2',d=>P.get(d.p.id)[1])
+      .attr('stroke','#0c2a1e').attr('stroke-opacity',0.3).attr('stroke-width',0.8);
+
+    gEdge.selectAll('line').data(EDGES).join('line')
+      .attr('x1',e=>P.get(e.s.id)[0]).attr('y1',e=>P.get(e.s.id)[1])
+      .attr('x2',e=>P.get(e.t.id)[0]).attr('y2',e=>P.get(e.t.id)[1])
+      .attr('stroke','#0c2a1e').attr('stroke-opacity',0.14).attr('stroke-width', wOf);
+
+    const sorted = [...nodes].sort((a,b)=> P.get(a.p.id)[2] - P.get(b.p.id)[2]);
+    gNode.selectAll('circle').data(sorted, d=>d.p.id).join('circle')
+      .attr('cx',d=>P.get(d.p.id)[0]).attr('cy',d=>P.get(d.p.id)[1]).attr('r',d=>d.r+0.6)
+      .attr('fill','#c8d5bc').attr('stroke','#0c2a1e').attr('stroke-width',0.9)
+      .style('cursor','pointer')
+      .on('mouseenter', function(ev,d){ d3.select(this).attr('fill','#0c2a1e');
+        showPop(d.p, window.scrollX+ev.clientX, window.scrollY+ev.clientY+6); })
+      .on('mouseleave', function(){ d3.select(this).attr('fill','#c8d5bc'); hidePop(); })
+      .on('click', (ev,d)=>window.open(d.p.url,'_blank','noopener'));
+  }
+  draw();
+
+  let dragging = false, lx = 0, ly = 0;
+  svg.style('cursor','grab')
+    .on('pointerdown', ev=>{ dragging=true; lx=ev.clientX; ly=ev.clientY; svg.style('cursor','grabbing'); ev.preventDefault(); })
+    .on('pointermove', ev=>{
+      if (!dragging) return;
+      yaw += (ev.clientX - lx) * 0.007;
+      pitch = Math.max(-0.15, Math.min(0.9, pitch + (ev.clientY - ly) * 0.005));
+      lx = ev.clientX; ly = ev.clientY; draw();
+    });
+  ['pointerup','pointerleave','pointercancel'].forEach(t =>
+    svg.on(t, ()=>{ dragging=false; svg.style('cursor','grab'); }));
+})();
+</script>
+</body>
+</html>
