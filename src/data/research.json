@@ -1,5 +1,14 @@
 [
   {
+    "slug": "looped-transformers-latent-cot",
+    "title": "Looped transformers & latent chain-of-thought",
+    "question": "OpenAI claims to be running Astra as a Looped Transformer with chain of thought replaced from decode to english to embedding representation. I'd like to learn and play around with this in small models. Find all modern reputable research that take a stab at this and prepare my report.",
+    "date": "2026-09-02",
+    "papers": 58,
+    "edges": 295,
+    "reportPath": "/research/looped-transformers-latent-cot/report.html"
+  },
+  {
     "slug": "model-size-vs-test-time-compute",
     "title": "Parameters vs. thinking tokens: is there an exchange rate?",
     "question": "You can increase the amount an LLM thinks in two axes: by increasing the size of the model, or by increasing the number of tokens it outputs. Can we quantify the mathematical equivalence between the two? Given an architecture (depth, embed dim, param count), what's the equation that establishes the relationship between model size and reasoning effort (test-time compute)?",
