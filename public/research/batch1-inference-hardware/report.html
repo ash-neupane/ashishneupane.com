@@ -1,0 +1,962 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Batch 1 is a different machine</title>
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+<style>
+:root{
+  --sage:#a8ba9a; --surface:#c8d5bc; --raised:#d5e0ca;
+  --ink:#0c2a1e; --bottle:#0c2a1e; --text2:#2c4034; --muted:#4d5d46; --border:#8fa17c;
+  --on-ink:#d5e0ca; --background:var(--sage); --accent:var(--ink); --accent-text:var(--on-ink);
+  --score:#2e6f47;
+  --angle-a:#2e6f47; --angle-b:#a9701b; --angle-c:#b23a2e; --angle-d:#6b4a6e;
+  --shadow-rgb:12,42,30;
+  --mono:ui-monospace,"SF Mono","SFMono-Regular",Menlo,Monaco,"Cascadia Mono","Roboto Mono","Courier New",monospace;
+  --sans:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif;
+  --r-xs:2px; --r-sm:3px;
+  --shadow-paper:2px 3px 0 rgba(var(--shadow-rgb),0.16);
+  --shadow-button:2px 3px 0 rgba(var(--shadow-rgb),0.22);
+  --shadow-pop:3px 5px 0 rgba(var(--shadow-rgb),0.20);
+  --s1:2px;--s2:4px;--s3:7px;--s4:10px;--s5:14px;--s6:20px;--s7:28px;--s8:40px;
+  --content-width:1100px;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{max-width:100%;overflow-x:clip}
+body{margin:0;background:var(--background);color:var(--ink);font-family:var(--sans);
+  font-size:15px;line-height:1.5;-webkit-text-size-adjust:100%}
+.wrap{max-width:var(--content-width);margin:0 auto;padding:0 24px}
+a{color:var(--ink)}
+h1,h2,h3{margin:0;font-weight:700;letter-spacing:-.01em}
+h1{font-size:clamp(28px,5.4vw,46px);line-height:1.08}
+h2{font-size:clamp(19px,3.2vw,26px)}
+h3{font-size:16px}
+.mono{font-family:var(--mono)}
+
+/* header */
+header{padding:var(--s8) 0 var(--s6)}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:var(--s4)}
+.qcard{margin-top:var(--s6);background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-sm);box-shadow:var(--shadow-paper);padding:var(--s5) var(--s6);
+  border-left:5px solid var(--ink);font-size:14.5px;color:var(--text2)}
+.statline{margin-top:var(--s5);font-family:var(--mono);font-size:12px;color:var(--muted);
+  display:flex;flex-wrap:wrap;gap:var(--s4) var(--s5)}
+
+/* sticky nav */
+.navbar{position:sticky;top:0;z-index:60;background:var(--sage);
+  border-bottom:1px solid var(--border);box-shadow:0 2px 0 rgba(var(--shadow-rgb),.10)}
+.navinner{display:flex;align-items:center;gap:var(--s3);padding-top:var(--s3);padding-bottom:var(--s3)}
+.pills{display:flex;gap:var(--s2);overflow-x:auto;scrollbar-width:none;flex:1;
+  scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
+.pills::-webkit-scrollbar{display:none}
+.pill{flex:0 0 auto;font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;
+  padding:6px 10px;border:1px solid var(--border);background:var(--surface);color:var(--muted);
+  border-radius:var(--r-sm);cursor:pointer;white-space:nowrap;
+  transition:background .28s ease,color .28s ease,box-shadow .28s ease,transform .28s ease,border-color .28s ease}
+.pill:hover{border-color:var(--ink)}
+.pill .n{opacity:.55;margin-right:5px}
+.pill.on{background:var(--ink);color:var(--on-ink);border-color:var(--ink);
+  box-shadow:var(--shadow-button);transform:translateY(-1px)}
+.pill.on .n{opacity:.7}
+.navarrow{flex:0 0 auto;width:28px;height:28px;display:grid;place-items:center;cursor:pointer;
+  border:1px solid var(--border);background:var(--surface);color:var(--ink);border-radius:var(--r-sm);
+  font-family:var(--mono);font-size:13px;line-height:1;transition:background .2s,color .2s}
+.navarrow:hover{background:var(--ink);color:var(--on-ink)}
+
+/* sections */
+section{padding:var(--s8) 0 var(--s7);scroll-margin-top:56px}
+.sechead{display:flex;align-items:baseline;gap:var(--s4);margin-bottom:var(--s6)}
+.sechead:after{content:"";flex:1;height:0;border-top:1px dashed var(--border)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);
+  box-shadow:var(--shadow-paper);padding:var(--s6)}
+.inset{background:var(--raised);border:1px solid var(--border);border-radius:var(--r-sm);padding:var(--s5)}
+
+/* tldr */
+ul.log{list-style:none;margin:0;padding:0}
+ul.log>li{position:relative;padding-left:var(--s6);margin-bottom:var(--s5)}
+ul.log>li:last-child{margin-bottom:0}
+ul.log>li:before{content:"\25B8";position:absolute;left:0;top:0;color:var(--ink);font-size:12px}
+ul.log .lead{font-weight:650}
+ul.log ul{list-style:none;margin:var(--s3) 0 0;padding:0 0 0 var(--s5);border-left:1px dashed var(--border)}
+ul.log ul li{position:relative;padding-left:var(--s5);margin-bottom:var(--s2);color:var(--text2);font-size:14px}
+ul.log ul li:before{content:"\2013";position:absolute;left:0;color:var(--muted)}
+
+/* citation chip */
+.cite{font-family:var(--mono);font-size:11.5px;text-decoration:none;color:var(--ink);
+  background:var(--raised);border:1px solid var(--border);border-radius:var(--r-xs);
+  padding:0 4px;white-space:nowrap;cursor:pointer}
+.cite:hover{background:var(--ink);color:var(--on-ink);border-color:var(--ink)}
+
+/* popover */
+#pop{position:absolute;z-index:200;width:300px;max-width:calc(100vw - 24px);background:var(--surface);
+  border:1px solid var(--ink);border-radius:var(--r-sm);box-shadow:var(--shadow-pop);
+  padding:var(--s5);display:none;font-size:12.5px;line-height:1.45}
+#pop.show{display:block}
+#pop .t{font-weight:700;font-size:13px;margin-bottom:4px}
+#pop .m{font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:var(--s3)}
+#pop .c{color:var(--text2);margin-bottom:var(--s3)}
+#pop a.go{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--ink);text-decoration:none;border-bottom:1px solid var(--ink)}
+
+/* carousel */
+.carousel{position:relative}
+.slide{display:none}
+.slide.on{display:block;animation:fade .32s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.slide h3{margin-bottom:var(--s5);font-size:clamp(17px,2.6vw,21px)}
+.dots{display:flex;justify-content:center;gap:7px;margin-top:var(--s6)}
+.dot{width:9px;height:9px;border-radius:50%;border:1px solid var(--ink);background:transparent;
+  cursor:pointer;padding:0;transition:background .25s ease,transform .25s ease}
+.dot.on{background:var(--ink);transform:scale(1.25)}
+.carbtns{display:flex;justify-content:space-between;gap:var(--s4);margin-top:var(--s5)}
+.btn{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+  padding:7px 12px;border:1px solid var(--ink);background:var(--surface);color:var(--ink);
+  border-radius:var(--r-sm);cursor:pointer;box-shadow:var(--shadow-button);transition:background .2s,color .2s}
+.btn:hover{background:var(--ink);color:var(--on-ink)}
+.btn:active{transform:translate(1px,1px);box-shadow:none}
+
+/* THE SPEC */
+.specband{background:var(--ink);color:var(--on-ink);border-radius:var(--r-sm);
+  box-shadow:var(--shadow-pop);padding:var(--s6);margin-bottom:var(--s6)}
+.specband .lbl{font-family:var(--mono);font-size:11px;letter-spacing:.2em;opacity:.7}
+.specband p{margin:var(--s3) 0 0;font-size:15px;max-width:62ch}
+.specgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s5)}
+@media (max-width:760px){.specgrid{grid-template-columns:1fr}}
+.speccard{background:var(--surface);border:1px solid var(--ink);border-radius:var(--r-sm);
+  box-shadow:var(--shadow-pop);padding:var(--s5) var(--s6);border-top:5px solid var(--ink)}
+.speccard h3{font-family:var(--mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:var(--s4)}
+.speccard ul{list-style:none;margin:0;padding:0}
+.speccard li{position:relative;padding-left:var(--s5);margin-bottom:var(--s3);font-size:13.5px;color:var(--text2)}
+.speccard li:before{content:"\25AA";position:absolute;left:0;color:var(--ink)}
+
+/* tier diagram */
+.tiers{display:flex;flex-direction:column;gap:var(--s3);margin-top:var(--s5)}
+.tier{display:grid;grid-template-columns:60px 1fr;gap:var(--s5);align-items:stretch}
+.tier .tag{font-family:var(--mono);font-size:11px;color:var(--muted);display:flex;align-items:center}
+.tier .bar{border:1px solid var(--ink);border-radius:var(--r-sm);padding:var(--s4) var(--s5);
+  box-shadow:var(--shadow-paper);display:flex;flex-wrap:wrap;gap:4px var(--s5);align-items:baseline}
+.tier .bar .nm{font-weight:700;font-size:14px}
+.tier .bar .fig{font-family:var(--mono);font-size:12px;color:var(--text2)}
+.tier .bar .note{font-size:12.5px;color:var(--muted);flex-basis:100%}
+.t0 .bar{background:var(--ink);color:var(--on-ink);width:34%;min-width:200px}
+.t0 .bar .fig,.t0 .bar .note{color:var(--on-ink);opacity:.85}
+.t1 .bar{background:var(--raised);width:66%;min-width:240px}
+.t2 .bar{background:var(--surface);width:100%;border-style:dashed;opacity:.85}
+
+/* power bar */
+.pbar{display:flex;height:46px;border:1px solid var(--ink);border-radius:var(--r-sm);
+  overflow:hidden;box-shadow:var(--shadow-paper);margin-top:var(--s5)}
+.pseg{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;
+  border-right:1px solid var(--ink);transition:filter .2s}
+.pseg:last-child{border-right:none}
+.plegend{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:var(--s3) var(--s6);
+  margin-top:var(--s5);font-size:12.5px}
+.plegend div{display:flex;align-items:baseline;gap:var(--s3)}
+.plegend .sw{align-self:center}
+.plegend .w{font-family:var(--mono);color:var(--muted);margin-left:auto;padding-left:var(--s4)}
+.sw{width:12px;height:12px;border:1px solid var(--ink);flex:0 0 auto}
+
+/* arithmetic table */
+.scrollx{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.arith{border-collapse:collapse;width:100%;min-width:620px;font-size:13px}
+table.arith th,table.arith td{border:1px solid var(--border);padding:var(--s3) var(--s4);text-align:right}
+table.arith th{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--muted);background:var(--raised);font-weight:600}
+table.arith td:first-child,table.arith th:first-child{text-align:left}
+table.arith td{font-family:var(--mono)}
+table.arith td.sc{font-family:var(--sans);font-weight:600}
+table.arith tbody tr:hover td{background:var(--raised)}
+td.hl{outline:2px solid var(--ink);outline-offset:-2px}
+
+/* figures */
+.figbox{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);
+  box-shadow:var(--shadow-paper);padding:var(--s4);position:relative}
+svg{display:block;width:100%;height:auto;touch-action:pan-y;
+  user-select:none;-webkit-user-select:none}
+.figbar{display:flex;flex-wrap:wrap;gap:var(--s3);align-items:center;margin-bottom:var(--s4)}
+.hint{font-family:var(--mono);font-size:11px;color:var(--muted)}
+
+/* hover card for nodes */
+#nodecard{position:absolute;z-index:150;width:290px;background:var(--surface);border:1px solid var(--ink);
+  border-radius:var(--r-sm);box-shadow:var(--shadow-pop);padding:var(--s5);display:none;font-size:12.5px}
+#nodecard.show{display:block}
+#nodecard .t{font-weight:700;font-size:13px;margin-bottom:4px}
+#nodecard .m{font-family:var(--mono);font-size:11px;color:var(--muted);margin-bottom:var(--s3)}
+#nodecard .c{color:var(--text2);margin-bottom:var(--s3)}
+#nodecard a.go{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.08em;
+  color:var(--ink);border-bottom:1px solid var(--ink);text-decoration:none}
+
+/* checklist */
+.checks{list-style:none;margin:0;padding:0;display:grid;gap:var(--s4)}
+.checks li{display:grid;grid-template-columns:20px 1fr;gap:var(--s5);align-items:start;
+  padding-bottom:var(--s4);border-bottom:1px dashed var(--border);font-size:14px;color:var(--text2)}
+.checks li:last-child{border-bottom:none;padding-bottom:0}
+.box{width:17px;height:17px;border:1.5px solid var(--ink);border-radius:var(--r-xs);margin-top:2px;
+  box-shadow:var(--shadow-paper)}
+
+/* idea deck */
+.deck2{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);
+  border:1px solid var(--border);border-radius:var(--r-sm);overflow:hidden;margin-top:var(--s5)}
+.cell{background:var(--surface);padding:var(--s5);min-height:104px}
+.cell .k{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:var(--s3)}
+.cell .v{font-size:13.5px;color:var(--text2)}
+.cell.empty .v{opacity:.45;font-style:italic}
+.shuffle{width:100%;margin-top:var(--s5);padding:var(--s5);font-family:var(--mono);font-size:13px;
+  letter-spacing:.16em;text-transform:uppercase;background:var(--ink);color:var(--on-ink);
+  border:1px solid var(--ink);border-radius:var(--r-sm);box-shadow:var(--shadow-pop);cursor:pointer}
+.shuffle:active{transform:translate(2px,3px);box-shadow:none}
+
+/* quality bars */
+.qrow{display:grid;grid-template-columns:150px 1fr;gap:var(--s5);align-items:center;
+  margin-bottom:var(--s4);cursor:default}
+.qname{font-size:13px;font-weight:600}
+.qtrack{position:relative;height:24px;background:var(--raised);border:1px solid var(--border);
+  border-radius:var(--r-xs)}
+.qfill{height:100%;background:var(--score);opacity:.35;border-right:2px solid var(--score);
+  transition:opacity .25s ease}
+.qrow:hover .qfill{opacity:.55}
+.qval{position:absolute;right:8px;top:0;line-height:24px;font-family:var(--mono);font-size:11px;color:var(--muted)}
+.qnote{grid-column:2;font-size:12.5px;color:var(--muted);max-height:0;overflow:hidden;
+  transition:max-height .3s ease,margin .3s ease}
+.qrow:hover+.qnote,.qnote:hover{max-height:60px;margin:-6px 0 var(--s4)}
+
+/* citations */
+.acc{border:1px solid var(--border);border-radius:var(--r-sm);background:var(--surface);
+  box-shadow:var(--shadow-paper);margin-bottom:var(--s3);overflow:hidden}
+.acchead{display:grid;grid-template-columns:1fr auto;gap:var(--s5);align-items:center;
+  padding:var(--s4) var(--s5);cursor:pointer}
+.acchead:hover{background:var(--raised)}
+.acchead .ti{font-size:14px;font-weight:650;line-height:1.3}
+.acchead .au{font-size:12px;color:var(--muted);margin-top:2px}
+.accmeta{font-family:var(--mono);font-size:11px;color:var(--muted);text-align:right;white-space:nowrap}
+.accbody{display:none;padding:0 var(--s5) var(--s5);border-top:1px dashed var(--border);
+  margin-top:0;font-size:13px;color:var(--text2)}
+.acc.open .accbody{display:block;padding-top:var(--s4)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:var(--s3) var(--s5);margin-top:var(--s4);font-size:12.5px}
+.kv .k{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.ang{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;
+  padding:1px 6px;border:1px solid currentColor;border-radius:var(--r-xs)}
+.filters{display:flex;flex-wrap:wrap;gap:var(--s3);margin-bottom:var(--s5)}
+
+footer{padding:var(--s7) 0 var(--s8);border-top:1px dashed var(--border);
+  font-family:var(--mono);font-size:11px;color:var(--muted)}
+
+@media (max-width:720px){
+  .wrap{padding:0 16px}
+  section{padding:var(--s7) 0 var(--s6)}
+  .deck2{grid-template-columns:1fr}
+  .qrow{grid-template-columns:110px 1fr}
+  .tier .bar{width:100% !important;min-width:0}
+  .acchead{grid-template-columns:1fr}
+  .accmeta{text-align:left}
+}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">Research report &middot; <span id="hdate"></span></div>
+  <h1 id="htitle"></h1>
+  <div class="qcard" id="hquestion"></div>
+  <div class="statline" id="hstats"></div>
+</header>
+</div>
+
+<nav class="navbar"><div class="wrap navinner">
+  <button class="navarrow" id="navprev" aria-label="Previous section">&#9664;</button>
+  <div class="pills" id="pills"></div>
+  <button class="navarrow" id="navnext" aria-label="Next section">&#9654;</button>
+</div></nav>
+
+<main class="wrap">
+
+<section id="tldr"><div class="sechead"><h2>TLDR</h2></div>
+  <div class="card"><ul class="log" id="tldrlist"></ul></div>
+</section>
+
+<section id="insights"><div class="sechead"><h2>Key insights</h2></div>
+  <div class="card carousel">
+    <div id="slides"></div>
+    <div class="carbtns">
+      <button class="btn" id="cprev">&#9664; Prev</button>
+      <button class="btn" id="cnext">Next &#9654;</button>
+    </div>
+    <div class="dots" id="dots"></div>
+  </div>
+</section>
+
+<section id="spec"><div class="sechead"><h2>The spec</h2></div>
+  <div class="specband">
+    <div class="lbl">THE DELIVERABLE</div>
+    <p>A dedicated batch-1 decode engine. Roughly 15&ndash;30 TOPS INT4-equivalent, a three-tier
+    memory hierarchy with no off-package HBM, and a 5W envelope &mdash; targeting 8&ndash;15 tok/s
+    on a 100&ndash;500B-total heavily-sparse model.</p>
+  </div>
+
+  <div class="specgrid" id="specgrid"></div>
+
+  <div class="card" style="margin-top:var(--s6)">
+    <h3>Memory hierarchy</h3>
+    <div class="tiers">
+      <div class="tier t0"><div class="tag">TIER 0</div><div class="bar">
+        <span class="nm">SRAM on-die</span><span class="fig">32&ndash;64 MB &middot; &gt;10 TB/s</span>
+        <span class="note">Shared experts, router, draft model. Never leaves the die.</span></div></div>
+      <div class="tier t1"><div class="tag">TIER 1</div><div class="bar">
+        <span class="nm">LPDDR6 on-package</span><span class="fig">24&ndash;48 GB &middot; 150&ndash;250 GB/s &middot; 4&ndash;6 pJ/bit</span>
+        <span class="note">Active working set + KV / SSM state. This tier sets the token rate.</span></div></div>
+      <div class="tier t2"><div class="tag">TIER 2</div><div class="bar">
+        <span class="nm">NAND cold store</span><span class="fig">256 GB &ndash; 1 TB &middot; ~4 GB/s</span>
+        <span class="note">Model residency only. Disqualified from the decode loop &mdash; 40&ndash;80&times; too slow.</span></div></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:var(--s6)">
+    <h3>Power budget &mdash; 5W</h3>
+    <div class="pbar" id="pbar"></div>
+    <div class="plegend" id="plegend"></div>
+  </div>
+</section>
+
+<section id="arith"><div class="sechead"><h2>The arithmetic</h2></div>
+  <div class="card">
+    <div class="figbar">
+      <span class="hint">Hover a row.</span>
+    </div>
+    <div class="scrollx"><table class="arith">
+      <thead><tr>
+        <th>Scenario</th><th>GB / token</th><th>@100 GB/s</th><th>@273 GB/s</th>
+        <th>@614 GB/s</th><th>@3 TB/s</th><th>@5W energy-limited</th>
+      </tr></thead><tbody id="arithbody"></tbody>
+    </table></div>
+    <div class="inset" style="margin-top:var(--s6)">
+      <div class="hint" style="margin-bottom:var(--s3)">CROSSOVER</div>
+      <div style="font-family:var(--mono);font-size:clamp(15px,3vw,21px)">P* = Bandwidth &times; J/byte</div>
+      <div style="margin-top:var(--s3);font-size:13.5px;color:var(--text2)">
+      Independent of model size. At 100 GB/s phone memory with a system-level 0.16 nJ/byte,
+      P* &asymp; 16W &mdash; below which the device is <b>energy-bound</b>, above which it is
+      <b>bandwidth-bound</b>. A 5W handheld sits firmly on the energy side. The 5W column is the
+      binding one.</div>
+    </div>
+  </div>
+</section>
+
+<section id="graph"><div class="sechead"><h2>Citation graph</h2></div>
+  <div class="figbox" id="graphbox">
+    <div class="figbar">
+      <button class="btn" id="greset">Reset view</button>
+      <span class="hint">Drag to pan &middot; scroll to zoom &middot; double-click a node to focus</span>
+    </div>
+    <svg id="mapsvg" role="img" aria-label="Citation graph over a world map"></svg>
+    <div id="nodecard"></div>
+  </div>
+</section>
+
+<section id="timeline"><div class="sechead"><h2>Timeline</h2></div>
+  <div class="figbox" id="timebox">
+    <div class="figbar">
+      <button class="btn" id="treset">Reset orbit</button>
+      <span class="hint">Drag to orbit &middot; X time &middot; Y citations &middot; Z angle lane</span>
+    </div>
+    <svg id="timesvg" role="img" aria-label="Three-dimensional citation timeline"></svg>
+  </div>
+</section>
+
+<section id="next"><div class="sechead"><h2>Next steps</h2></div>
+  <div class="card"><ul class="checks" id="checklist"></ul></div>
+</section>
+
+<section id="ideas"><div class="sechead"><h2>Idea deck</h2></div>
+  <div class="card">
+    <div class="deck2" id="deck"></div>
+    <button class="shuffle" id="shuffle">&#8635; Shuffle</button>
+  </div>
+</section>
+
+<section id="quality"><div class="sechead"><h2>Report quality</h2></div>
+  <div class="card" id="qbars"></div>
+</section>
+
+<section id="cites"><div class="sechead"><h2>Citations</h2></div>
+  <div class="filters" id="cfilters"></div>
+  <div id="acclist"></div>
+</section>
+
+</main>
+
+<div class="wrap"><footer>
+  <span id="fstats"></span>
+</footer></div>
+
+<div id="pop"></div>
+
+<script>
+const PAPERS = [{"id": "pope2022", "title": "Efficiently Scaling Transformer Inference", "authors": "Reiner Pope, Sholto Douglas, Aakanksha Chowdhery, Jacob Devlin, James Bradbury, Anselm Levskaya, Jonathan Heek, Kefan Xiao, Shivani Agrawal, Jeff Dean", "institutions": "Google", "year": 2022, "venue": "MLSys 2023", "citation_count": 742, "url": "https://arxiv.org/abs/2211.05102", "key_claim": "Analytical inference cost model for 500B+ models on TPU v4 distinguishing compute-bound prefill from memory-bandwidth-bound generation; derives partitioning for the MFU/latency Pareto frontier", "relevance_to_question": "Canonical analytical roofline model for transformer decode", "angle": "roofline", "citation_count_estimated": false, "lat": 37.42, "lon": -122.08, "org_type": "industry", "cites": ["shazeer2019mqa"]}, {"id": "gholami2024", "title": "AI and Memory Wall", "authors": "Amir Gholami, Zhewei Yao, Sehoon Kim, Coleman Hooper, Michael W. Mahoney, Kurt Keutzer", "institutions": "UC Berkeley, ICSI", "year": 2024, "venue": "IEEE Micro", "citation_count": 412, "url": "https://arxiv.org/abs/2403.14123", "key_claim": "Compute scaling has vastly outpaced DRAM/HBM bandwidth scaling, so memory-bound workloads like batch-1 GEMV decode are throttled regardless of added compute", "relevance_to_question": "Foundational memory-wall argument for why 'just add FLOPS' fails at batch 1", "angle": "roofline", "citation_count_estimated": false, "lat": 37.87, "lon": -122.27, "org_type": "academia", "cites": ["kwon2023pagedattention", "llminflash_2023", "kwon2021hbmpim", "ainslie2023gqa", "liu2024deepseekv2", "zhong2024distserve"]}, {"id": "yuan2024", "title": "LLM Inference Unveiled: Survey and Roofline Model Insights", "authors": "Zhihang Yuan, Yuzhang Shang, Yang Zhou, et al.", "institutions": "Infinigence-AI and academic collaborators", "year": 2024, "venue": "arXiv", "citation_count": 219, "url": "https://arxiv.org/abs/2402.16363", "key_claim": "Roofline-based framework (LLM-Viewer) for identifying memory vs compute bottlenecks across LLM inference techniques and hardware", "relevance_to_question": "Reusable roofline tooling framing the core method of this question", "angle": "roofline", "citation_count_estimated": false, "lat": 38.9, "lon": -77.04, "org_type": "independent", "cites": ["kim2023", "patel2023splitwise", "agrawal2024sarathiserve", "pope2022", "agrawal2023sarathi", "hong2023"]}, {"id": "kim2023", "title": "Full Stack Optimization of Transformer Inference: a Survey", "authors": "Sehoon Kim, Coleman Hooper, Thanakul Wattanawong, Minwoo Kang, Ruohan Yan, Hasan Genc, Grace Dinh, Qijing Huang, Kurt Keutzer, Michael W. Mahoney, Yakun Sophia Shao, Amir Gholami", "institutions": "UC Berkeley, NVIDIA", "year": 2023, "venue": "arXiv", "citation_count": 178, "url": "https://arxiv.org/abs/2302.14017", "key_claim": "Full-stack co-design from algorithm to hardware yields up to 88.7x speedup; profiles bottlenecks across the transformer inference stack", "relevance_to_question": "Cross-layer bottleneck analysis grounding the hardware discussion", "angle": "roofline", "citation_count_estimated": false, "lat": 37.87, "lon": -122.27, "org_type": "academia", "cites": ["pope2022", "ainslie2023gqa", "patel2023splitwise", "shazeer2019mqa", "agrawal2023sarathi", "leviathan2023specdec"]}, {"id": "hong2023", "title": "FlashDecoding++: Faster Large Language Model Inference on GPUs", "authors": "Ke Hong, Guohao Dai, Jiaming Xu, Qiuli Mao, Xiuhong Li, Jun Liu, Kangdi Chen, Yuhan Dong, Yu Wang", "institutions": "Tsinghua University, Infinigence-AI", "year": 2023, "venue": "MLSys 2024", "citation_count": 113, "url": "https://arxiv.org/abs/2311.01282", "key_claim": "Decode-phase GEMM degenerates into flat-shape GEMV at batch size 1; asynchronized softmax and flat-GEMM optimizations target that regime", "relevance_to_question": "Directly characterizes batch-1 decode as GEMV at the kernel level", "angle": "roofline", "citation_count_estimated": false, "lat": 40.0, "lon": 116.33, "org_type": "academia", "cites": ["llminflash_2023", "kwon2023pagedattention", "patel2023splitwise", "pope2022", "agrawal2023sarathi", "kim2023"]}, {"id": "dao2023flashdecoding", "title": "Flash-Decoding for Long-Context Inference", "authors": "Tri Dao, Daniel Haziza, Francisco Massa, Grigory Sizov", "institutions": "Princeton, Meta, Together AI", "year": 2023, "venue": "PyTorch/Princeton NLP technical report", "citation_count": 100, "url": "https://princeton-nlp.github.io/flash-decoding/", "key_claim": "At batch 1 FlashAttention uses under 1% of the GPU because it parallelizes only over batch and query blocks; Flash-Decoding parallelizes over the KV sequence dimension, making batch-1 decode nearly length-invariant", "relevance_to_question": "Measured GPU under-utilization at batch 1 and the kernel-level fix; sets the software latency floor for attention", "angle": "roofline", "lat": 40.34, "lon": -74.66, "org_type": "academia", "cites": ["leviathan2023specdec", "llminflash_2023", "patel2023splitwise", "shazeer2019mqa", "pope2022", "agrawal2023sarathi"]}, {"id": "zhang2023dissecting", "title": "Dissecting the Runtime Performance of the Training, Fine-tuning, and Inference of Large Language Models", "authors": "Longteng Zhang, Xiang Liu, Zeyu Li, et al.", "institutions": "academic/industry consortium", "year": 2023, "venue": "arXiv", "citation_count": 22, "url": "https://arxiv.org/abs/2311.03687", "key_claim": "Empirical macro/micro runtime benchmarks of 7B/13B/70B LLMs isolating compute vs communication vs memory time", "relevance_to_question": "Measured time breakdown complementing the analytical roofline", "angle": "roofline", "citation_count_estimated": false, "lat": 38.9, "lon": -77.04, "org_type": "independent", "cites": ["hong2023", "llminflash_2023", "kwon2023pagedattention", "ainslie2023gqa", "patel2023splitwise", "pope2022"]}, {"id": "agrawal2024sarathiserve", "title": "Taming Throughput-Latency Tradeoff in LLM Inference with Sarathi-Serve", "authors": "Amey Agrawal, Nitin Kedia, Ashish Panwar, Jayashree Mohan, Nipun Kwatra, Bhargav Gulavani, Alexey Tumanov, Ramachandran Ramjee", "institutions": "Microsoft Research, Georgia Tech", "year": 2024, "venue": "OSDI 2024", "citation_count": 764, "url": "https://arxiv.org/abs/2403.02310", "key_claim": "Stall-free scheduling via chunked prefill interleaves compute-bound prefill with memory-bound decode to raise MFU without hurting decode latency", "relevance_to_question": "System-level exploitation of the prefill/decode roofline asymmetry", "angle": "roofline", "citation_count_estimated": false, "lat": 47.64, "lon": -122.13, "org_type": "industry", "cites": ["agrawal2023sarathi", "patel2023splitwise", "pope2022", "kim2023", "hong2023", "dao2023flashdecoding"]}, {"id": "agrawal2023sarathi", "title": "SARATHI: Efficient LLM Inference by Piggybacking Decodes with Chunked Prefills", "authors": "Amey Agrawal, Ashish Panwar, Jayashree Mohan, Nipun Kwatra, Bhargav S. Gulavani, Ramachandran Ramjee", "institutions": "Microsoft Research", "year": 2023, "venue": "arXiv", "citation_count": 273, "url": "https://arxiv.org/abs/2308.16369", "key_claim": "Chunked prefill converts low-MFU decode-only iterations into piggybacked mixed batches, raising compute utilization", "relevance_to_question": "Foundational chunked-prefill technique addressing batch-1-like low utilization", "angle": "roofline", "citation_count_estimated": false, "lat": 47.64, "lon": -122.13, "org_type": "industry", "cites": ["patel2023splitwise", "dejavu_2023", "llminflash_2023", "kwon2023pagedattention", "pope2022", "leviathan2023specdec"]}, {"id": "kwon2023pagedattention", "title": "Efficient Memory Management for Large Language Model Serving with PagedAttention", "authors": "Woosuk Kwon, Zhuohan Li, Siyuan Zhuang, Ying Sheng, Lianmin Zheng, Cody Hao Yu, Joseph E. Gonzalez, Hao Zhang, Ion Stoica", "institutions": "UC Berkeley, Stanford", "year": 2023, "venue": "SOSP 2023", "citation_count": 8045, "url": "https://arxiv.org/abs/2309.06180", "key_claim": "Virtual-memory-style KV paging eliminates fragmentation, enabling far higher effective batch sizes", "relevance_to_question": "Shows how systems push decode toward the compute-bound crossover via batching, the lever a single user does not have", "angle": "roofline", "citation_count_estimated": false, "lat": 37.87, "lon": -122.27, "org_type": "academia", "cites": ["wang2021spatten", "kwon2021hbmpim", "shazeer2019mqa", "pope2022"]}, {"id": "zhong2024distserve", "title": "DistServe: Disaggregating Prefill and Decoding for Goodput-optimized LLM Serving", "authors": "Yinmin Zhong, Shengyu Liu, Junda Chen, Jianbo Hu, Yibo Zhu, Xuanzhe Liu, Xin Jin, Hao Zhang", "institutions": "Peking University, UC San Diego", "year": 2024, "venue": "OSDI 2024", "citation_count": 921, "url": "https://arxiv.org/abs/2401.09670", "key_claim": "Physically separating compute-bound prefill and memory-bound decode serves up to 7.4x more requests at the same latency SLO", "relevance_to_question": "Architectural consequence of the prefill/decode asymmetry, implying two different machines", "angle": "roofline", "citation_count_estimated": false, "lat": 39.99, "lon": 116.31, "org_type": "academia", "cites": ["kwon2023pagedattention", "shazeer2019mqa", "dao2023flashdecoding", "leviathan2023specdec", "chen2023accelerating", "powerinfer_2023"]}, {"id": "patel2023splitwise", "title": "Splitwise: Efficient Generative LLM Inference Using Phase Splitting", "authors": "Pratyush Patel, Esha Choukse, Chaojie Zhang, Aashaka Shah, Inigo Goiri, Saeed Maleki, Ricardo Bianchini", "institutions": "Microsoft Azure Research", "year": 2023, "venue": "ISCA 2024", "citation_count": 886, "url": "https://arxiv.org/abs/2311.18677", "key_claim": "Splits prompt processing (compute-heavy) and token generation (memory-heavy) across heterogeneous machines optimized per phase", "relevance_to_question": "Hardware heterogeneity motivated directly by the phase-level roofline split", "angle": "roofline", "citation_count_estimated": false, "lat": 47.64, "lon": -122.13, "org_type": "industry", "cites": ["kwon2023pagedattention", "pope2022", "leviathan2023specdec", "wang2021spatten", "ainslie2023gqa", "shazeer2019mqa"]}, {"id": "liu2024deepseekv2", "title": "DeepSeek-V2: A Strong, Economical, and Efficient Mixture-of-Experts Language Model", "authors": "DeepSeek-AI (Aixin Liu et al.)", "institutions": "DeepSeek-AI", "year": 2024, "venue": "arXiv", "citation_count": 1416, "url": "https://arxiv.org/abs/2405.04434", "key_claim": "Multi-head Latent Attention compresses the KV cache via low-rank joint projection, cutting per-token KV bandwidth to ~14% (small MoE) or ~4% (large MoE) of standard MHA", "relevance_to_question": "Concrete KV-bandwidth reduction altering the per-token memory-traffic term", "angle": "roofline", "citation_count_estimated": false, "lat": 31.23, "lon": 121.47, "org_type": "industry", "cites": ["kwon2023pagedattention", "patel2023splitwise", "agrawal2023sarathi", "mixtral_2024", "wang2021spatten", "dejavu_2023"]}, {"id": "shazeer2019mqa", "title": "Fast Transformer Decoding: One Write-Head is All You Need", "authors": "Noam Shazeer", "institutions": "Google", "year": 2019, "venue": "arXiv", "citation_count": 872, "url": "https://arxiv.org/abs/1911.02150", "key_claim": "Multi-Query Attention shares one K/V head across all query heads, cutting KV-cache memory traffic by the head count and speeding memory-bound incremental decoding", "relevance_to_question": "Original paper establishing memory bandwidth, not compute, as the decode bottleneck", "angle": "roofline", "citation_count_estimated": false, "lat": 37.42, "lon": -122.08, "org_type": "industry", "cites": []}, {"id": "ainslie2023gqa", "title": "GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints", "authors": "Joshua Ainslie, James Lee-Thorp, Michiel de Jong, Yury Zemlyanskiy, Federico Lebron, Sumit Sanghai", "institutions": "Google Research", "year": 2023, "venue": "EMNLP 2023", "citation_count": 1729, "url": "https://arxiv.org/abs/2305.13245", "key_claim": "Grouped-Query Attention interpolates between MHA and MQA for tunable KV-bandwidth reduction (8x for Llama-3-70B) at near-MHA quality", "relevance_to_question": "Deployed technique reducing the KV term in the per-token traffic budget", "angle": "roofline", "citation_count_estimated": false, "lat": 37.42, "lon": -122.08, "org_type": "industry", "cites": ["shazeer2019mqa", "hong2022dfx", "pope2022", "leviathan2023specdec", "wang2021spatten", "kwon2023pagedattention"]}, {"id": "deepseekv3_2024", "title": "DeepSeek-V3 Technical Report", "authors": "DeepSeek-AI", "institutions": "DeepSeek", "year": 2024, "venue": "arXiv", "citation_count": 400, "url": "https://arxiv.org/abs/2412.19437", "key_claim": "671B total, 37B active per token (256 routed experts + 1 shared, top-8), auxiliary-loss-free load balancing; MLA for KV compression and an MTP module usable for self-speculative decoding", "relevance_to_question": "Flagship evidence of an extreme batch-1 sparsity ratio (5.5% activation) plus two co-design levers in one production model", "angle": "sparsity", "citation_count_estimated": true, "lat": 31.23, "lon": 121.47, "org_type": "industry", "cites": ["liu2024deepseekv2", "mixtral_2024", "dejavu_2023", "powerinfer_2023", "llminflash_2023"]}, {"id": "qwen3_2025", "title": "Qwen3 Technical Report (Qwen3-235B-A22B)", "authors": "Qwen Team", "institutions": "Alibaba", "year": 2025, "venue": "arXiv", "citation_count": 0, "url": "https://qwenlm.github.io/blog/qwen3/", "key_claim": "235B total, 22B active, 128 experts top-8; matches larger dense models at roughly one third the compute", "relevance_to_question": "Second large-scale MoE activation-ratio data point", "angle": "sparsity", "lat": 38.9, "lon": -77.04, "org_type": "independent", "citation_count_estimated": true, "cites": ["deepseekv3_2024", "bitnet158_2024", "mixtral_2024", "dejavu_2023", "powerinfer_2023", "llminflash_2023"]}, {"id": "kimik2_2025", "title": "Kimi K2: Open Agentic Intelligence", "authors": "Kimi Team", "institutions": "Moonshot AI", "year": 2025, "venue": "arXiv", "citation_count": 0, "url": "https://arxiv.org/pdf/2507.20534", "key_claim": "1.04T total params, 32B active, 384 experts top-8, behaving like a ~32B dense model per query", "relevance_to_question": "Largest open MoE; ~32x total:active ratio exemplifying the batch-1 sparsity upside", "angle": "sparsity", "lat": 39.9, "lon": 116.4, "org_type": "industry", "citation_count_estimated": true, "cites": ["mixtral_2024", "deepseekv3_2024", "dejavu_2023", "powerinfer_2023", "llminflash_2023", "powerinfer2_2024"]}, {"id": "gptoss_2025", "title": "gpt-oss-120b and gpt-oss-20b Model Card", "authors": "OpenAI", "institutions": "OpenAI", "year": 2025, "venue": "arXiv", "citation_count": 0, "url": "https://arxiv.org/pdf/2508.10925", "key_claim": "120B model activates 5.1B params per token, 32 experts top-4", "relevance_to_question": "Open model card with explicit active-parameter accounting", "angle": "sparsity", "lat": 37.76, "lon": -122.41, "org_type": "industry", "citation_count_estimated": true, "cites": ["mixtral_2024", "deepseekv3_2024", "dejavu_2023", "powerinfer_2023", "llminflash_2023", "powerinfer2_2024"]}, {"id": "mixtral_2024", "title": "Mixtral of Experts", "authors": "Albert Q. Jiang et al.", "institutions": "Mistral AI", "year": 2024, "venue": "arXiv", "citation_count": 1500, "url": "https://arxiv.org/pdf/2401.04088", "key_claim": "8x7B sparse MoE, top-2 of 8 experts per token", "relevance_to_question": "Reference model for nearly all MoE offloading and expert-caching systems work", "angle": "sparsity", "lat": 38.9, "lon": -77.04, "org_type": "independent", "cites": ["dejavu_2023", "powerinfer_2023", "llminflash_2023"]}, {"id": "spatiotemporal_routing_2026", "title": "A Spatio-Temporal Expert Prefetching Framework for Efficient MoE-based LLM Inference", "authors": "various", "institutions": "various", "year": 2026, "venue": "arXiv", "citation_count": 0, "url": "https://arxiv.org/pdf/2606.15453", "key_claim": "Consecutive-token same-expert reuse probability around 30% vs a 12.5% random baseline, strongest in later layers", "relevance_to_question": "The quantitative basis for expert caching at batch 1 — locality is real but far from perfect", "angle": "sparsity", "lat": 38.9, "lon": -77.04, "org_type": "independent", "citation_count_estimated": true, "cites": ["klotski_2025", "dejavu_2023", "llminflash_2023", "moeinfinity_2024", "hobbit_2024", "patel2023splitwise"]}, {"id": "fiddler_2024", "title": "Fiddler: CPU-GPU Orchestration for Fast Inference of Mixture-of-Experts Models", "authors": "Keisuke Kamahori et al.", "institutions": "University of Washington", "year": 2024, "venue": "ICLR 2025", "citation_count": 60, "url": "https://arxiv.org/pdf/2402.07033", "key_claim": "At batch 1 it is faster to compute cold experts on the CPU than to transfer their weights to the GPU, since PCIe transfer dominates; 1.26x single-batch, 11.57x beam search on Mixtral-8x7B", "relevance_to_question": "Directly tests the batch-1 compute-vs-transfer tradeoff that defines the memory hierarchy design", "angle": "sparsity", "lat": 47.66, "lon": -122.31, "org_type": "academia", "cites": ["powerinfer2_2024", "leviathan2023specdec", "liu2024deepseekv2", "mixtral_2024", "dejavu_2023", "powerinfer_2023"]}, {"id": "moeinfinity_2024", "title": "MoE-Infinity: Activation-Aware Expert Offloading for Efficient MoE Serving", "authors": "Leyang Xue et al.", "institutions": "University of Edinburgh", "year": 2024, "venue": "arXiv", "citation_count": 40, "url": "https://arxiv.org/pdf/2401.14361", "key_claim": "Sequence-level activation tracing plus prefetching cuts latency 4-20x and cost over 8x versus naive offloading on personal machines at batch 1", "relevance_to_question": "Core evidence that batch-1 MoE has exploitable temporal locality on a personal machine", "angle": "sparsity", "lat": 55.94, "lon": -3.19, "org_type": "academia", "cites": ["kwon2023pagedattention", "dejavu_2023", "powerinfer_2023", "llminflash_2023", "prosparse_2024", "liu2024deepseekv2"]}, {"id": "hobbit_2024", "title": "HOBBIT: A Mixed Precision Expert Offloading System for Fast MoE Inference", "authors": "Peng Tang et al.", "institutions": "various", "year": 2024, "venue": "arXiv", "citation_count": 15, "url": "https://arxiv.org/pdf/2411.01433", "key_claim": "Token/layer/sequence-level dynamic expert caching with mixed precision gives up to 9.93x decode speedup on Jetson AGX Orin", "relevance_to_question": "Edge-device MoE offloading with concrete speedup numbers", "angle": "sparsity", "lat": 38.9, "lon": -77.04, "org_type": "independent", "cites": ["powerinfer2_2024", "fiddler_2024", "moeinfinity_2024", "leviathan2023specdec", "dejavu_2023", "powerinfer_2023"]}, {"id": "klotski_2025", "title": "Klotski: Efficient Mixture-of-Expert Inference via Expert-Aware Multi-Batch Pipeline", "authors": "Zhiyuan Fang et al.", "institutions": "various", "year": 2025, "venue": "arXiv", "citation_count": 0, "url": "https://arxiv.org/html/2502.06888", "key_claim": "94.1% GPU memory reduction and ~40 tok/s for Mixtral-8x22B on one H800, evaluated at batch 4-64", "relevance_to_question": "Counterpoint: most offloading results target batched serving, not the single-user regime, and do not transfer", "angle": "sparsity", "lat": 38.9, "lon": -77.04, "org_type": "independent", "citation_count_estimated": true, "cites": ["moeinfinity_2024", "dejavu_2023", "llminflash_2023", "fiddler_2024", "hobbit_2024", "liu2024deepseekv2"]}, {"id": "dejavu_2023", "title": "Deja Vu: Contextual Sparsity for Efficient LLMs at Inference Time", "authors": "Zichang Liu et al.", "institutions": "Rice, Zhejiang, ETH Zurich, CMU, Together AI, Meta AI, Stanford", "year": 2023, "venue": "ICML 2023", "citation_count": 370, "url": "https://arxiv.org/abs/2310.17157", "key_claim": "Up to 80% contextual sparsity in attention heads and MLPs is predictable on the fly, giving over 2x latency reduction on OPT-175B vs FasterTransformer", "relevance_to_question": "Foundational activation-sparsity result independent of MoE architecture", "angle": "sparsity", "citation_count_estimated": false, "lat": 29.72, "lon": -95.4, "org_type": "academia", "cites": ["patel2023splitwise", "kwon2023pagedattention", "leviathan2023specdec", "pope2022", "wang2021spatten"]}, {"id": "powerinfer_2023", "title": "PowerInfer: Fast Large Language Model Serving with a Consumer-grade GPU", "authors": "Yixin Song et al.", "institutions": "Shanghai Jiao Tong University (IPADS)", "year": 2023, "venue": "SOSP 2024", "citation_count": 340, "url": "https://arxiv.org/abs/2312.12456", "key_claim": "Power-law hot/cold neuron locality with hot neurons pinned on GPU and cold computed on CPU reaches 13.2 tok/s average (29 peak) on one RTX 4090, within 18% of an A100", "relevance_to_question": "Core precedent for exploiting single-request activation locality on consumer hardware", "angle": "sparsity", "citation_count_estimated": false, "lat": 31.2, "lon": 121.43, "org_type": "academia", "cites": ["kwon2023pagedattention", "leviathan2023specdec", "chen2023accelerating", "shazeer2019mqa", "abts2020tsp", "dejavu_2023"]}, {"id": "powerinfer2_2024", "title": "PowerInfer-2: Fast Large Language Model Inference on a Smartphone", "authors": "Zhenliang Xue, Yixin Song et al.", "institutions": "Shanghai Jiao Tong University (IPADS)", "year": 2024, "venue": "arXiv", "citation_count": 143, "url": "https://arxiv.org/abs/2406.06282", "key_claim": "First system to serve a 47B model on a smartphone at 11.68 tok/s using a neuron-cluster abstraction across NPU and CPU, up to 27.8x over prior mobile frameworks", "relevance_to_question": "The most concrete handheld data point and the honest current ceiling", "angle": "sparsity", "citation_count_estimated": false, "lat": 31.2, "lon": 121.43, "org_type": "academia", "cites": ["powerinfer_2023", "llminflash_2023", "leviathan2023specdec", "zeng2024flightllm", "hong2023", "zhang2023dissecting"]}, {"id": "llminflash_2023", "title": "LLM in a Flash: Efficient Large Language Model Inference with Limited Memory", "authors": "Keivan Alizadeh et al.", "institutions": "Apple", "year": 2023, "venue": "ACL 2024", "citation_count": 294, "url": "https://arxiv.org/abs/2312.11514", "key_claim": "FFN sparsity exceeds 95% in some layers; windowing plus row-column bundling runs models at 2x available DRAM with 4-5x (CPU) to 20-25x (GPU) speedup over naive flash loading", "relevance_to_question": "Answers whether NAND streaming destroys the sparsity win: no if selective, yes if paging whole layers", "angle": "sparsity", "citation_count_estimated": false, "lat": 37.33, "lon": -122.03, "org_type": "industry", "cites": ["kwon2023pagedattention", "dejavu_2023", "patel2023splitwise", "powerinfer_2023", "leviathan2023specdec", "chen2023accelerating"]}, {"id": "activeweightswap_2025", "title": "Scaling Up On-Device LLMs via Active-Weight Swapping Between DRAM and Flash", "authors": "various", "institutions": "various", "year": 2025, "venue": "arXiv", "citation_count": 0, "url": "https://arxiv.org/pdf/2504.08378", "key_claim": "Active-weight swapping extends on-device LLM scale beyond DRAM limits", "relevance_to_question": "Follow-up to LLM-in-a-Flash targeting the on-device capacity ceiling directly", "angle": "sparsity", "lat": 38.9, "lon": -77.04, "org_type": "independent", "citation_count_estimated": true, "cites": ["dejavu_2023", "llminflash_2023", "pope2022", "ma2024bitnet158", "li2025eagle3", "dao2023flashdecoding"]}, {"id": "turbosparse_2024", "title": "Turbo Sparse: Achieving LLM SOTA Performance with Minimal Activated Parameters", "authors": "Yixin Song et al.", "institutions": "Shanghai Jiao Tong University", "year": 2024, "venue": "arXiv", "citation_count": 48, "url": "https://arxiv.org/abs/2406.05955", "key_claim": "The dReLU activation raises activation sparsity in dense and MoE FFNs, giving 2-5x decoding speedup", "relevance_to_question": "Training-time technique that stacks on top of MoE experts", "angle": "sparsity", "citation_count_estimated": false, "lat": 31.2, "lon": 121.43, "org_type": "academia", "cites": ["wang2021spatten", "zhang2023dissecting", "mixtral_2024", "deepseekv3_2024", "dejavu_2023", "powerinfer_2023"]}, {"id": "prosparse_2024", "title": "ProSparse: Introducing and Enhancing Intrinsic Activation Sparsity within Large Language Models", "authors": "Chenyang Song et al.", "institutions": "Tsinghua University", "year": 2024, "venue": "COLING 2025", "citation_count": 55, "url": "https://arxiv.org/abs/2402.13516", "key_claim": "Progressive sparsity regularization with ReLU substitution raises intrinsic activation sparsity without quality loss", "relevance_to_question": "Training-time lever to maximize exploitable sparsity at inference", "angle": "sparsity", "citation_count_estimated": false, "lat": 40.0, "lon": 116.33, "org_type": "academia", "cites": ["dejavu_2023", "powerinfer_2023", "llminflash_2023", "powerinfer2_2024", "kwon2023pagedattention", "chen2023accelerating"]}, {"id": "bitnet158_2024", "title": "BitNet b1.58 2B4T Technical Report", "authors": "Shuming Ma, Hongyu Wang, Shaohan Huang et al.", "institutions": "Microsoft Research", "year": 2025, "venue": "arXiv", "citation_count": 100, "url": "https://arxiv.org/pdf/2504.12285", "key_claim": "A natively trained ternary 2B model matches fp16 LLaMA quality at 3.55x less memory and 2.71x faster", "relevance_to_question": "The quantization lever that most directly buys capacity and bandwidth headroom for 100B+ on a handheld", "angle": "sparsity", "lat": 47.64, "lon": -122.13, "org_type": "industry", "cites": ["deepseekv3_2024", "mixtral_2024", "dejavu_2023", "powerinfer_2023", "llminflash_2023", "powerinfer2_2024"]}, {"id": "ufs41_standard", "title": "JEDEC UFS 4.1 Standard", "authors": "JEDEC", "institutions": "JEDEC", "year": 2024, "venue": "industry standard", "citation_count": 0, "url": "https://americas.kioxia.com/en-us/business/memory/mlc-nand/ufs4.html", "key_claim": "UFS 4.0/4.1 sequential read/write reaches about 4.2 GB/s, double UFS 3.1", "relevance_to_question": "Bandwidth ceiling for cold-expert paging feasibility on real phone hardware", "angle": "sparsity", "lat": 38.9, "lon": -77.04, "org_type": "independent", "citation_count_estimated": true, "cites": ["jedec_lpddr5x", "mixtral_2024", "deepseekv3_2024", "dejavu_2023", "powerinfer_2023", "llminflash_2023"]}, {"id": "horowitz2014energy", "title": "Computing's Energy Problem (and what we can do about it)", "authors": "Mark Horowitz", "institutions": "Stanford University", "year": 2014, "venue": "ISSCC", "citation_count": 3000, "url": "https://gwern.net/doc/cs/hardware/2014-horowitz-2.pdf", "key_claim": "Off-chip DRAM access costs ~1.3-2.6 nJ per 32-bit word versus ~0.1 pJ for a 32-bit on-chip add; data movement dominates compute energy by orders of magnitude", "relevance_to_question": "Foundational energy-per-bit numbers behind the batch-1 energy-wall arithmetic", "angle": "memory-tech", "lat": 37.43, "lon": -122.17, "org_type": "academia", "cites": []}, {"id": "kwon2021hbmpim", "title": "Aquabolt-XL: Samsung HBM2-PIM with In-Memory Processing for ML Accelerators", "authors": "Jin Hyun Kim et al.", "institutions": "Samsung", "year": 2021, "venue": "Hot Chips 33", "citation_count": 150, "url": "https://www.hc33.hotchips.org/assets/program/conference/day1/20210813_HC33_Aquabolt-XL_PIM_Jin_Kim_slide.pdf", "key_claim": "HBM2-PIM delivers over 2x system performance with more than 70% energy reduction on ML workloads by computing inside the memory bank", "relevance_to_question": "First shipping PIM silicon proof point for GEMV energy and speedup", "angle": "memory-tech", "lat": 45.5, "lon": -73.57, "org_type": "industry", "cites": ["horowitz2014energy"]}, {"id": "heo2024neupims", "title": "NeuPIMs: NPU-PIM Heterogeneous Acceleration for Batched LLM Inferencing", "authors": "Guseul Heo et al.", "institutions": "KAIST, Seoul National University", "year": 2024, "venue": "ASPLOS 2024", "citation_count": 178, "url": "https://arxiv.org/abs/2403.00579", "key_claim": "Jointly using a GEMM NPU and GEMV-optimized PIM gives 2.4x throughput and about 25% energy reduction for LLM inference", "relevance_to_question": "Quantifies realistic PIM gains for the exact GEMV-bound decode bottleneck", "angle": "memory-tech", "citation_count_estimated": false, "lat": 36.37, "lon": 127.36, "org_type": "academia", "cites": ["horowitz2014energy", "kwon2021hbmpim", "skintemp2023", "jedec_lpddr5x"]}, {"id": "park2023attacc", "title": "AttAcc! Unleashing the Power of PIM for Batched Transformer-based Generative Model Inference", "authors": "Jaehyun Park, Jaewan Choi, Bongjoon Hyun et al.", "institutions": "Seoul National University, SK hynix", "year": 2024, "venue": "ASPLOS 2024", "citation_count": 4, "url": "https://arxiv.org/abs/2401.11459", "key_claim": "Offloading attention GEMV to HBM-PIM while the GPU handles GEMM improves throughput and cuts off-chip movement", "relevance_to_question": "Establishes the PIM-for-GEMV / NPU-for-GEMM split a handheld would need", "angle": "memory-tech", "citation_count_estimated": false, "lat": 38.9, "lon": -77.04, "org_type": "academia", "cites": ["skintemp2023", "patel2023splitwise", "pope2022", "kim2023", "hong2022dfx", "mo2024luttensorcore"]}, {"id": "dmatrix2025corsair", "title": "Corsair: An In-Memory Computing Chiplet Architecture for Inference-Time Compute Acceleration", "authors": "Sudeep Bhoja et al.", "institutions": "d-Matrix", "year": 2025, "venue": "Hot Chips 2025 / IEEE", "citation_count": 15, "url": "https://ieeexplore.ieee.org/document/11108245/", "key_claim": "Digital in-memory compute chiplets give 2GB SRAM at 150 TB/s plus up to 256GB LPDDR5 capacity memory at 400 GB/s in a 600W card", "relevance_to_question": "The right architectural shape for batch-1 (fast tier + capacity tier), at 100x the handheld power budget", "angle": "memory-tech", "lat": 38.9, "lon": -77.04, "org_type": "independent", "cites": ["li2025eagle3", "cnmcim2024", "dejavu_2023", "llminflash_2023", "horowitz2014energy", "heo2024neupims"]}, {"id": "cerebras2024inference", "title": "Cerebras Inference: AI at Instant Speed", "authors": "Cerebras Systems", "institutions": "Cerebras", "year": 2024, "venue": "Cerebras technical blog", "citation_count": 0, "url": "https://www.cerebras.ai/blog/introducing-cerebras-inference-ai-at-instant-speed", "key_claim": "WSE-3 with 44GB on-chip SRAM at 21 PB/s runs Llama-70B at over 2100 tok/s, eliminating the DRAM wall at ~15kW per wafer", "relevance_to_question": "Upper bound: what batch-1 looks like with no DRAM wall, at power and cost incompatible with a handheld", "angle": "memory-tech", "lat": 38.9, "lon": -77.04, "org_type": "independent", "citation_count_estimated": true, "cites": ["park2023attacc", "leviathan2023specdec", "patel2023splitwise", "agrawal2024sarathiserve", "pope2022", "dejavu_2023"]}, {"id": "groq2024lpu", "title": "Inside the LPU: Deconstructing Groq's Speed", "authors": "Groq", "institutions": "Groq", "year": 2024, "venue": "Groq technical blog", "citation_count": 0, "url": "https://groq.com/blog/inside-the-lpu-deconstructing-groq-speed", "key_claim": "The LPU uses about 230MB on-chip SRAM per chip at 150 TB/s, requiring 8 to 576+ linked chips to hold a 70B+ model", "relevance_to_question": "Direct evidence that SRAM-only designs solve bandwidth but not capacity", "angle": "memory-tech", "lat": 38.9, "lon": -77.04, "org_type": "independent", "citation_count_estimated": true, "cites": ["horowitz2014energy", "heo2024neupims", "kwon2021hbmpim", "cnmcim2024", "skintemp2023", "park2023attacc"]}, {"id": "microchip2026mythic", "title": "Mythic Selects memBrain Technology from SST for its Next Generation of Ultra-Low-Power APUs", "authors": "Mythic, Microchip/SST", "institutions": "Mythic, Microchip", "year": 2026, "venue": "press release", "citation_count": 0, "url": "https://www.microchip.com/en-us/about/news-releases/products/mythic-selects-membrain-technology-from-sst-for-its-next-gen-of-ultra-low-power-apus", "key_claim": "Flash-based analog compute-in-memory targets 120 TOPS/W, about 100x GPU efficiency, but is limited to small arrays and low precision", "relevance_to_question": "Maturity ceiling of analog CIM for weight capacity, far short of 100B+ weights", "angle": "memory-tech", "lat": 38.9, "lon": -77.04, "org_type": "independent", "citation_count_estimated": true, "cites": ["skintemp2023", "park2023attacc", "leviathan2023specdec", "ainslie2023gqa", "hong2022dfx", "horowitz2014energy"]}, {"id": "jedec_lpddr5x", "title": "LPDDR5X JEDEC Standard and Subsystem Implementations", "authors": "JEDEC", "institutions": "JEDEC", "year": 2023, "venue": "JEDEC standard", "citation_count": 0, "url": "https://www.design-reuse.com/article/61594-beyond-limits-unleashing-the-10-7-gbps-lpddr5x-subsystem/", "key_claim": "LPDDR5X reaches 8533 MT/s and about 68 GB/s per package with 4-16GB typical mobile density", "relevance_to_question": "Current mobile DRAM bandwidth and capacity ceiling for the feasibility calculation", "angle": "memory-tech", "lat": 38.9, "lon": -77.04, "org_type": "independent", "citation_count_estimated": true, "cites": ["horowitz2014energy", "kwon2021hbmpim", "skintemp2023"]}, {"id": "apple2025m5", "title": "Apple M5: unified memory bandwidth specifications", "authors": "Apple", "institutions": "Apple", "year": 2025, "venue": "Apple Newsroom", "citation_count": 0, "url": "https://www.apple.com/newsroom/2025/10/apple-unleashes-m5-the-next-big-leap-in-ai-performance-for-apple-silicon/", "key_claim": "M5 unified memory bandwidth is 153 GB/s at base and up to 614 GB/s on M5 Max, at laptop/desktop power envelopes", "relevance_to_question": "Best consumer 'large unified memory' data point, showing what bandwidth costs in watts", "angle": "memory-tech", "lat": 37.33, "lon": -122.03, "org_type": "industry", "citation_count_estimated": true, "cites": ["kwon2021hbmpim", "cnmcim2024", "dmatrix2025corsair", "ndpdimm2025", "kwon2023pagedattention", "gholami2024"]}, {"id": "theregister2025dgxspark", "title": "Tested: AMD's Strix Halo vs Nvidia's DGX Spark", "authors": "The Register", "institutions": "The Register", "year": 2025, "venue": "trade press", "citation_count": 0, "url": "https://www.theregister.com/on-prem/2025/12/25/tested-amds-strix-halo-vs-nvidias-dgx-spark/2098514", "key_claim": "DGX Spark reaches 128GB LPDDR5X at ~273 GB/s and Strix Halo 128GB at ~256 GB/s, both around 120-140W SoC power", "relevance_to_question": "The closest existing 'single user, big model' systems and the power a handheld must beat by 20-30x", "angle": "memory-tech", "lat": 38.9, "lon": -77.04, "org_type": "independent", "citation_count_estimated": true, "cites": ["horowitz2014energy", "heo2024neupims", "kwon2021hbmpim", "cnmcim2024", "dmatrix2025corsair", "skintemp2023"]}, {"id": "hbm4_2026specs", "title": "HBM3E and HBM4: IC Design Guide for Next-Generation High Bandwidth Memory", "authors": "Siemens EDA", "institutions": "Siemens", "year": 2026, "venue": "technical guide", "citation_count": 0, "url": "https://blogs.sw.siemens.com/semiconductor-packaging/2026/04/24/hbm3e-hbm4-ic-design-guide/", "key_claim": "HBM4 delivers 2.0-3.3 TB/s per stack at about 3.8 pJ/bit interface energy, requiring 2.5D interposer packaging", "relevance_to_question": "Best-in-class DRAM energy per bit, and why its packaging excludes handheld use", "angle": "memory-tech", "lat": 38.9, "lon": -77.04, "org_type": "independent", "citation_count_estimated": true, "cites": ["apple2025m5", "kwon2021hbmpim", "cnmcim2024", "dmatrix2025corsair", "ndpdimm2025", "kwon2023pagedattention"]}, {"id": "skintemp2023", "title": "Investigating Skin Temperature-Based Overheating in mmWave Smartphones: Power and Thermal Models", "authors": "various", "institutions": "academic", "year": 2023, "venue": "arXiv", "citation_count": 10, "url": "https://arxiv.org/pdf/2304.06512", "key_claim": "Sustained smartphone thermal budget is about 3-6W, bounded by 40-45 C skin comfort limits", "relevance_to_question": "Defines the ~5W ceiling that anchors the entire energy-wall calculation", "angle": "memory-tech", "lat": 38.9, "lon": -77.04, "org_type": "independent", "cites": ["hong2022dfx", "horowitz2014energy", "kwon2021hbmpim"]}, {"id": "p3llm2025", "title": "P3-LLM: An Integrated NPU-PIM Accelerator for LLM Inference Using Hybrid Numerical Formats", "authors": "various", "institutions": "academic", "year": 2025, "venue": "arXiv", "citation_count": 5, "url": "https://arxiv.org/html/2511.06838v1", "key_claim": "A hybrid NPU-PIM accelerator with mixed numerical formats improves LLM decode efficiency", "relevance_to_question": "Recent PIM+NPU co-design aimed squarely at decode", "angle": "memory-tech", "lat": 38.9, "lon": -77.04, "org_type": "independent", "cites": ["patel2023splitwise", "dmatrix2025corsair", "ndpdimm2025", "park2023attacc", "cerebras2024inference", "leviathan2023specdec"]}, {"id": "ndpdimm2025", "title": "Make LLM Inference Affordable to Everyone: Augmenting GPU Memory with NDP-DIMM", "authors": "various", "institutions": "academic", "year": 2025, "venue": "arXiv", "citation_count": 8, "url": "https://arxiv.org/pdf/2502.16963", "key_claim": "Near-data-processing DIMMs extend effective memory capacity and bandwidth for LLM inference at commodity cost", "relevance_to_question": "A cheaper near-memory path than HBM-PIM, relevant to cost-constrained device design", "angle": "memory-tech", "lat": 38.9, "lon": -77.04, "org_type": "independent", "cites": ["dmatrix2025corsair", "llminflash_2023", "kwon2021hbmpim", "cnmcim2024", "park2023attacc", "cerebras2024inference"]}, {"id": "cnmcim2024", "title": "The Landscape of Compute-near-memory and Compute-in-memory: A Research and Commercial Overview", "authors": "various", "institutions": "academic survey", "year": 2024, "venue": "arXiv", "citation_count": 40, "url": "https://arxiv.org/pdf/2401.14428", "key_claim": "Survey of CNM/CIM commercial and research efforts covering SRAM-CIM, ReRAM and flash-CIM maturity and non-idealities", "relevance_to_question": "Honest maturity assessment across the CIM/PIM landscape", "angle": "memory-tech", "lat": 38.9, "lon": -77.04, "org_type": "independent", "cites": ["kwon2021hbmpim", "kwon2023pagedattention", "gholami2024", "llminflash_2023", "prabhakar2024sn40l", "horowitz2014energy"]}, {"id": "abts2020tsp", "title": "Think Fast: A Tensor Streaming Processor (TSP) for Accelerating Deep Learning Workloads", "authors": "Dennis Abts et al.", "institutions": "Groq", "year": 2020, "venue": "ISCA 2020", "citation_count": 300, "url": "https://ieeexplore.ieee.org/document/9138986", "key_claim": "Fully deterministic, compiler-scheduled dataflow with single-level SRAM eliminates hardware scheduling nondeterminism", "relevance_to_question": "The purest precedent for a deterministic, latency-optimal single-user architecture", "angle": "accelerators", "lat": 38.9, "lon": -77.04, "org_type": "independent", "cites": ["ham2020a3", "shazeer2019mqa"]}, {"id": "prabhakar2024sn40l", "title": "SambaNova SN40L: Scaling the AI Memory Wall with Dataflow and Composition of Experts", "authors": "Raghu Prabhakar et al.", "institutions": "SambaNova Systems", "year": 2024, "venue": "MICRO 2024", "citation_count": 49, "url": "https://arxiv.org/abs/2405.07518", "key_claim": "A three-tier on-chip SRAM / on-package HBM / off-package DDR memory system enables trillion-parameter dataflow inference on bounded sockets", "relevance_to_question": "Closest existing blueprint for the bandwidth-tiered chip a handheld 100-500B design needs", "angle": "accelerators", "citation_count_estimated": false, "lat": 38.9, "lon": -77.04, "org_type": "independent", "cites": ["gholami2024", "kwon2023pagedattention", "mixtral_2024", "liu2024deepseekv2", "pope2022", "llminflash_2023"]}, {"id": "zeng2024flightllm", "title": "FlightLLM: Efficient Large Language Model Inference with a Complete Mapping Flow on FPGAs", "authors": "Shulin Zeng, Jun Liu et al.", "institutions": "Infinigence-AI, Tsinghua University", "year": 2024, "venue": "FPGA 2024", "citation_count": 171, "url": "https://arxiv.org/abs/2401.03868", "key_claim": "A configurable sparse DSP chain plus on-chip weight decode recovers bandwidth for low-batch decode, beating V100/A100 on energy and cost efficiency", "relevance_to_question": "Co-design that changes the datapath spec for sparse low-batch GEMV", "angle": "accelerators", "citation_count_estimated": false, "lat": 40.0, "lon": 116.33, "org_type": "academia", "cites": ["llminflash_2023", "kwon2023pagedattention", "patel2023splitwise", "dejavu_2023", "agrawal2023sarathi", "hong2023"]}, {"id": "hong2022dfx", "title": "DFX: A Low-Latency Multi-FPGA Appliance for Accelerating Transformer-Based Text Generation", "authors": "Seongmin Hong et al.", "institutions": "KAIST", "year": 2022, "venue": "MICRO 2022", "citation_count": 147, "url": "https://arxiv.org/abs/2209.10797", "key_claim": "A multi-FPGA model-parallel pipeline with ring interconnect achieves 5.6x speedup and 4x energy efficiency over V100 GPUs on GPT-2 decoding", "relevance_to_question": "Early complete accelerator for autoregressive decode latency; quantifies GPU inefficiency at batch 1", "angle": "accelerators", "citation_count_estimated": false, "lat": 36.37, "lon": 127.36, "org_type": "academia", "cites": ["ham2020a3", "abts2020tsp", "shazeer2019mqa", "pope2022", "wang2021spatten"]}, {"id": "wang2023chipletcloud", "title": "Chiplet Cloud: Building AI Supercomputers for Serving Large Generative Language Models", "authors": "Huwan Wang et al.", "institutions": "University of Washington, University of Sydney, Microsoft", "year": 2023, "venue": "arXiv", "citation_count": 20, "url": "https://arxiv.org/abs/2307.02666", "key_claim": "Replicated small chiplets with on-chip CC-MEM holding all weights and KV optimize total cost per token", "relevance_to_question": "The 'many small SRAM pools' alternative to one big die", "angle": "accelerators", "citation_count_estimated": false, "lat": 47.66, "lon": -122.31, "org_type": "academia", "cites": ["kwon2023pagedattention", "powerinfer_2023", "chen2023accelerating", "patel2023splitwise", "llminflash_2023", "hong2023"]}, {"id": "wang2021spatten", "title": "SpAtten: Efficient Sparse Attention Architecture with Cascade Token and Head Pruning", "authors": "Hanrui Wang, Zhekai Zhang, Song Han", "institutions": "MIT", "year": 2021, "venue": "HPCA 2021", "citation_count": 588, "url": "https://arxiv.org/abs/2012.09852", "key_claim": "Cascade token and head pruning with quantization reduces attention computation and memory access in a dedicated ASIC", "relevance_to_question": "Foundational sparse-attention accelerator relevant to batch-1 latency", "angle": "accelerators", "citation_count_estimated": false, "lat": 42.36, "lon": -71.09, "org_type": "academia", "cites": ["ham2020a3", "shazeer2019mqa", "abts2020tsp"]}, {"id": "ham2020a3", "title": "A^3: Accelerating Attention Mechanisms in Neural Networks with Approximation", "authors": "Tae Jun Ham et al.", "institutions": "Seoul National University", "year": 2020, "venue": "HPCA 2020", "citation_count": 317, "url": "https://arxiv.org/abs/2002.10941", "key_claim": "Approximate candidate selection reduces the attention search space in dedicated hardware", "relevance_to_question": "Early attention co-design reducing compute for latency-critical inference", "angle": "accelerators", "citation_count_estimated": false, "lat": 38.9, "lon": -77.04, "org_type": "academia", "cites": []}, {"id": "leviathan2023specdec", "title": "Fast Inference from Transformers via Speculative Decoding", "authors": "Yaniv Leviathan, Matan Kalman, Yossi Matias", "institutions": "Google Research", "year": 2023, "venue": "ICML 2023", "citation_count": 1953, "url": "https://arxiv.org/abs/2211.17192", "key_claim": "A small draft model proposes tokens verified in parallel by the target model, provably lossless, 2-3x speedup", "relevance_to_question": "The core algorithm converting memory-bound GEMV into compute-bound batched verification", "angle": "accelerators", "citation_count_estimated": false, "lat": 37.42, "lon": -122.08, "org_type": "industry", "cites": ["shazeer2019mqa", "abts2020tsp", "pope2022", "wang2021spatten", "ham2020a3", "hong2022dfx"]}, {"id": "chen2023accelerating", "title": "Accelerating Large Language Model Decoding with Speculative Sampling", "authors": "Charlie Chen, Sebastian Borgeaud, Geoffrey Irving et al.", "institutions": "DeepMind", "year": 2023, "venue": "arXiv", "citation_count": 1066, "url": "https://arxiv.org/abs/2302.01318", "key_claim": "Independently derived speculative sampling scales well with appropriately sized draft models in the small-batch setting", "relevance_to_question": "Confirms speculative decoding as a batch-1-specific optimization", "angle": "accelerators", "citation_count_estimated": false, "lat": 51.53, "lon": -0.12, "org_type": "industry", "cites": ["leviathan2023specdec", "ham2020a3", "abts2020tsp", "hong2022dfx", "kwon2023pagedattention", "shazeer2019mqa"]}, {"id": "chen2024sequoia", "title": "Sequoia: Scalable, Robust, and Hardware-aware Speculative Decoding", "authors": "Zhuoming Chen, Avner May et al.", "institutions": "CMU, Together AI, Meta", "year": 2024, "venue": "NeurIPS 2024", "citation_count": 111, "url": "https://arxiv.org/abs/2402.12374", "key_claim": "Dynamic-programming-optimal speculation tree size and shape selected per hardware target; 9.5x speedup under memory offload", "relevance_to_question": "Ties speculation tree shape directly to a device's bandwidth/compute ratio", "angle": "accelerators", "citation_count_estimated": false, "lat": 40.44, "lon": -79.94, "org_type": "academia", "cites": ["leviathan2023specdec", "chen2023accelerating", "zhong2024distserve", "shazeer2019mqa", "dao2023flashdecoding", "wang2021spatten"]}, {"id": "li2025eagle3", "title": "EAGLE-3: Scaling up Inference Acceleration of Large Language Models via Training-Time Test", "authors": "Yuhui Li et al.", "institutions": "Peking University, Microsoft", "year": 2025, "venue": "arXiv", "citation_count": 302, "url": "https://arxiv.org/abs/2503.01840", "key_claim": "A multi-layer feature-fusion draft head on the target model reaches 3-6.5x speedup with no separate draft model", "relevance_to_question": "The most hardware-practical self-speculation variant for a device", "angle": "accelerators", "citation_count_estimated": false, "lat": 39.99, "lon": 116.31, "org_type": "academia", "cites": ["zhang2023dissecting", "zeng2024flightllm", "pope2022", "dejavu_2023", "llminflash_2023", "powerinfer2_2024"]}, {"id": "gloeckle2024mtp", "title": "Better & Faster Large Language Models via Multi-token Prediction", "authors": "Fabian Gloeckle, Badr Youbi Idrissi, Baptiste Roziere, David Lopez-Paz, Gabriel Synnaeve", "institutions": "Meta AI", "year": 2024, "venue": "ICML 2024", "citation_count": 383, "url": "https://arxiv.org/abs/2404.19737", "key_claim": "Training to predict multiple future tokens improves quality and enables self-speculative decoding at inference", "relevance_to_question": "Multi-token prediction as a native architectural feature rather than a bolt-on", "angle": "accelerators", "citation_count_estimated": false, "lat": 37.48, "lon": -122.15, "org_type": "industry", "cites": ["hong2023", "chen2023accelerating", "wang2021spatten", "ma2024bitnet158", "hong2022dfx", "wang2023chipletcloud"]}, {"id": "ma2024bitnet158", "title": "The Era of 1-bit LLMs: All Large Language Models are in 1.58 Bits", "authors": "Shuming Ma, Hongyu Wang, Lingxiao Ma et al.", "institutions": "Microsoft Research", "year": 2024, "venue": "arXiv", "citation_count": 458, "url": "https://arxiv.org/abs/2402.17764", "key_claim": "Ternary weight LLMs match FP16 quality while defining a new scaling law, and the authors explicitly call for dedicated 1-bit hardware", "relevance_to_question": "The quantization format whose hardware implication is a multiplier-free datapath", "angle": "accelerators", "citation_count_estimated": false, "lat": 47.64, "lon": -122.13, "org_type": "industry", "cites": ["chen2023accelerating", "wang2023chipletcloud", "kwon2023pagedattention", "dejavu_2023", "powerinfer_2023", "llminflash_2023"]}, {"id": "wang2024tmac", "title": "T-MAC: CPU Renaissance via Table Lookup for Low-Bit LLM Deployment on Edge", "authors": "Jianyu Wei et al.", "institutions": "Microsoft Research", "year": 2024, "venue": "EuroSys 2025", "citation_count": 84, "url": "https://arxiv.org/abs/2407.00088", "key_claim": "LUT-based mixed-precision GEMM on CPU outperforms GPU and NPU paths specifically in single-batch decoding", "relevance_to_question": "Directly targets batch-1 low-bit decode on edge compute", "angle": "accelerators", "citation_count_estimated": false, "lat": 47.64, "lon": -122.13, "org_type": "industry", "cites": ["leviathan2023specdec", "chen2023accelerating", "wang2021spatten", "lieber2024jamba", "ma2024bitnet158", "gloeckle2024mtp"]}, {"id": "mo2024luttensorcore", "title": "LUT Tensor Core: A Software-Hardware Co-Design for LUT-Based Low-Bit LLM Inference", "authors": "Zhiwen Mo et al.", "institutions": "Microsoft Research, Shanghai Jiao Tong University", "year": 2024, "venue": "ISCA 2025", "citation_count": 33, "url": "https://arxiv.org/abs/2408.06003", "key_claim": "Elongated tiling with bit-serial LUT hardware gives 6.93x speed and 20.9x compute density versus a standard tensor core for mixed-precision GEMM", "relevance_to_question": "A concrete custom datapath justified by low-bit weights, with area and energy numbers", "angle": "accelerators", "citation_count_estimated": false, "lat": 47.64, "lon": -122.13, "org_type": "industry", "cites": ["leviathan2023specdec", "abts2020tsp", "zeng2024flightllm", "hong2022dfx", "chen2024sequoia", "patel2023splitwise"]}, {"id": "lieber2024jamba", "title": "Jamba: A Hybrid Transformer-Mamba Language Model", "authors": "Opher Lieber et al.", "institutions": "AI21 Labs", "year": 2024, "venue": "arXiv", "citation_count": 506, "url": "https://arxiv.org/abs/2403.19887", "key_claim": "A 7:1 Mamba:attention hybrid with MoE gives 3x Mixtral throughput and 256K context with only 4GB of KV cache", "relevance_to_question": "SSM-attention hybrid as a batch-1 hardware win by nearly eliminating the KV bandwidth term", "angle": "accelerators", "citation_count_estimated": false, "lat": 47.62, "lon": -122.34, "org_type": "industry", "cites": ["hong2022dfx", "ainslie2023gqa", "shazeer2019mqa", "pope2022", "kim2023", "leviathan2023specdec"]}, {"id": "shan2025confidentialtee", "title": "Confidential LLM Inference: Performance and Cost Across CPU and GPU TEEs", "authors": "various", "institutions": "various", "year": 2025, "venue": "arXiv", "citation_count": 16, "url": "https://arxiv.org/abs/2509.18886", "key_claim": "CPU TEEs impose under 10% throughput overhead and GPU confidential compute 4-8%, diminishing with batch size", "relevance_to_question": "Quantifies the TEE alternative to local inference, so the privacy case rests on trust, not TEE slowness", "angle": "accelerators", "citation_count_estimated": false, "lat": 38.9, "lon": -77.04, "org_type": "independent", "cites": ["zhang2023dissecting", "leviathan2023specdec", "li2025eagle3", "zeng2024flightllm", "mo2024luttensorcore", "patel2023splitwise"]}, {"id": "hwaccsurvey2024", "title": "Hardware Acceleration of LLMs: A Comprehensive Survey and Comparison", "authors": "various", "institutions": "multiple", "year": 2024, "venue": "arXiv", "citation_count": 20, "url": "https://arxiv.org/abs/2409.03384", "key_claim": "Survey comparing GPU, FPGA and ASIC design points for LLM inference including attention-specific accelerators", "relevance_to_question": "Contextualizes the design space of low-batch accelerators", "angle": "accelerators", "citation_count_estimated": false, "lat": 38.9, "lon": -77.04, "org_type": "independent", "cites": ["ma2024bitnet158", "chen2024sequoia", "mo2024luttensorcore", "dejavu_2023", "yuan2024", "kim2023"]}];
+const CONTENT = {"id": "batch1-inference-hardware", "title": "Batch 1 is a different machine", "question": "Model inference but for a single user, on a local machine. You lose batching at scale and the property that all MoE experts activate at large batch size. For privacy. Find the exact nature of computation for a single thread of inference and spec out what the ideal dedicated hardware would look like. Goal: run 100B-500B models on a handheld.", "date": "2026-09-04", "stats": {"papers": 68, "edges": 357}, "tldr": [{"point": "Batch-1 decode is settled physics: ~1-2 FLOP/byte, ridge point 2-3 orders higher on any accelerator", "sub": ["Serial, per-layer, bandwidth-and-latency-bound GEMV stream [[pope2022]]", "~0.17% MFU on H100 for a 70B step. Not a tuning failure, the roofline floor", "Prefill is the opposite regime. Two workloads, two engines [[zhong2024distserve]]"]}, {"point": "The premise checks out: MoE sparsity is worth everything at batch 1, ~nothing at scale", "sub": ["DeepSeek-V3 activates 5.5% of 671B; Kimi K2 ~3% of 1.04T [[deepseekv3_2024]] [[kimik2_2025]]", "But not binary — ~50% expert coverage in shallow layers at batch 64, ~100% deep"]}, {"point": "LOAD-BEARING CORRECTION: energy and bandwidth are independent walls that diverge by device class", "sub": ["Crossover power P* = Bandwidth x J/byte, independent of model size", "At 100 GB/s phone memory, P* ~ 16W. A 3-5W handheld is ENERGY-bound, not bandwidth-bound", "Spec pJ/bit first, GB/s second. The reverse of everyone's instinct"]}, {"point": "Honest ceiling: 100-500B *total* heavily-sparse at ~8-15 tok/s is a 2028-30 device; 100B+ *active* is out of reach this decade"}], "insights": [{"title": "Batch 1 is a different machine, not a smaller one", "points": ["Prefill compute-bound GEMM; decode bandwidth-bound GEMV. Opposite asks", "Serving stacks already split them physically — 7.4x goodput [[zhong2024distserve]] [[patel2023splitwise]]", "TOPS is nearly irrelevant to steady-state tok/s", "FlashAttention uses <1% of a GPU at batch 1 [[dao2023flashdecoding]]"]}, {"title": "The latency floor no software removes", "points": ["Per-token = num_layers x (per-layer transfer + launch/sync). Strictly serial", "No cross-layer parallelism at batch 1 — each layer is a mandatory DRAM round trip", "Only two levers: fewer bytes, or faster bytes [[gholami2024]]", "Compute scaled ~3x/2yr, bandwidth ~1.1x/2yr"]}, {"title": "The corrected arithmetic, and where it binds", "points": ["500B dense @4b = 250 GB/token → 0.4 tok/s at 100 GB/s. Dead", "500B MoE 37B-active @4b = 18.5 GB/token → 5.4 tok/s at 100 GB/s, 1.7 tok/s at 5W", "100B MoE 6B-active @4b = 3 GB/token → 33 tok/s bandwidth, 10.4 tok/s at 5W", "Energy binds below ~16W; bandwidth binds above it"]}, {"title": "The router is a latency problem, not a bandwidth problem", "points": ["Routing depends on the previous layer's output — no within-layer lookahead", "Prefetch is cross-layer only; ~85% one-layer-ahead accuracy with on-demand fallback", "Consecutive-token expert reuse ~30% vs 12.5% random [[spatiotemporal_routing_2026]]", "At batch 1 it is cheaper to recompute a cold expert on CPU than to move it [[fiddler_2024]]"]}, {"title": "SRAM solves bandwidth and creates a capacity problem", "points": ["Cerebras: 44GB SRAM, 21 PB/s, 2100 tok/s on 70B — at 15kW and $2-3M [[cerebras2024inference]]", "Groq: 150 TB/s per chip but 230MB — needs 8-576 chips for one 70B model [[groq2024lpu]]", "SN40L's three-tier SRAM/HBM/DDR is the shape a handheld needs [[prabhakar2024sn40l]]", "HBM is disqualified: 5-10W per stack is the whole handheld budget"]}, {"title": "KV cache is a second tax that sparsity does not touch", "points": ["Grows linearly with context; rivals weight bytes at 128K", "MLA cuts it 2.7-4.7x vs GQA [[liu2024deepseekv2]]", "Jamba: 256K context in 4GB of state, 3x Mixtral throughput [[lieber2024jamba]]", "SSM-hybrid is a co-design requirement for long-context handheld, not a nicety"]}, {"title": "Ternary + LUT datapaths are the biggest unproven lever", "points": ["BitNet b1.58: 3.55x less memory, 2.71x faster; authors ask for new silicon [[ma2024bitnet158]]", "LUT Tensor Core: 6.93x speed, 20.9x compute density vs a tensor core [[mo2024luttensorcore]]", "T-MAC beats GPU/NPU paths specifically at single-batch decode [[wang2024tmac]]", "Nobody has combined native ternary + MoE + streaming + phone NPU above 47B"]}, {"title": "Speculation turns batch-1 badness into batch-4 goodness", "points": ["k sequential GEMVs become one GEMM-shaped verification [[leviathan2023specdec]]", "Sequoia tunes tree shape per hardware target: 9.5x under memory offload [[chen2024sequoia]]", "EAGLE-3: 3-6.5x with no separate draft model [[li2025eagle3]]", "Caveat: the draft competes for the same bus. Only near-zero-byte drafts (~2% tax) transfer"]}, {"title": "NAND is disqualified from the decode loop", "points": ["UFS 4.1 at 4.2 GB/s = 2.4 s/token for a 10 GB/token model. 40-80x too slow", "NAND read energy is worse than DRAM per bit", "Cold model store only — never in the loop [[ufs41_standard]]", "LLM-in-a-Flash works because it streams *selectively*, not by paging layers [[llminflash_2023]]"]}, {"title": "THE SPEC — compute", "points": ["~15-30 TOPS INT4-equivalent. Deliberately not hundreds", "Small ~5 TOPS dense GEMM array for prefill + speculative verification (batch 4-8)", "Ternary/LUT MAC-replacement array for the active-expert GEMV stream", "Groq-style deterministic dataflow — no dynamic scheduling [[abts2020tsp]]"]}, {"title": "THE SPEC — memory hierarchy", "points": ["Tier 0: 32-64MB on-die SRAM, >10 TB/s — shared experts, router, draft model", "Tier 1: 24-48GB on-package LPDDR6, 150-250 GB/s, 4-6 pJ/bit — working set + KV/SSM state", "Tier 2: 256GB-1TB NAND, cold store only, never in the decode loop", "No off-package HBM. Wide short on-package PHY, single die, no scale-out"]}, {"title": "THE SPEC — model the hardware assumes", "points": ["Fine-grained MoE, 128-384 experts, top-4/8, with shared experts", "Natively trained ternary or MXFP4 — not post-hoc quantized", "SSM-hybrid (~7:1 Mamba:attention) or MLA. Not vanilla GQA", "Native multi-token-prediction heads for self-speculation"]}, {"title": "THE SPEC — power, cost, and what gets thrown away", "points": ["5W budget: LPDDR6 PHY/refresh 2.5-3.0W, ternary compute 0.7-1.0W, SRAM 0.3-0.5W, prefill 0.3-0.5W, control 0.3-0.5W", "~150-250 mm2 compute die + 24-48GB LPDDR6; premium mobile chipset BOM", "Expected 8-15 tok/s on a 100-500B-total sparse model", "Thrown away: tensor cores, warp scheduling, HBM, PagedAttention, all batching machinery"]}, {"title": "Privacy is a trust argument, not a performance one", "points": ["CPU TEEs cost under 10% throughput; GPU confidential compute 4-8% [[shan2025confidentialtee]]", "So 'the cloud is too slow to be private' is false", "The local case rests on data residency and trust, not on TEEs being unusable", "Which means the hardware must win on its own terms"]}], "next_steps": ["Measure achieved bandwidth vs tok/s on Apple Silicon with powermetrics — replace blog-level numbers with first-party data", "Back out real pJ/bit from phone SoC power during a memory-bound synthetic benchmark", "Trace expert routing on a 128-384-expert MoE and measure consecutive-token hit rate", "Roofline a ternary/LUT datapath against published T-MAC and LUT-Tensor-Core numbers", "Treat every tok/s figure here as a 2028-2030 claim contingent on LPDDR6 and ternary silicon shipping"], "ideas": [{"id": "D1", "question": "Does the ~30% expert-reuse locality hold at 256-384-expert granularity?", "hypothesis": "Finer granularity collapses temporal locality toward the random baseline", "experiment": "Trace routing decisions on DeepSeek-V3 and Kimi K2 over long generations; measure consecutive-token and one-layer-ahead hit rates", "why": "Tier-1 working-set sizing in the spec depends entirely on this number"}, {"id": "D2", "question": "What is the real achieved bandwidth-to-tok/s ratio on Apple Silicon?", "hypothesis": "Measured tok/s tracks weight-bytes/step divided by achieved (not spec) bandwidth within 20%", "experiment": "llama.cpp and MLX across model sizes and quant levels on M-series, instrumented with powermetrics", "why": "Every number in this report currently leans on secondary blog sources"}, {"id": "D3", "question": "What is the actual controller/PHY/refresh multiplier for random expert fetches on LPDDR?", "hypothesis": "Random expert-sized fetches cost 3-5x the sequential-streaming interface energy", "experiment": "Microbenchmark strided vs sequential reads at expert granularity, measuring SoC power", "why": "The 0.16 nJ/byte system-level figure the whole ceiling rests on is an assumed multiplier"}, {"id": "D4", "question": "Can a trace-driven cache simulator hit the spec's Tier-0/Tier-1 hit rates?", "hypothesis": "A 32-64MB Tier 0 plus 24-48GB Tier 1 achieves >90% hit on a 37B-active model with one-layer-ahead prefetch", "experiment": "Replay real routing traces against a modeled hierarchy, sweeping capacity and prefetch depth", "why": "Cheapest way to falsify the memory hierarchy before anyone designs silicon"}, {"id": "D5", "question": "Do published speculative-decoding speedups survive a phone compute cap?", "hypothesis": "Acceptance-rate gains hold but net speedup collapses once the draft competes for the same bus, except for EAGLE/MTP-style drafts", "experiment": "Sweep draft size and tree shape under an emulated bandwidth and TOPS cap", "why": "The spec allocates real silicon to a verification array on the strength of datacenter numbers"}, {"id": "D6", "question": "Is the SSM-hybrid requirement real at realistic handheld context lengths?", "hypothesis": "Below ~16K context the KV term is small enough that GQA suffices; the requirement only bites past 64K", "experiment": "Closed-form bytes/token across context lengths for GQA, MLA and Jamba-style hybrids using real model configs", "why": "Determines whether the hardware can assume a conventional attention model"}, {"id": "D7", "question": "Can native ternary + fine-grained MoE + SSM-hybrid combine without a quality regression?", "hypothesis": "The three interact badly — ternary noise plus routing noise plus recurrent state degrades more than each alone", "experiment": "Train small (0.5-2B) models with each combination on a fixed budget and compare", "why": "The spec assumes all three simultaneously and nobody has tested the combination"}, {"id": "D8", "question": "Is a wall-powered base station doing prefill plus a handheld doing decode a better architecture?", "hypothesis": "Splitting along the prefill/decode line beats making one device do both, and preserves privacy if the base station is in the home", "experiment": "Model end-to-end latency and energy for split vs monolithic under realistic prompt/response length distributions", "why": "The whole report assumes one device; the roofline argument itself suggests two"}, {"id": "O1", "question": "Does burst power (15W for 10-30s) rather than 3-8W sustained change the feasibility verdict?", "why": "Short interactive turns may never hit thermal steady state, which would move the crossover power materially"}, {"id": "O2", "question": "Do 10k-token reasoning traces make average sustained power, not peak tok/s, the binding constraint?", "why": "Reasoning models invert the workload assumption every mobile inference paper is built on"}, {"id": "O3", "question": "Is there any memory technology on a 2030 roadmap that changes the energy exponent rather than the bandwidth constant?", "why": "PIM and CIM give 2-3x; the gap needs more than 10x, so only a category change closes it"}], "report_quality": {"verdict": "MEDIUM", "verdict_note": "Qualitative thesis holds; several originally stated numbers did not survive re-derivation.", "axes": [{"name": "Freshness", "score": 5, "note": "2024-2026 sources throughout, including shipping-silicon specs"}, {"name": "Accuracy", "score": 3, "note": "One 16x unit error and an HBM4 pJ/bit misattribution both caught and corrected"}, {"name": "Reproducibility", "score": 3, "note": "Key tok/s figures lean on blog-level secondary sources, not measurements"}, {"name": "Bias/Completeness", "score": 4, "note": "Good coverage; light on analog CIM primary literature"}, {"name": "Causal rigor", "score": 3, "note": "Energy and bandwidth walls were conflated as one constraint until the adversarial pass separated them"}, {"name": "Scale-transfer", "score": 2, "note": "Everything demonstrated at <=47B on a phone; the target is 100-500B"}, {"name": "Falsifiability", "score": 4, "note": "The spec commits to numbers an engineer can attack; kill criteria are explicit"}]}};
+const ARITH = [
+ {s:"500B dense @4b",       gb:250,  v:[0.40,1.09,2.46,12.0], w5:0.125},
+ {s:"500B MoE 37B-act @4b", gb:18.5, v:[5.4,14.8,33.2,162],   w5:1.69},
+ {s:"500B MoE 37B-act @2b", gb:9.25, v:[10.8,29.5,66.4,324],  w5:3.38},
+ {s:"100B MoE 6B-act @4b",  gb:3.0,  v:[33.3,91.0,205,1000],  w5:10.4}
+];
+const POWER = [
+ {k:"LPDDR6 PHY / refresh", w:2.90, c:"var(--angle-a)"},
+ {k:"Ternary compute",      w:0.90, c:"var(--angle-b)"},
+ {k:"SRAM tier 0",          w:0.45, c:"var(--angle-c)"},
+ {k:"Prefill array",        w:0.40, c:"var(--angle-d)"},
+ {k:"Control / IO",         w:0.35, c:"var(--muted)"}
+];
+const ANGLE_LABEL = {roofline:"Roofline", sparsity:"Sparsity",
+  "memory-tech":"Memory tech", accelerators:"Accelerators"};
+const ANGLE_COLOR = {roofline:"var(--angle-a)", sparsity:"var(--angle-b)",
+  "memory-tech":"var(--angle-c)", accelerators:"var(--angle-d)"};
+const ANGLE_ORDER = ["roofline","sparsity","memory-tech","accelerators"];
+const LANE_LETTER = {roofline:"A", sparsity:"B", "memory-tech":"C", accelerators:"D"};
+
+const BY_ID = new Map(PAPERS.map(p=>[p.id,p]));
+const esc = s => String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const authorList = p => Array.isArray(p.authors) ? p.authors : String(p.authors||"").split(/,\s*/);
+const authorShort = p => { const a=authorList(p); return a.slice(0,3).join(", ") + (a.length>3?" et al.":""); };
+const instList = p => Array.isArray(p.institutions) ? p.institutions : String(p.institutions||"").split(/,\s*/);
+const cc = p => p.citation_count||0;
+
+/* ---------- citation refs ---------- */
+function refs(text){
+  return esc(text).replace(/\[\[([A-Za-z0-9_\-]+)\]\]/g,(m,id)=>{
+    const p = BY_ID.get(id);
+    if(!p) return id;
+    return '<a class="cite" data-pid="'+id+'" href="'+esc(p.url)+'" target="_blank" rel="noopener">'+esc(id)+'</a>';
+  });
+}
+function cardHTML(p){
+  return '<div class="t">'+esc(p.title)+'</div>'+
+    '<div class="m">'+esc(authorShort(p))+' &middot; '+p.year+' &middot; '+esc(p.venue||"")+
+    ' &middot; '+cc(p).toLocaleString()+(p.citation_count_estimated?"*":"")+' cites</div>'+
+    '<div class="c">'+esc(p.key_claim||"")+'</div>'+
+    '<a class="go" href="'+esc(p.url)+'" target="_blank" rel="noopener">Open paper &rarr;</a>';
+}
+
+/* popover with bridge delay */
+const pop = document.getElementById("pop");
+let popTimer=null, popOver=false;
+function popShow(el,p){
+  clearTimeout(popTimer);
+  pop.innerHTML = cardHTML(p);
+  pop.classList.add("show");
+  const r = el.getBoundingClientRect();
+  const w = pop.offsetWidth, h = pop.offsetHeight;
+  let x = r.left + window.scrollX + r.width/2 - w/2;
+  x = Math.max(8, Math.min(x, document.documentElement.clientWidth - w - 8));
+  let y = r.top + window.scrollY - h - 8;
+  if(y < window.scrollY + 4) y = r.bottom + window.scrollY + 8;
+  pop.style.left = x+"px"; pop.style.top = y+"px";
+}
+function popHide(){ popTimer = setTimeout(()=>{ if(!popOver) pop.classList.remove("show"); },220); }
+pop.addEventListener("mouseenter",()=>{popOver=true;clearTimeout(popTimer);});
+pop.addEventListener("mouseleave",()=>{popOver=false;popHide();});
+document.addEventListener("mouseover",e=>{
+  const c = e.target.closest(".cite");
+  if(c){ const p = BY_ID.get(c.dataset.pid); if(p) popShow(c,p); }
+});
+document.addEventListener("mouseout",e=>{ if(e.target.closest(".cite")) popHide(); });
+
+/* ---------- header ---------- */
+document.getElementById("htitle").textContent = CONTENT.title;
+document.getElementById("hdate").textContent = CONTENT.date;
+document.getElementById("hquestion").textContent = CONTENT.question;
+const nEdges = (CONTENT.stats&&CONTENT.stats.edges) || PAPERS.reduce((a,p)=>a+((p.cites||[]).length),0);
+const statTxt = PAPERS.length+" papers &middot; "+nEdges+" citation links &middot; "+
+  ANGLE_ORDER.map(a=>ANGLE_LABEL[a]).join(" &middot; ");
+document.getElementById("hstats").innerHTML = statTxt;
+document.getElementById("fstats").innerHTML = PAPERS.length+" papers &middot; "+nEdges+" edges &middot; "+CONTENT.date;
+
+/* ---------- TLDR ---------- */
+document.getElementById("tldrlist").innerHTML = CONTENT.tldr.map(item=>{
+  if(typeof item === "string") return "<li>"+refs(item)+"</li>";
+  const sub = (item.sub||[]).map(s=>"<li>"+refs(s)+"</li>").join("");
+  return "<li><span class=\"lead\">"+refs(item.point)+"</span>"+(sub?"<ul>"+sub+"</ul>":"")+"</li>";
+}).join("");
+
+/* ---------- insights split: SPEC cards get their own section ---------- */
+const isSpec = i => /^THE SPEC/i.test(i.title);
+const specCards = CONTENT.insights.filter(isSpec);
+const carouselItems = CONTENT.insights.filter(i=>!isSpec(i));
+
+document.getElementById("specgrid").innerHTML = specCards.map(i=>{
+  const t = i.title.replace(/^THE SPEC\s*[—–-]\s*/i,"");
+  return '<div class="speccard"><h3>'+esc(t)+'</h3><ul>'+
+    i.points.map(p=>"<li>"+refs(p)+"</li>").join("")+"</ul></div>";
+}).join("");
+
+/* ---------- carousel ---------- */
+(function(){
+  const slides = document.getElementById("slides");
+  const dots = document.getElementById("dots");
+  slides.innerHTML = carouselItems.map((i,k)=>
+    '<div class="slide'+(k===0?" on":"")+'"><h3>'+esc(i.title)+'</h3><ul class="log">'+
+    i.points.map(p=>"<li>"+refs(p)+"</li>").join("")+"</ul></div>").join("");
+  dots.innerHTML = carouselItems.map((_,k)=>
+    '<button class="dot'+(k===0?" on":"")+'" data-k="'+k+'" aria-label="Insight '+(k+1)+'"></button>').join("");
+  const S = [...slides.children], D = [...dots.children];
+  let cur = 0;
+  function go(k){
+    cur = (k + S.length) % S.length;
+    S.forEach((s,i)=>s.classList.toggle("on",i===cur));
+    D.forEach((d,i)=>d.classList.toggle("on",i===cur));
+  }
+  D.forEach(d=>d.addEventListener("click",()=>go(+d.dataset.k)));
+  document.getElementById("cprev").addEventListener("click",()=>go(cur-1));
+  document.getElementById("cnext").addEventListener("click",()=>go(cur+1));
+})();
+
+/* ---------- power bar ---------- */
+(function(){
+  const total = POWER.reduce((a,p)=>a+p.w,0);
+  document.getElementById("pbar").innerHTML = POWER.map(p=>
+    '<div class="pseg" style="width:'+(p.w/total*100)+'%;background:'+p.c+';color:var(--on-ink)" '+
+    'title="'+esc(p.k)+' — '+p.w.toFixed(2)+'W">'+(p.w/total>0.11?p.w.toFixed(1)+"W":"")+"</div>").join("");
+  document.getElementById("plegend").innerHTML = POWER.map(p=>
+    '<div><span class="sw" style="background:'+p.c+'"></span><span>'+esc(p.k)+
+    '</span><span class="w">'+p.w.toFixed(2)+"W</span></div>").join("")+
+    '<div><span class="sw" style="background:var(--ink)"></span><b>Total</b>'+
+    '<span class="w" style="color:var(--ink)">'+total.toFixed(2)+"W</span></div>";
+})();
+
+/* ---------- arithmetic table ---------- */
+(function(){
+  const fmt = v => v>=100 ? Math.round(v).toLocaleString() : v>=10 ? v.toFixed(1) : v.toFixed(2);
+  document.getElementById("arithbody").innerHTML = ARITH.map(r=>
+    "<tr><td class=\"sc\">"+esc(r.s)+"</td><td>"+r.gb+"</td>"+
+    r.v.map(v=>"<td>"+fmt(v)+"</td>").join("")+
+    "<td class=\"hl\">"+fmt(r.w5)+"</td></tr>").join("");
+})();
+
+/* ---------- next steps ---------- */
+document.getElementById("checklist").innerHTML = CONTENT.next_steps.map(s=>
+  '<li><span class="box"></span><span>'+refs(s)+"</span></li>").join("");
+
+/* ---------- idea deck ---------- */
+(function(){
+  const deck = document.getElementById("deck");
+  let last = -1;
+  function cell(k,v){
+    return '<div class="cell'+(v?"":" empty")+'"><div class="k">'+k+'</div><div class="v">'+
+      (v?refs(v):"&mdash;")+"</div></div>";
+  }
+  function render(i){
+    const d = CONTENT.ideas[i];
+    deck.innerHTML = cell("Research question",d.question)+cell("Hypothesis",d.hypothesis)+
+      cell("Experiment",d.experiment)+cell("Why it matters",d.why);
+  }
+  function shuffle(){
+    let i; do { i = Math.floor(Math.random()*CONTENT.ideas.length); }
+    while(CONTENT.ideas.length>1 && i===last);
+    last = i; render(i);
+  }
+  document.getElementById("shuffle").addEventListener("click",shuffle);
+  shuffle();
+})();
+
+/* ---------- report quality ---------- */
+(function(){
+  document.getElementById("qbars").innerHTML = CONTENT.report_quality.axes.map(a=>
+    '<div class="qrow"><div class="qname">'+esc(a.name)+'</div>'+
+    '<div class="qtrack"><div class="qfill" style="width:'+(a.score/5*100)+'%"></div>'+
+    '<span class="qval">'+a.score+"/5</span></div></div>"+
+    '<div class="qnote">'+esc(a.note||"")+"</div>").join("");
+})();
+
+/* ---------- citations ---------- */
+(function(){
+  const list = document.getElementById("acclist");
+  let filter = "all";
+  function render(){
+    const rows = PAPERS.filter(p=>filter==="all"||p.angle===filter)
+      .sort((a,b)=>cc(b)-cc(a));
+    list.innerHTML = rows.map(p=>
+      '<div class="acc" data-id="'+esc(p.id)+'">'+
+        '<div class="acchead"><div>'+
+          '<div class="ti">'+esc(p.title)+'</div>'+
+          '<div class="au">'+esc(authorShort(p))+'</div>'+
+        '</div><div class="accmeta">'+p.year+' &middot; '+cc(p).toLocaleString()+
+          (p.citation_count_estimated?"*":"")+' cites</div></div>'+
+        '<div class="accbody">'+
+          '<div>'+esc(p.key_claim||"")+"</div>"+
+          '<div class="kv">'+
+            '<div class="k">Relevance</div><div>'+esc(p.relevance_to_question||"")+"</div>"+
+            '<div class="k">Venue</div><div>'+esc(p.venue||"")+"</div>"+
+            '<div class="k">Institution</div><div>'+esc(instList(p)[0]||"")+
+              ' <span style="color:var(--muted)">('+esc(p.org_type||"")+")</span></div>"+
+            '<div class="k">Angle</div><div><span class="ang" style="color:'+
+              (ANGLE_COLOR[p.angle]||"var(--ink)")+'">'+esc(ANGLE_LABEL[p.angle]||p.angle)+"</span></div>"+
+            '<div class="k">Id</div><div class="mono">'+esc(p.id)+"</div>"+
+          "</div>"+
+          '<div style="margin-top:var(--s5)"><a class="cite" href="'+esc(p.url)+
+            '" target="_blank" rel="noopener">Open paper &rarr;</a></div>'+
+        "</div></div>").join("");
+  }
+  const fl = document.getElementById("cfilters");
+  fl.innerHTML = ['<button class="pill on" data-a="all">All <span class="n">'+PAPERS.length+"</span></button>"]
+    .concat(ANGLE_ORDER.map(a=>{
+      const n = PAPERS.filter(p=>p.angle===a).length;
+      return '<button class="pill" data-a="'+a+'">'+ANGLE_LABEL[a]+' <span class="n">'+n+"</span></button>";
+    })).join("");
+  fl.addEventListener("click",e=>{
+    const b = e.target.closest("button[data-a]"); if(!b) return;
+    filter = b.dataset.a;
+    [...fl.children].forEach(c=>c.classList.toggle("on",c===b));
+    render();
+  });
+  list.addEventListener("click",e=>{
+    if(e.target.closest("a")) return;
+    const h = e.target.closest(".acchead"); if(!h) return;
+    h.parentElement.classList.toggle("open");
+  });
+  render();
+})();
+
+/* ---------- shared node hover card ---------- */
+const nodecard = document.getElementById("nodecard");
+let ncTimer=null, ncOver=false;
+nodecard.addEventListener("mouseenter",()=>{ncOver=true;clearTimeout(ncTimer);});
+nodecard.addEventListener("mouseleave",()=>{ncOver=false;ncHide();});
+function ncShow(p, box, px, py){
+  clearTimeout(ncTimer);
+  nodecard.innerHTML = cardHTML(p);
+  nodecard.classList.add("show");
+  const bw = box.clientWidth, w = nodecard.offsetWidth, h = nodecard.offsetHeight;
+  let x = Math.max(6, Math.min(px + 14, bw - w - 6));
+  let y = py - h - 12; if(y < 6) y = py + 18;
+  nodecard.style.left = x+"px"; nodecard.style.top = y+"px";
+}
+function ncHide(){ ncTimer = setTimeout(()=>{ if(!ncOver) nodecard.classList.remove("show"); },240); }
+function boxXY(svgEl, box, vx, vy, VBW){
+  const sr = svgEl.getBoundingClientRect(), br = box.getBoundingClientRect();
+  const k = sr.width / VBW;
+  return [vx*k + (sr.left - br.left), vy*k + (sr.top - br.top)];
+}
+
+const maxCites = d3.max(PAPERS, cc) || 1;
+const rScale = d3.scaleSqrt().domain([0,maxCites]).range([2.4,7.5]).clamp(true);
+const EDGES = [];
+PAPERS.forEach(p=>(p.cites||[]).forEach(t=>{ if(BY_ID.has(t)) EDGES.push({s:p.id,t:t}); }));
+const eqScale = d3.scaleSqrt()
+  .domain([0, d3.max(EDGES,e=>cc(BY_ID.get(e.s))+cc(BY_ID.get(e.t))) || 1])
+  .range([0.35,2.6]).clamp(true);
+const edgeW = e => eqScale(cc(BY_ID.get(e.s))+cc(BY_ID.get(e.t)));
+
+/* ---------- 5. GRAPH ON MAP ---------- */
+(function(){
+  const box = document.getElementById("graphbox");
+  const svg = d3.select("#mapsvg");
+  const W = 1000, H = 470;
+  svg.attr("viewBox","0 0 "+W+" "+H);
+
+  const defs = svg.append("defs");
+  defs.append("marker").attr("id","arrow").attr("viewBox","0 -4 8 8")
+    .attr("refX",8).attr("refY",0).attr("markerWidth",5).attr("markerHeight",5)
+    .attr("orient","auto").attr("markerUnits","strokeWidth")
+    .append("path").attr("d","M0,-3L7,0L0,3").attr("fill","#0c2a1e").attr("fill-opacity",.55);
+
+  const root = svg.append("g");
+  const gMap = root.append("g");
+  const gEdge = root.append("g").attr("fill","none");
+  const gNode = root.append("g");
+
+  const proj = d3.geoNaturalEarth1();
+  // frame the projection on the papers themselves, not the whole globe
+  const cloud = {type:"MultiPoint", coordinates: PAPERS.map(p=>[p.lon,p.lat])};
+  proj.fitExtent([[46,54],[W-46,H-46]], cloud);
+  const path = d3.geoPath(proj);
+
+  gMap.append("path").attr("d", path({type:"Sphere"}))
+    .attr("fill","#b9c9ac").attr("stroke","#0c2a1e").attr("stroke-opacity",.35).attr("stroke-width",.8);
+  gMap.append("path").attr("d", path(d3.geoGraticule10()))
+    .attr("fill","none").attr("stroke","#0c2a1e").attr("stroke-opacity",.10).attr("stroke-width",.4);
+
+  // de-overlap nodes seeded at their geo position
+  const nodes = PAPERS.map(p=>{
+    const xy = proj([p.lon, p.lat]) || [W/2,H/2];
+    return {p, id:p.id, gx:xy[0], gy:xy[1], x:xy[0], y:xy[1], r:rScale(cc(p))};
+  });
+  const nById = new Map(nodes.map(n=>[n.id,n]));
+  const links = EDGES.map(e=>({source:nById.get(e.s), target:nById.get(e.t), w:edgeW(e)}));
+
+  const sim = d3.forceSimulation(nodes)
+    .force("x", d3.forceX(d=>d.gx).strength(.55))
+    .force("y", d3.forceY(d=>d.gy).strength(.55))
+    .force("collide", d3.forceCollide(d=>d.r+2.2).strength(.9))
+    .stop();
+  for(let i=0;i<220;i++) sim.tick();
+
+  const edgeSel = gEdge.selectAll("path").data(links).join("path")
+    .attr("stroke","#0c2a1e").attr("stroke-opacity",.22)
+    .attr("stroke-width",d=>d.w).attr("marker-end","url(#arrow)")
+    .attr("d",d=>{
+      const dx=d.target.x-d.source.x, dy=d.target.y-d.source.y;
+      const L=Math.hypot(dx,dy)||1;
+      const off=d.target.r+2;
+      const ex=d.target.x-dx/L*off, ey=d.target.y-dy/L*off;
+      const sx=d.source.x+dx/L*(d.source.r+1), sy=d.source.y+dy/L*(d.source.r+1);
+      const mx=(sx+ex)/2 - dy*0.09, my=(sy+ey)/2 + dx*0.09;
+      return "M"+sx+","+sy+"Q"+mx+","+my+" "+ex+","+ey;
+    });
+
+  const nodeSel = gNode.selectAll("circle").data(nodes).join("circle")
+    .attr("cx",d=>d.x).attr("cy",d=>d.y).attr("r",d=>d.r)
+    .attr("fill","#d5e0ca").attr("stroke","#0c2a1e").attr("stroke-width",1)
+    .style("cursor","pointer");
+
+  let zoomT = d3.zoomIdentity;
+  const zoom = d3.zoom().scaleExtent([0.35,26]).on("zoom",ev=>{
+    zoomT = ev.transform;
+    root.attr("transform",zoomT);
+    const k = zoomT.k;
+    nodeSel.attr("r",d=>d.r/Math.sqrt(k)*1.15).attr("stroke-width",1/k);
+    edgeSel.attr("stroke-width",d=>d.w/k);
+    gMap.selectAll("path").attr("stroke-width",function(){
+      return (d3.select(this).attr("stroke-opacity")>0.2?0.8:0.4)/k; });
+  });
+  svg.call(zoom);
+
+  function pxy(d){
+    const t = zoomT.apply([d.x,d.y]);
+    return boxXY(svg.node(), box, t[0], t[1], W);
+  }
+  nodeSel
+    .on("mouseenter",function(ev,d){
+      const xy = pxy(d);
+      ncShow(d.p, box, xy[0], xy[1]);
+      d3.select(this).attr("fill","#0c2a1e");
+    })
+    .on("mouseleave",function(){ ncHide(); d3.select(this).attr("fill","#d5e0ca"); })
+    .on("dblclick",(ev,d)=>{
+      ev.stopPropagation();
+      svg.transition().duration(650).call(zoom.transform,
+        d3.zoomIdentity.translate(W/2,H/2).scale(8).translate(-d.x,-d.y));
+    });
+
+  // start zoomed on the dense N.America/Atlantic/Europe cluster
+  function homeView(){
+    svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity);
+  }
+  document.getElementById("greset").addEventListener("click",homeView);
+
+  fetch("https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json")
+    .then(r=>r.json())
+    .then(topo=>{
+      const land = topojson.feature(topo, topo.objects.countries);
+      gMap.insert("path",":nth-child(2)").attr("d", path(land))
+        .attr("fill","#a8ba9a").attr("stroke","#0c2a1e")
+        .attr("stroke-opacity",.75).attr("stroke-width",.8).attr("stroke-linejoin","round");
+      homeView();
+    })
+    .catch(()=>{ homeView(); });
+})();
+
+/* ---------- 6. ORBITABLE 3-D TIMELINE ---------- */
+(function(){
+  const svg = d3.select("#timesvg");
+  const W = 1000, H = 560;
+  svg.attr("viewBox","0 0 "+W+" "+H);
+  const g = svg.append("g");
+
+  const years = d3.extent(PAPERS, p=>p.year);
+  const SX = 780, LANE = 130, SZ = 300;
+  const x3 = d3.scaleLinear().domain(years).range([-SX/2, SX/2]);
+  const z3 = a => (ANGLE_ORDER.indexOf(a) - 1.5) * LANE;
+  const y3 = d3.scaleSqrt().domain([0, maxCites]).range([0, SZ]).clamp(true);
+
+  let yaw = -0.62, pitch = 0.50;
+  const CX = W*0.44, CY = H*0.62, SCALE = 0.80, DEPTH = 900;
+
+  function proj(x,y,z){
+    const cy0 = Math.cos(yaw), sy0 = Math.sin(yaw);
+    let X = x*cy0 - z*sy0;
+    let Z = x*sy0 + z*cy0;
+    const cp = Math.cos(pitch), sp = Math.sin(pitch);
+    let Y = y*cp - Z*sp;
+    let Zc = y*sp + Z*cp;
+    const f = DEPTH/(DEPTH + Zc);
+    return [CX + X*SCALE*f, CY - Y*SCALE*f, Zc];
+  }
+
+  const items = PAPERS.map(p=>({p, x:x3(p.year), z:z3(p.angle), h:y3(cc(p)), r:rScale(cc(p))}));
+  const byId = new Map(items.map(i=>[i.p.id,i]));
+  const links = EDGES.map(e=>({a:byId.get(e.s), b:byId.get(e.t), w:edgeW(e)}));
+
+  const gFloor = g.append("g"), gEdge = g.append("g").attr("fill","none"),
+        gPill = g.append("g"), gNode = g.append("g"), gAxis = g.append("g");
+
+  // static structure
+  const laneLines = gFloor.selectAll("line.lane").data(ANGLE_ORDER).join("line").attr("class","lane")
+    .attr("stroke","#0c2a1e").attr("stroke-opacity",.25).attr("stroke-width",1);
+  const laneLabels = gAxis.selectAll("text.lane").data(ANGLE_ORDER).join("text").attr("class","lane")
+    .attr("font-family","ui-monospace,Menlo,monospace").attr("font-size",11).attr("font-weight",700)
+    .attr("fill","#0c2a1e").attr("text-anchor","start")
+    .text(a=>LANE_LETTER[a]+" · "+ANGLE_LABEL[a]);
+  const yearVals = d3.range(years[0], years[1]+1).filter(y=>y%2===0||y===years[1]);
+  const yearTicks = gFloor.selectAll("line.yr").data(yearVals).join("line").attr("class","yr")
+    .attr("stroke","#0c2a1e").attr("stroke-opacity",.16).attr("stroke-width",1);
+  const yearLabels = gAxis.selectAll("text.yr").data(yearVals).join("text").attr("class","yr")
+    .attr("font-family","ui-monospace,Menlo,monospace").attr("font-size",10)
+    .attr("fill","#4d5d46").attr("text-anchor","middle").text(d=>d);
+  const yAxis = gAxis.append("line").attr("stroke","#0c2a1e").attr("stroke-opacity",.45).attr("stroke-width",1.2);
+  const yTickVals = [10,100,1000,10000].filter(v=>v<=maxCites);
+  const yTicks = gAxis.selectAll("text.yt").data(yTickVals).join("text").attr("class","yt")
+    .attr("font-family","ui-monospace,Menlo,monospace").attr("font-size",10)
+    .attr("fill","#4d5d46").attr("text-anchor","end").text(d=>d.toLocaleString());
+
+  const edgeSel = gEdge.selectAll("line").data(links).join("line")
+    .attr("stroke","#0c2a1e").attr("stroke-opacity",.18).attr("stroke-width",d=>d.w);
+  const pillSel = gPill.selectAll("line").data(items).join("line")
+    .attr("stroke","#0c2a1e").attr("stroke-opacity",.32).attr("stroke-width",1.1);
+  const nodeSel = gNode.selectAll("circle").data(items).join("circle")
+    .attr("fill","#d5e0ca").attr("stroke","#0c2a1e").attr("stroke-width",1).style("cursor","pointer");
+
+  const box = document.getElementById("timebox");
+  function pxy(cx,cy){
+    return boxXY(svg.node(), box, cx, cy, W);
+  }
+  nodeSel
+    .on("mouseenter",function(ev,d){
+      const t = proj(d.x, d.h, d.z);
+      const xy = pxy(t[0], t[1]);
+      ncShow(d.p, box, xy[0], xy[1]);
+      d3.select(this).attr("fill","#0c2a1e");
+    })
+    .on("mouseleave",function(){ ncHide(); d3.select(this).attr("fill","#d5e0ca"); })
+    .on("click",(ev,d)=>window.open(d.p.url,"_blank","noopener"));
+
+  function draw(){
+    const xa = x3(years[0]) - 30, xb = x3(years[1]) + 30;
+    laneLines.each(function(a){
+      const z = z3(a);
+      const p0 = proj(xa,0,z), p1 = proj(xb,0,z);
+      d3.select(this).attr("x1",p0[0]).attr("y1",p0[1]).attr("x2",p1[0]).attr("y2",p1[1]);
+    });
+    laneLabels.each(function(a){
+      const p = proj(xb+14,0,z3(a));
+      d3.select(this).attr("x",p[0]).attr("y",p[1]+4);
+    });
+    const zA = z3(ANGLE_ORDER[0]) - 45, zB = z3(ANGLE_ORDER[3]) + 45;
+    yearTicks.each(function(y){
+      const p0 = proj(x3(y),0,zA), p1 = proj(x3(y),0,zB);
+      d3.select(this).attr("x1",p0[0]).attr("y1",p0[1]).attr("x2",p1[0]).attr("y2",p1[1]);
+    });
+    yearLabels.each(function(y){
+      const p = proj(x3(y),0,zB+26);
+      d3.select(this).attr("x",p[0]).attr("y",p[1]+11);
+    });
+    const a0 = proj(xa,0,zA), a1 = proj(xa,SZ,zA);
+    yAxis.attr("x1",a0[0]).attr("y1",a0[1]).attr("x2",a1[0]).attr("y2",a1[1]);
+    yTicks.each(function(v){
+      const p = proj(xa,y3(v),zA);
+      d3.select(this).attr("x",p[0]-6).attr("y",p[1]+3);
+    });
+
+    items.forEach(d=>{
+      const b = proj(d.x,0,d.z), t = proj(d.x,d.h,d.z);
+      d.bx=b[0]; d.by=b[1]; d.tx=t[0]; d.ty=t[1]; d.depth=t[2];
+    });
+    pillSel.attr("x1",d=>d.bx).attr("y1",d=>d.by).attr("x2",d=>d.tx).attr("y2",d=>d.ty);
+    edgeSel.attr("x1",d=>d.a.tx).attr("y1",d=>d.a.ty).attr("x2",d=>d.b.tx).attr("y2",d=>d.b.ty);
+    nodeSel.attr("cx",d=>d.tx).attr("cy",d=>d.ty)
+      .attr("r",d=>d.r * (DEPTH/(DEPTH+d.depth)));
+    gNode.selectAll("circle").sort((a,b)=>b.depth-a.depth);
+  }
+
+  let drag = null;
+  const el = svg.node();
+  function down(e){
+    if(!e.touches && e.preventDefault) e.preventDefault();
+    const t = e.touches ? e.touches[0] : e;
+    drag = {x:t.clientX, y:t.clientY, yaw, pitch};
+  }
+  function move(e){
+    if(!drag) return;
+    const t = e.touches ? e.touches[0] : e;
+    yaw = drag.yaw + (t.clientX - drag.x) * 0.006;
+    pitch = Math.max(-0.15, Math.min(1.15, drag.pitch + (t.clientY - drag.y) * 0.004));
+    if(e.cancelable) e.preventDefault();
+    draw();
+  }
+  function up(){ drag = null; }
+  el.addEventListener("mousedown",down);
+  window.addEventListener("mousemove",move);
+  window.addEventListener("mouseup",up);
+  el.addEventListener("touchstart",down,{passive:true});
+  el.addEventListener("touchmove",move,{passive:false});
+  window.addEventListener("touchend",up);
+  el.style.cursor = "grab";
+
+  document.getElementById("treset").addEventListener("click",()=>{
+    const y0=yaw, p0=pitch;
+    d3.transition().duration(500).tween("orbit",()=>{
+      const iy = d3.interpolate(y0,-0.62), ip = d3.interpolate(p0,0.50);
+      return t=>{ yaw = iy(t); pitch = ip(t); draw(); };
+    });
+  });
+
+  draw();
+})();
+
+/* ---------- sticky nav ---------- */
+(function(){
+  const secs = [...document.querySelectorAll("main > section")];
+  const names = {tldr:"TLDR", insights:"Insights", spec:"The Spec", arith:"Arithmetic",
+    graph:"Graph", timeline:"Timeline", next:"Next steps", ideas:"Ideas",
+    quality:"Quality", cites:"Citations"};
+  const pills = document.getElementById("pills");
+  pills.innerHTML = secs.map((s,i)=>
+    '<button class="pill'+(i===0?" on":"")+'" data-i="'+i+'"><span class="n">'+
+    String(i+1).padStart(2,"0")+"</span>"+names[s.id]+"</button>").join("");
+  const P = [...pills.children];
+  let cur = 0;
+  function setCur(i){
+    if(i===cur) return;
+    cur = i;
+    P.forEach((p,k)=>p.classList.toggle("on",k===i));
+    const p = P[i];
+    pills.scrollTo({left: p.offsetLeft - pills.clientWidth/2 + p.offsetWidth/2, behavior:"smooth"});
+  }
+  function goTo(i){
+    i = Math.max(0, Math.min(secs.length-1, i));
+    userNav = Date.now() + 900;
+    secs[i].scrollIntoView({behavior:"smooth", block:"start"});
+    setCur(i);
+  }
+  P.forEach(p=>p.addEventListener("click",()=>goTo(+p.dataset.i)));
+  document.getElementById("navprev").addEventListener("click",()=>goTo(cur-1));
+  document.getElementById("navnext").addEventListener("click",()=>goTo(cur+1));
+
+  let userNav = 0;
+  function pick(){
+    if(Date.now() < userNav) return;
+    let idx = 0;
+    for(let k=0;k<secs.length;k++){
+      if(secs[k].getBoundingClientRect().top <= 120) idx = k;
+    }
+    const se = document.scrollingElement || document.documentElement;
+    if(se.scrollTop + window.innerHeight >= se.scrollHeight - 4) idx = secs.length-1;
+    setCur(idx);
+  }
+  const io = new IntersectionObserver(pick,
+    {rootMargin:"-118px 0px -55% 0px", threshold:[0,0.01,0.2,0.5,1]});
+  secs.forEach(s=>io.observe(s));
+  ["scroll","wheel","touchmove"].forEach(ev=>{
+    window.addEventListener(ev, pick, {passive:true});
+    document.addEventListener(ev, pick, {passive:true});
+  });
+  setInterval(pick, 400);
+  pick();
+})();
+</script>
+</body>
+</html>

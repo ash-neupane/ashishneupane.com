@@ -1,5 +1,14 @@
 [
   {
+    "slug": "batch1-inference-hardware",
+    "title": "Batch 1 is a different machine",
+    "question": "Model inference but for a single user, on a local machine. You lose batching at scale and the property that all MoE experts activate at large batch size. For privacy. Find the exact nature of computation for a single thread of inference and spec out what the ideal dedicated hardware would look like. Goal: run 100B-500B models on a handheld.",
+    "date": "2026-09-04",
+    "papers": 68,
+    "edges": 357,
+    "reportPath": "/research/batch1-inference-hardware/report.html"
+  },
+  {
     "slug": "looped-transformers-latent-cot",
     "title": "Looped transformers & latent chain-of-thought",
     "question": "OpenAI claims to be running Astra as a Looped Transformer with chain of thought replaced from decode to english to embedding representation. I'd like to learn and play around with this in small models. Find all modern reputable research that take a stab at this and prepare my report.",
