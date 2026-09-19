@@ -1,5 +1,14 @@
 [
   {
+    "slug": "jev-system-one-parallel",
+    "title": "How Jev computes in parallel",
+    "question": "How does Jev \u2014 TypeSafe AI's \"System One\" model \u2014 achieve parallel computation, and what is the most defensible speculation about its underlying architecture?",
+    "date": "2026-09-19",
+    "papers": 86,
+    "edges": 338,
+    "reportPath": "/research/jev-system-one-parallel/report.html"
+  },
+  {
     "slug": "batch1-inference-hardware",
     "title": "Batch 1 is a different machine",
     "question": "Model inference but for a single user, on a local machine. You lose batching at scale and the property that all MoE experts activate at large batch size. For privacy. Find the exact nature of computation for a single thread of inference and spec out what the ideal dedicated hardware would look like. Goal: run 100B-500B models on a handheld.",
