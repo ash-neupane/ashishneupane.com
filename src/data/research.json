@@ -4,8 +4,8 @@
     "title": "How Jev computes in parallel",
     "question": "How does Jev \u2014 TypeSafe AI's \"System One\" model \u2014 achieve parallel computation, and what is the most defensible speculation about its underlying architecture?",
     "date": "2026-09-19",
-    "papers": 86,
-    "edges": 338,
+    "papers": 122,
+    "edges": 552,
     "reportPath": "/research/jev-system-one-parallel/report.html"
   },
   {
