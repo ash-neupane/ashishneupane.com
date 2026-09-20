@@ -10,8 +10,9 @@ The site is deployed to **GitHub Pages** via GitHub Actions.
 
 ## Custom Domain
 
-- Domain: `www.ashishneupane.com` (managed through Squarespace)
+- Domain: `ashishneupane.com` (managed through Squarespace)
 - The `public/CNAME` file tells GitHub Pages which domain to serve
+- `www.ashishneupane.com` 301-redirects to the apex; canonical URLs, sitemap and OG tags use the apex (`SITE_URL` in `src/data/site.ts`)
 
 ### DNS Records (Squarespace)
 
@@ -26,7 +27,7 @@ The site is deployed to **GitHub Pages** via GitHub Actions.
 ### GitHub Pages Settings
 
 - Source: GitHub Actions
-- Custom domain: `www.ashishneupane.com`
+- Custom domain: `ashishneupane.com`
 - Enforce HTTPS: enabled
 
 ## Build locally

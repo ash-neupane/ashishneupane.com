@@ -14,7 +14,7 @@ Personal portfolio site for Ashish Neupane — a Next.js (App Router) static sit
 - Research manifest in `src/data/research.json` + reports in `public/research/<slug>/report.html` are owned by a publish script — do NOT hand-edit; read via the typed accessor in `src/data/research.ts`
 - Pages: About Me (`/`), Research Reading (`/research`, `/research/[slug]`)
 - Static export to `out/`, deployed via GitHub Actions to GitHub Pages
-- Custom domain `www.ashishneupane.com` via Squarespace DNS
+- Custom domain `ashishneupane.com` via Squarespace DNS
 
 ## Code style
 

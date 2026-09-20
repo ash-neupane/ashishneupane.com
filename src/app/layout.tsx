@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { JsonLd } from "@/components/json-ld";
 import { Nav } from "@/components/nav";
 import { PERSONAL } from "@/data/resume";
-import { SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/data/site";
+import { OG_IMAGE, SITE_DESCRIPTION, SITE_NAME, SITE_URL } from "@/data/site";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -20,11 +20,13 @@ export const metadata: Metadata = {
     title: `${SITE_NAME} — Machine Learning Systems Engineer`,
     description: SITE_DESCRIPTION,
     url: SITE_URL,
+    images: [OG_IMAGE],
   },
   twitter: {
     card: "summary_large_image",
     title: `${SITE_NAME} — Machine Learning Systems Engineer`,
     description: SITE_DESCRIPTION,
+    images: [OG_IMAGE.url],
   },
 };
 
