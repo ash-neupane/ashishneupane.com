@@ -34,9 +34,6 @@ export default function Home() {
         <p className="max-w-xl text-base leading-relaxed text-ink">
           Hello, I am a human. I enjoy hiking and reading research papers.
         </p>
-        <p className="mt-4 max-w-xl text-base leading-relaxed text-ink">
-          {PERSONAL.summary}
-        </p>
       </section>
     </Container>
   );
