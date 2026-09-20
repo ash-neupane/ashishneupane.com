@@ -1,5 +1,14 @@
 [
   {
+    "slug": "rl-variants-for-llms",
+    "title": "The RLxx Zoo: what the suffix actually names, and what has held up",
+    "question": "Do a survey of the state of the art in various RL methods being experimented to improve language models. RLHF and RLVR are known, but Jev uses RLCD and in the process I started seeing a variety of RLxx algorithms. They seem to describe the shape of the data that the reward is being derived off. What are people up to and what has been working?",
+    "date": "2026-09-20",
+    "papers": 106,
+    "edges": 578,
+    "reportPath": "/research/rl-variants-for-llms/report.html"
+  },
+  {
     "slug": "jev-system-one-parallel",
     "title": "How Jev computes in parallel",
     "question": "How does Jev \u2014 TypeSafe AI's \"System One\" model \u2014 achieve parallel computation, and what is the most defensible speculation about its underlying architecture?",
