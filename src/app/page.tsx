@@ -4,6 +4,13 @@ import { Container } from "@/components/container";
 export default function Home() {
   return (
     <Container className="space-y-12 py-16">
+      <header className="space-y-2">
+        <h1 className="text-3xl font-semibold tracking-tight text-ink">
+          {PERSONAL.name}
+        </h1>
+        <p className="text-base text-muted">{PERSONAL.title}</p>
+      </header>
+
       <div className="flex flex-wrap gap-3">
         <a
           href={PERSONAL.github}
@@ -26,6 +33,9 @@ export default function Home() {
       <section className="rounded-[3px] border border-border bg-surface p-8 shadow-[var(--shadow-paper)]">
         <p className="max-w-xl text-base leading-relaxed text-ink">
           Hello, I am a human. I enjoy hiking and reading research papers.
+        </p>
+        <p className="mt-4 max-w-xl text-base leading-relaxed text-ink">
+          {PERSONAL.summary}
         </p>
       </section>
     </Container>

@@ -1,6 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { RESEARCH } from "@/data/research";
 import { Container } from "@/components/container";
+
+export const metadata: Metadata = {
+  title: "Research Reading",
+  description:
+    "Literature reviews and idea write-ups on LLM inference hardware, looped transformers, tokenization, and reasoning.",
+  alternates: { canonical: "/research" },
+};
 
 function formatStats(papers: number | null, edges: number | null) {
   const parts: string[] = [];
@@ -22,6 +30,7 @@ export default function ResearchIndex() {
 
   return (
     <Container className="py-16">
+      <h1 className="sr-only">Research Reading</h1>
       <ul className="space-y-5">
         {RESEARCH.map((thread) => (
           <li key={thread.slug}>
