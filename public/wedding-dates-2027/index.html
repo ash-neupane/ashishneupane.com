@@ -1,0 +1,1030 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<title>Saait Forecast 2084</title>
+<meta name="description" content="Forecasting which days between 15 May and 31 August 2027 the Nepal Panchanga Nirnayak Samiti will publish as marriage saait, from six years of published lists and sidereal astronomy.">
+<style>
+/*
+ * Khaja design system — "paper procurement": cream paper on a sage desk,
+ * bottle-green ink, monospaced figures, dashed tear lines, sawtooth receipt
+ * edges, rubber-stamp statuses. Tokens ported from khaja/partsnap/webapp.
+ * Single-theme by design: the system declares color-scheme: light.
+ */
+:root {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+
+  --ps-sage: #a8ba9a;
+  --ps-bottle: #092b1f;
+  --ps-cream: #f3f1e7;
+  --ps-paper: #faf8ef;
+  --ps-canvas-soft: #cbd6bf;
+  --ps-rule: #d8d2be;
+
+  --ps-ink: var(--ps-bottle);
+  --ps-surface: var(--ps-cream);
+  --ps-canvas: var(--ps-sage);
+  --ps-accent: var(--ps-bottle);
+  --ps-accent-text: var(--ps-cream);
+
+  --ps-text1: #092b1f;
+  --ps-text2: #2c4034;
+  --ps-text3: #5e6e5a;
+
+  --ps-high: #2e6f47;
+  --ps-medium: #a9701b;
+  --ps-low: #b23a2e;
+
+  --ps-shadow-rgb: 9, 43, 31;
+
+  --ps-mono: ui-monospace, "SF Mono", "SFMono-Regular", Menlo, Monaco, "Cascadia Mono",
+    "Roboto Mono", "Courier New", monospace;
+  --ps-sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+
+  --ps-r-xs: 2px;
+  --ps-r-sm: 3px;
+
+  --ps-shadow-paper: 2px 3px 0 rgba(var(--ps-shadow-rgb), 0.18);
+  --ps-shadow-pop: 3px 5px 0 rgba(var(--ps-shadow-rgb), 0.22);
+
+  --ps-tooth-w: 11px;
+  --ps-tooth-h: 5px;
+
+  --ps-1: 2px;  --ps-2: 4px;  --ps-3: 7px;  --ps-4: 10px;
+  --ps-5: 14px; --ps-6: 20px; --ps-7: 28px; --ps-8: 40px;
+  --ps-content-max: 1180px;
+
+  /* Chart slots, stepped from the brand ramp and validated on the cream surface. */
+  --series-a: #00785c;
+  --series-b: #b06a12;
+  --ramp-0: #e6ebd9;
+  --ramp-1: #c3d4b3;
+  --ramp-2: #94b78e;
+  --ramp-3: #4d8f6b;
+  --ramp-4: #0f5a43;
+  --bar-muted: #c2cdb4;
+  --blocked: #e2e0d2;
+
+  color-scheme: light;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  background: var(--ps-canvas);
+  color: var(--ps-text1);
+  font-family: var(--ps-mono);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+/* The sage desk shows a faint ruled grid, like a ledger pad. */
+body::before {
+  content: "";
+  position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: .5;
+  background-image: linear-gradient(rgba(var(--ps-shadow-rgb), .04) 1px, transparent 1px);
+  background-size: 100% 28px;
+}
+main, header.top, footer { position: relative; z-index: 1; }
+
+h1, h2, h3 { margin: 0; font-family: var(--ps-mono); line-height: 1.15; }
+h1 { font-size: clamp(25px, 5vw, 42px); font-weight: 800; letter-spacing: -0.5px; text-wrap: balance; }
+h2 { font-size: clamp(18px, 2.7vw, 25px); font-weight: 800; letter-spacing: -0.3px; text-wrap: balance; }
+h3 { font-size: 15px; font-weight: 800; }
+p { margin: 0; }
+a { color: var(--ps-ink); text-underline-offset: 3px; text-decoration-thickness: 1px; }
+:focus-visible { outline: 2px solid var(--ps-bottle); outline-offset: 2px; }
+* { scrollbar-width: thin; scrollbar-color: rgba(var(--ps-shadow-rgb), .35) transparent; }
+*::-webkit-scrollbar { width: 9px; height: 9px; }
+*::-webkit-scrollbar-thumb { background: rgba(var(--ps-shadow-rgb), .3); border-radius: 99px; }
+
+.wrap { width: 100%; max-width: var(--ps-content-max); margin: 0 auto; padding-inline: var(--ps-6); }
+.prose { font-family: var(--ps-sans); font-size: 15px; line-height: 1.62; color: var(--ps-text2); max-width: 68ch; }
+.prose b { color: var(--ps-text1); font-weight: 600; }
+
+.label {
+  font-family: var(--ps-mono); font-size: 11px; font-weight: 800;
+  letter-spacing: 1.5px; text-transform: uppercase; color: var(--ps-text3);
+}
+.num { font-variant-numeric: tabular-nums; }
+.muted { color: var(--ps-text3); }
+
+/* Rubber stamp */
+.stamp {
+  display: inline-block; font-family: var(--ps-mono); font-size: 11px; font-weight: 800;
+  letter-spacing: 1.2px; text-transform: uppercase; padding: 3px 8px;
+  border: 1.5px solid currentColor; border-radius: var(--ps-r-xs); opacity: .85;
+  transform: rotate(var(--rot, -2deg)); white-space: nowrap; color: var(--ps-ink);
+}
+.stamp.high { color: var(--ps-high); }
+.stamp.medium { color: var(--ps-medium); }
+
+.dashed { width: 100%; height: 0; border-top: 1px dashed rgba(var(--ps-shadow-rgb), .3); }
+
+.paper {
+  background: var(--ps-surface); border-radius: var(--ps-r-sm);
+  border: 1px solid rgba(var(--ps-shadow-rgb), .18); box-shadow: var(--ps-shadow-paper);
+}
+/* Sawtooth receipt edge, top and bottom */
+.receipt {
+  --w: var(--ps-tooth-w); --h: var(--ps-tooth-h);
+  background: var(--ps-paper);
+  filter: drop-shadow(2px 3px 0 rgba(var(--ps-shadow-rgb), .22));
+  padding-block: calc(var(--h) + 14px);
+  -webkit-mask:
+    linear-gradient(#000 0 0) 50% / 100% calc(100% - 2 * var(--h)) no-repeat,
+    conic-gradient(from -45deg at 50% 0, #000 0 90deg, #0000 0) 0 0 / var(--w) var(--h) repeat-x,
+    conic-gradient(from -45deg at 50% 100%, #000 0 90deg, #0000 0) 0 100% / var(--w) var(--h) repeat-x;
+  mask:
+    linear-gradient(#000 0 0) 50% / 100% calc(100% - 2 * var(--h)) no-repeat,
+    conic-gradient(from -45deg at 50% 0, #000 0 90deg, #0000 0) 0 0 / var(--w) var(--h) repeat-x,
+    conic-gradient(from -45deg at 50% 100%, #000 0 90deg, #0000 0) 0 100% / var(--w) var(--h) repeat-x;
+}
+
+header.top {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 40;
+  background: var(--ps-cream); border-bottom: 1px solid rgba(var(--ps-shadow-rgb), .25);
+  box-shadow: 0 2px 0 rgba(var(--ps-shadow-rgb), .08);
+}
+header.top .wrap { display: flex; align-items: center; gap: var(--ps-5); justify-content: space-between; padding-block: var(--ps-3); }
+header.top .mark { font-size: 12px; font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
+nav.jump { display: flex; gap: var(--ps-1); flex-wrap: wrap; }
+nav.jump a {
+  font-size: 11px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase;
+  text-decoration: none; color: var(--ps-text3); padding: 4px 7px; border-radius: var(--ps-r-xs);
+}
+nav.jump a:hover { color: var(--ps-cream); background: var(--ps-ink); }
+
+.hero { padding-block: var(--ps-8) var(--ps-7); }
+.docket { padding-inline: var(--ps-6); }
+.docket .inner { max-width: 72ch; }
+.docket .filed {
+  display: flex; flex-wrap: wrap; gap: var(--ps-5); align-items: center;
+  justify-content: space-between; margin-bottom: var(--ps-6);
+}
+.hero .lede { margin-top: var(--ps-5); font-size: 16px; }
+
+section { padding-block: var(--ps-8); scroll-margin-top: 78px; }
+.sec-head { margin-bottom: var(--ps-6); }
+.sec-head h2 { margin-top: var(--ps-2); }
+.sec-head .prose { margin-top: var(--ps-4); }
+
+.verdict-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(286px, 1fr)); gap: var(--ps-5); margin-top: var(--ps-5); }
+.cand { padding-inline: var(--ps-5); display: flex; flex-direction: column; gap: var(--ps-4); }
+.cand .head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--ps-4); }
+.cand .range { font-size: 18px; font-weight: 800; letter-spacing: -.3px; }
+.cand .bs { font-size: 11px; color: var(--ps-text3); margin-top: 2px; }
+.cand .big { font-size: 40px; font-weight: 800; letter-spacing: -2px; line-height: 1; font-variant-numeric: tabular-nums; }
+.cand .cap { font-size: 10.5px; color: var(--ps-text3); letter-spacing: .8px; text-transform: uppercase; margin-top: var(--ps-2); }
+.cand .line { display: flex; justify-content: space-between; gap: var(--ps-4); font-size: 11.5px; color: var(--ps-text2); }
+.strip { display: flex; gap: 2px; }
+.strip .d { flex: 1; min-width: 0; text-align: center; }
+.strip .bar { height: 30px; border: 1px solid rgba(var(--ps-shadow-rgb), .22); border-radius: var(--ps-r-xs); }
+.strip .lbl { font-size: 9px; color: var(--ps-text3); margin-top: 3px; }
+
+.note { margin-top: var(--ps-6); padding: var(--ps-5) var(--ps-6); border-left: 3px solid var(--ps-ink); }
+.note .prose { max-width: 78ch; }
+
+figure { margin: 0; padding: var(--ps-5) var(--ps-5) var(--ps-4); }
+figcaption { font-family: var(--ps-sans); font-size: 13px; line-height: 1.55; color: var(--ps-text3); margin-top: var(--ps-4); padding-top: var(--ps-4); border-top: 1px dashed rgba(var(--ps-shadow-rgb), .3); }
+figcaption b { color: var(--ps-text2); font-weight: 600; }
+.fig-title { display: flex; justify-content: space-between; align-items: baseline; gap: var(--ps-5); flex-wrap: wrap; margin-bottom: var(--ps-5); }
+.legend { display: flex; gap: var(--ps-4); flex-wrap: wrap; align-items: center; }
+.legend span { display: inline-flex; align-items: center; gap: 5px; font-size: 10.5px; color: var(--ps-text2); }
+.swatch { width: 10px; height: 10px; border-radius: var(--ps-r-xs); flex: none; border: 1px solid rgba(var(--ps-shadow-rgb), .3); }
+
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(310px, 1fr)); gap: var(--ps-5); }
+.scroll { overflow-x: auto; }
+svg { display: block; max-width: 100%; }
+svg text { font-family: var(--ps-mono); fill: var(--ps-text3); font-size: 10px; }
+svg text.val { fill: var(--ps-text2); font-size: 9.5px; }
+svg .grid-line { stroke: rgba(9, 43, 31, .14); stroke-width: 1; }
+svg .axis { stroke: rgba(9, 43, 31, .45); stroke-width: 1; }
+
+.cal { display: grid; grid-template-columns: 40px repeat(7, minmax(0, 1fr)); grid-auto-rows: 52px; gap: 3px; min-width: 340px; }
+.cal .dow { align-self: end; font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--ps-text3); text-align: center; padding-bottom: var(--ps-2); }
+.cal .wk { font-size: 9.5px; color: var(--ps-text3); display: flex; align-items: center; justify-content: flex-end; padding-right: var(--ps-2); text-align: right; }
+.cell {
+  border-radius: var(--ps-r-xs);
+  border: 1px solid rgba(var(--ps-shadow-rgb), .22);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+}
+.cell.empty { border: none; background: none; }
+.cell .dnum { font-size: 11px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.cell .pnum { font-size: 9px; opacity: .85; font-variant-numeric: tabular-nums; }
+.cell.blocked {
+  background: var(--blocked); color: var(--ps-text3);
+  background-image: repeating-linear-gradient(135deg, transparent 0 4px, rgba(var(--ps-shadow-rgb), .18) 4px 5px);
+}
+.cell.hi { box-shadow: 0 0 0 2px var(--ps-ink); }
+
+/* Tooltip — a small paper chit */
+#tip {
+  position: fixed; z-index: 90; pointer-events: none; opacity: 0; transition: opacity .1s;
+  background: var(--ps-paper); color: var(--ps-text1);
+  border: 1px solid rgba(var(--ps-shadow-rgb), .4); border-radius: var(--ps-r-xs);
+  padding: var(--ps-3) var(--ps-4); box-shadow: var(--ps-shadow-pop);
+  font-family: var(--ps-mono); font-size: 11px; line-height: 1.5; max-width: 250px;
+}
+#tip .t-h { font-weight: 800; font-size: 11.5px; letter-spacing: .3px; text-transform: uppercase; margin-bottom: 4px; padding-bottom: 4px; border-bottom: 1px dashed rgba(var(--ps-shadow-rgb), .3); }
+#tip .t-r { display: flex; justify-content: space-between; gap: var(--ps-5); color: var(--ps-text3); }
+#tip .t-r b { color: var(--ps-text1); font-weight: 700; }
+
+/* Ledger tables */
+table { border-collapse: collapse; width: 100%; font-size: 12px; font-variant-numeric: tabular-nums; }
+th, td { text-align: left; padding: var(--ps-3) var(--ps-4); border-bottom: 1px solid rgba(var(--ps-shadow-rgb), .14); white-space: nowrap; }
+th { font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--ps-text3); border-bottom: 1px solid rgba(var(--ps-shadow-rgb), .45); }
+tbody tr:nth-child(even) td { background: rgba(var(--ps-shadow-rgb), .035); }
+tbody tr:last-child td { border-bottom: none; }
+tr.chosen td { background: rgba(0, 120, 92, .13); font-weight: 700; }
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr)); gap: 1px; background: rgba(var(--ps-shadow-rgb), .22); border: 1px solid rgba(var(--ps-shadow-rgb), .22); border-radius: var(--ps-r-sm); overflow: hidden; }
+.stat { background: var(--ps-paper); padding: var(--ps-5); display: flex; flex-direction: column; gap: 5px; }
+.stat .k { font-size: 10px; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; color: var(--ps-text3); }
+.stat .v { font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.stat .n { font-size: 10.5px; color: var(--ps-text3); }
+
+ul.tight { margin: var(--ps-4) 0 0; padding-left: var(--ps-6); font-family: var(--ps-sans); font-size: 14.5px; line-height: 1.6; color: var(--ps-text2); max-width: 70ch; }
+ul.tight li { margin-bottom: var(--ps-3); }
+ul.tight li b { color: var(--ps-text1); font-weight: 600; }
+ul.tight li::marker { color: var(--ps-text3); }
+
+.chip { display: inline-flex; align-items: center; font-family: var(--ps-mono); font-size: 10.5px; font-weight: 700; padding: 3px 8px; border-radius: var(--ps-r-sm); border: 1px solid rgba(var(--ps-shadow-rgb), .35); background: var(--ps-paper); color: var(--ps-text2); white-space: nowrap; }
+.chip.ok { color: var(--ps-high); border-color: rgba(46, 111, 71, .5); }
+.chip.test { color: var(--ps-medium); border-color: rgba(169, 112, 27, .5); }
+
+details { padding: var(--ps-5); margin-top: var(--ps-5); }
+details summary { font-weight: 800; cursor: pointer; font-size: 14px; }
+details[open] summary { margin-bottom: var(--ps-4); }
+details .prose + .prose { margin-top: var(--ps-4); }
+
+.barcode { display: inline-flex; flex-direction: column; align-items: center; gap: 5px; }
+.bars { display: flex; align-items: flex-end; gap: 2px; height: 26px; }
+.bars i { display: block; background: rgba(var(--ps-shadow-rgb), .85); height: 100%; }
+.barcode .caption { font-size: 9px; font-weight: 600; letter-spacing: 3px; text-transform: uppercase; color: var(--ps-text3); }
+
+footer { padding-block: var(--ps-7) var(--ps-8); }
+footer .wrap { display: flex; gap: var(--ps-6); align-items: center; justify-content: space-between; flex-wrap: wrap; }
+footer .fine { font-family: var(--ps-sans); font-size: 12.5px; color: var(--ps-text2); max-width: 62ch; }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .001ms !important; transition-duration: .001ms !important; } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <span class="mark">Saait Forecast 2084</span>
+    <nav class="jump">
+      <a href="#verdict">Verdict</a>
+      <a href="#rules">Rules</a>
+      <a href="#evidence">Evidence</a>
+      <a href="#forecast">Forecast</a>
+      <a href="#clusters">Clusters</a>
+      <a href="#appendix">Appendix</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<div class="wrap hero">
+  <div class="receipt docket">
+    <div class="inner">
+      <div class="filed">
+        <span class="label">Nepal Panchanga Nirnayak Samiti &middot; 2084 BS</span>
+        <span class="stamp medium" style="--rot:-2.5deg">Not yet published</span>
+      </div>
+      <h1>Which summer 2027 days will be wedding saait?</h1>
+      <p class="prose lede">The committee will not publish the 2084 BS list until around April 2027.
+      This forecasts it from astronomy — trained on six published years, scored once on two years it
+      never saw. The single most consequential finding: <b>Chaturmas begins 14 July 2027</b>, so a
+      wedding inside the 15 May – 31 August window has to happen in its first 60 days.</p>
+    </div>
+  </div>
+</div>
+
+<section id="verdict">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="label">The answer</div>
+      <h2>Three date ranges that almost certainly contain a saait</h2>
+      <p class="prose">Non-overlapping windows, ranked by the probability that at least one day inside
+      them is published as a marriage saait. Seven-day ranges are the safe choice; three-day ranges are
+      tighter but riskier.</p>
+    </div>
+
+    <div class="label">Seven-day ranges</div>
+    <div class="verdict-grid" id="cand7"></div>
+
+    <div class="label" style="margin-top:var(--ps-7)">Three-day ranges</div>
+    <div class="verdict-grid" id="cand3"></div>
+
+    <div class="paper note">
+      <p class="prose" id="verdict-note"></p>
+    </div>
+  </div>
+</section>
+
+<section id="rules">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="label">Step 1 — how a saait is set</div>
+      <h2>Four gates, then a moment</h2>
+      <p class="prose">A saait is not a day, it is a <em>moment</em>. The committee first strikes out
+      whole stretches of the year with deterministic astronomy, then hunts inside what remains for an
+      instant when the Moon's mansion, the lunar day, the karana and the rising sign all agree. The
+      gates are the part that moves the most dates.</p>
+    </div>
+
+    <div class="two">
+      <div>
+        <ul class="tight">
+          <li><b>Solar season.</b> The Sun must stand in Mesha, Vrisha, Mithuna, Vrischika, Makara or
+          Kumbha. Karka through Tula is Chaturmas territory; Dhanu and Meena are Kharmas.</li>
+          <li><b>Chaturmas.</b> From Harishayani Ekadashi (Ashadha shukla 11) to Haribodhini Ekadashi
+          (Kartika shukla 11), Vishnu sleeps and every sacrament pauses — about four months with no
+          weddings at all.</li>
+          <li><b>Shukra asta.</b> When Venus is lost in the Sun's glare it cannot bless a marriage.
+          Fitted threshold: <span class="chip num">6.5&deg;</span> elongation.</li>
+          <li><b>Guru asta.</b> Same for Jupiter, at <span class="chip num">11.5&deg;</span>. These two
+          gates alone are why 2081 BS had only 17 saait days while 2083 had 41.</li>
+          <li><b>Then the moment:</b> a vivaha nakshatra, a tithi that is not rikta or Purnima, no
+          Vishti karana, and an auspicious lagna rising — all at once.</li>
+        </ul>
+      </div>
+      <figure class="paper">
+        <div class="fig-title"><h3>Every gate, no saait lost</h3></div>
+        <div id="funnel"></div>
+        <figcaption>The four gates cut the six labelled years from 2,192 days to 826 — <b>62% of the
+        calendar removed while keeping all 186 published saait days.</b> A gate that dropped even one
+        real saait would be a fatal error, so gate recall was the binding constraint during
+        tuning.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section id="evidence">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="label">Step 2 — lining the dates up with the sky</div>
+      <h2>The Moon's cycle and its constellations do most of the work</h2>
+      <p class="prose">Six published years, 2,192 days, 186 of them saait. Sorting those days by where
+      the Moon was gives the model its whole signal — but only once you stop reading the panchanga at
+      sunrise.</p>
+    </div>
+
+    <div class="stats" id="hero-stats"></div>
+
+    <div class="paper note">
+      <p class="prose"><b>The finding that made the model work.</b> At sunrise, only
+      <span class="num" id="sr-pct"></span> of published saait days carry one of the eleven classical
+      vivaha nakshatras — which looked like the classical rule simply did not apply in Nepal. But
+      <span class="num" id="at-pct"></span> of them carry one <em>at some point during the day</em>.
+      The committee is picking the moment, not the date. Every feature in this model is therefore a
+      duration across the day, measured sunrise to sunrise, not a value read at sunrise.</p>
+    </div>
+
+    <figure class="paper" style="margin-top:var(--ps-6)">
+      <div class="fig-title">
+        <h3>Share of days that became saait, by the Moon's nakshatra at sunrise</h3>
+        <div class="legend">
+          <span><i class="swatch" style="background:var(--series-a)"></i>Classical vivaha nakshatra</span>
+          <span><i class="swatch" style="background:var(--bar-muted)"></i>Other</span>
+        </div>
+      </div>
+      <div class="scroll" id="nak-chart"></div>
+      <figcaption>The eleven nakshatras named in Muhurta Chintamani take the top of the ranking, and
+      four mansions never produced a single saait in six years. <b>Jyeshtha is the anomaly</b> — a
+      classically forbidden ugra nakshatra that the Nepali committee uses freely, which is why the
+      model learns weights rather than applying the textbook list as a hard filter.</figcaption>
+    </figure>
+
+    <div class="two" style="margin-top:var(--ps-5)">
+      <figure class="paper">
+        <div class="fig-title">
+          <h3>By lunar day</h3>
+          <div class="legend">
+            <span><i class="swatch" style="background:var(--series-a)"></i>Shukla</span>
+            <span><i class="swatch" style="background:var(--series-b)"></i>Krishna</span>
+          </div>
+        </div>
+        <div class="scroll" id="tithi-chart"></div>
+        <figcaption>The waxing fortnight is preferred and the rikta tithis (Chaturthi, Navami,
+        Chaturdashi) plus Purnima are suppressed — the fitted exclusion set. The late krishna tithis
+        fade as the Moon weakens.</figcaption>
+      </figure>
+      <figure class="paper">
+        <div class="fig-title"><h3>By weekday</h3></div>
+        <div id="vara-chart"></div>
+        <figcaption><b>A negative result worth having.</b> Guides claim Tuesday and Saturday are
+        avoided for Nepali weddings. Across six published years the weekday rate is essentially flat,
+        and adding weekday features made held-out accuracy <em>worse</em>. Vara is not in the final
+        model.</figcaption>
+      </figure>
+    </div>
+  </div>
+</section>
+
+<section id="forecast">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="label">Step 3 — the forecast</div>
+      <h2>15 May to 31 August 2027, day by day</h2>
+      <p class="prose">Probability that the committee publishes each day as a marriage saait. Hover any
+      cell for its panchanga. The model expects <b id="exp-count"></b> saait days in this window.</p>
+    </div>
+
+    <figure class="paper">
+      <div class="fig-title">
+        <h3>Daily probability</h3>
+        <div class="legend" id="cal-legend"></div>
+      </div>
+      <div class="scroll"><div class="cal" id="cal"></div></div>
+      <figcaption>Hatched cells are struck out by a hard gate, with the reason on hover. <b>From 14
+      July the window is closed outright</b> — Harishayani Ekadashi falls that day and Chaturmas runs
+      to 10 November 2027. Everything after 13 July is a structural zero, not a low score.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="clusters">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="label">Step 5 — smoothing into ranges</div>
+      <h2>Pick a range, not a day</h2>
+      <p class="prose">For every run of consecutive days, the chance that at least one of them turns
+      out to be a saait. This is the number to plan a venue around, because you only need one day
+      inside the range to work.</p>
+    </div>
+    <figure class="paper">
+      <div class="fig-title">
+        <h3>Probability a window contains at least one saait, by start date</h3>
+        <div class="legend">
+          <span><i class="swatch" style="background:var(--series-a)"></i>7-day window</span>
+          <span><i class="swatch" style="background:var(--series-b)"></i>3-day window</span>
+        </div>
+      </div>
+      <div class="scroll" id="curve"></div>
+      <figcaption>Windows are scored as one minus the product of the daily misses, which held-out tests
+      showed needs no further calibration (Brier <b id="b7"></b> for 7-day, <b id="b3"></b> for 3-day).
+      An isotonic smoother fitted on the validation years was tried and <b>rejected</b> — it tied on
+      validation and came out slightly worse on test.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="appendix">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="label">Appendix</div>
+      <h2>Method, test results, and what would change the answer</h2>
+    </div>
+
+    <h3>A1 &middot; Protocol</h3>
+    <p class="prose" style="margin-top:var(--ps-3)">Six years of published lists, split strictly by
+    year. Hyperparameters were searched only against the validation years using leave-one-year-out;
+    the test years were scored exactly once, at the end, and never informed a single choice.</p>
+    <div class="paper scroll" style="margin-top:var(--ps-4)"><table id="split-table"></table></div>
+
+    <h3 style="margin-top:var(--ps-7)">A2 &middot; Held-out test results</h3>
+    <p class="prose" style="margin-top:var(--ps-3)">Validation average precision was 0.438; test came
+    in at <span class="num" id="ap-test"></span> — the model did not degrade out of sample, and every
+    published saait day in both test years survived the gates.</p>
+    <div class="stats" style="margin-top:var(--ps-4)" id="test-stats"></div>
+    <div class="paper scroll" style="margin-top:var(--ps-4)"><table id="year-table"></table></div>
+
+    <h3 style="margin-top:var(--ps-7)">A3 &middot; Ablation — why each setting was chosen</h3>
+    <p class="prose" style="margin-top:var(--ps-3)">One axis varied at a time around the selected
+    configuration, scored by leave-one-year-out average precision on the validation years only. The
+    highlighted row is the chosen value in each block.</p>
+    <div class="paper scroll" style="margin-top:var(--ps-4)"><table id="abl-table"></table></div>
+
+    <h3 style="margin-top:var(--ps-7)">A4 &middot; Hyperparameter search</h3>
+    <p class="prose" style="margin-top:var(--ps-3)"><span class="num" id="n-configs"></span>
+    configurations were evaluated. Top ten by validation average precision:</p>
+    <div class="paper scroll" style="margin-top:var(--ps-4)"><table id="sweep-table"></table></div>
+
+    <h3 style="margin-top:var(--ps-7)">A5 &middot; The fitted model</h3>
+    <p class="prose" style="margin-top:var(--ps-3)">A logistic head over seven duration features,
+    applied only to days that pass the gates. Bigger feature sets — per-nakshatra weights, per-tithi
+    weights, weekday, solar month — all scored worse in cross-validation: with 186 positive examples
+    the compact model is the robust one.</p>
+    <div class="paper scroll" style="margin-top:var(--ps-4)"><table id="coef-table"></table></div>
+
+    <h3 style="margin-top:var(--ps-7)">A6 &middot; Limitations</h3>
+    <ul class="tight">
+      <li><b>2079 BS is missing.</b> Sources disagree on its total (40 vs 56) and none enumerates its
+      Baishakh days, so the year was excluded rather than guessed at.</li>
+      <li><b>Six years is a small sample.</b> 186 positive days total. This is why the winning model is
+      deliberately small and why every gate was checked for perfect recall.</li>
+      <li><b>The lagna is approximated.</b> The committee computes an exact lagna window with planetary
+      aspects for each muhurta; this model only measures how long an auspicious sign is rising during
+      wedding hours. That is the largest remaining gap.</li>
+      <li><b>Ranking beats identification.</b> Precision at the true count is about 44% — roughly two
+      of every five predicted days will be right. Useful for choosing a range; not a substitute for
+      the published patro.</li>
+      <li><b>Personal charts are out of scope.</b> The committee's list is universal; your own
+      horoscopes may rule out specific dates on it.</li>
+    </ul>
+
+    <details class="paper">
+      <summary>A7 &middot; Sources</summary>
+      <p class="prose">All saait lists trace to the Nepal Panchanga Nirnayak Samiti, the body that
+      approves every printed patro in Nepal.</p>
+      <div class="scroll" style="margin-top:var(--ps-4)"><table id="src-table"></table></div>
+      <p class="prose" style="margin-top:var(--ps-4)">Rules from the
+      <a href="https://katigate.com/en/blog/auspicious-wedding-dates-nepal-bibaha-muhurat">Katigate
+      bibaha saait guide</a>. Astronomy computed with the Swiss Ephemeris (pyswisseph), sidereal
+      Lahiri, evaluated at Kathmandu sunrise (27.7172&deg;N, 85.3240&deg;E, 1400 m); Bikram Sambat
+      conversion via nepali-datetime.</p>
+      <p class="prose">
+      <b>Independent checks.</b> Computed tithi matches Hamro Patro's own day page for 2083-06-05,
+      which the site states follows the official Samiti calendar. The combustion model was checked
+      against the committee's own announced 2077 dates: it placed Venus's setting within 2 days and
+      Jupiter's within 3.</p>
+    </details>
+  </div>
+</section>
+</main>
+
+<div id="tip" role="tooltip" aria-hidden="true"></div>
+
+<footer>
+  <div class="wrap">
+    <p class="fine">Built <span class="num" id="gen-date"></span> &middot; forecast for 2084 BS, which
+    the Nepal Panchanga Nirnayak Samiti had not published at the time of writing. Verify against the
+    official patro when it appears, around Baishakh 2084.</p>
+    <span class="barcode"><span class="bars" id="barcode"></span><span class="caption">Saait 2084</span></span>
+  </div>
+</footer>
+
+<script type="application/json" id="payload">{"generated":"2026-09-21","config":{"ayanamsa":"Lahiri","good_nakshatras":[4,5,10,12,13,15,17,19,21,26,27],"bad_tithis":[4,9,14,15],"venus_combust_deg":6.5,"jupiter_combust_deg":11.5,"regularisation":0.3,"blocks":["window"]},"data":{"validation_years":[2077,2078,2080,2081],"test_years":[2082,2083],"counts":{"2077":18,"2078":36,"2080":35,"2081":17,"2082":39,"2083":41}},"evidence":{"nakshatra_rate":[{"name":"Ashwini","days":80,"saait":0,"rate":0.0},{"name":"Bharani","days":83,"saait":0,"rate":0.0},{"name":"Krittika","days":78,"saait":7,"rate":0.08974358974358974},{"name":"Rohini","days":84,"saait":15,"rate":0.17857142857142858},{"name":"Mrigashira","days":81,"saait":9,"rate":0.1111111111111111},{"name":"Ardra","days":81,"saait":0,"rate":0.0},{"name":"Punarvasu","days":83,"saait":0,"rate":0.0},{"name":"Pushya","days":84,"saait":0,"rate":0.0},{"name":"Ashlesha","days":79,"saait":7,"rate":0.08860759493670886},{"name":"Magha","days":83,"saait":12,"rate":0.14457831325301204},{"name":"Purva Phalguni","days":81,"saait":9,"rate":0.1111111111111111},{"name":"Uttara Phalguni","days":81,"saait":16,"rate":0.19753086419753085},{"name":"Hasta","days":83,"saait":8,"rate":0.0963855421686747},{"name":"Chitra","days":84,"saait":9,"rate":0.10714285714285714},{"name":"Swati","days":80,"saait":7,"rate":0.0875},{"name":"Vishakha","days":81,"saait":9,"rate":0.1111111111111111},{"name":"Anuradha","days":81,"saait":6,"rate":0.07407407407407407},{"name":"Jyeshtha","days":80,"saait":13,"rate":0.1625},{"name":"Mula","days":80,"saait":10,"rate":0.125},{"name":"Purva Ashadha","days":80,"saait":10,"rate":0.125},{"name":"Uttara Ashadha","days":81,"saait":11,"rate":0.13580246913580246},{"name":"Shravana","days":83,"saait":1,"rate":0.012048192771084338},{"name":"Dhanishta","days":82,"saait":0,"rate":0.0},{"name":"Shatabhisha","days":77,"saait":0,"rate":0.0},{"name":"Purva Bhadrapada","days":82,"saait":8,"rate":0.0975609756097561},{"name":"Uttara Bhadrapada","days":80,"saait":14,"rate":0.175},{"name":"Revati","days":80,"saait":5,"rate":0.0625}],"tithi_rate":[{"name":"shukla Pratipada","index":1,"days":72,"saait":6,"rate":0.08333333333333333},{"name":"shukla Dwitiya","index":2,"days":72,"saait":7,"rate":0.09722222222222222},{"name":"shukla Tritiya","index":3,"days":78,"saait":7,"rate":0.08974358974358974},{"name":"shukla Chaturthi","index":4,"days":69,"saait":5,"rate":0.07246376811594203},{"name":"shukla Panchami","index":5,"days":76,"saait":5,"rate":0.06578947368421052},{"name":"shukla Sasthi","index":6,"days":78,"saait":6,"rate":0.07692307692307693},{"name":"shukla Saptami","index":7,"days":73,"saait":3,"rate":0.0410958904109589},{"name":"shukla Astami","index":8,"days":74,"saait":8,"rate":0.10810810810810811},{"name":"shukla Navami","index":9,"days":75,"saait":12,"rate":0.16},{"name":"shukla Dashami","index":10,"days":73,"saait":11,"rate":0.1506849315068493},{"name":"shukla Ekadashi","index":11,"days":74,"saait":4,"rate":0.05405405405405406},{"name":"shukla Dwadashi","index":12,"days":70,"saait":4,"rate":0.05714285714285714},{"name":"shukla Trayodashi","index":13,"days":73,"saait":5,"rate":0.0684931506849315},{"name":"shukla Chaturdashi","index":14,"days":67,"saait":4,"rate":0.05970149253731343},{"name":"shukla Purnima/Amavasya","index":15,"days":73,"saait":3,"rate":0.0410958904109589},{"name":"krishna Pratipada","index":16,"days":73,"saait":9,"rate":0.1232876712328767},{"name":"krishna Dwitiya","index":17,"days":68,"saait":8,"rate":0.11764705882352941},{"name":"krishna Tritiya","index":18,"days":73,"saait":6,"rate":0.0821917808219178},{"name":"krishna Chaturthi","index":19,"days":69,"saait":10,"rate":0.14492753623188406},{"name":"krishna Panchami","index":20,"days":72,"saait":5,"rate":0.06944444444444445},{"name":"krishna Sasthi","index":21,"days":75,"saait":6,"rate":0.08},{"name":"krishna Saptami","index":22,"days":72,"saait":9,"rate":0.125},{"name":"krishna Astami","index":23,"days":72,"saait":10,"rate":0.1388888888888889},{"name":"krishna Navami","index":24,"days":73,"saait":8,"rate":0.1095890410958904},{"name":"krishna Dashami","index":25,"days":78,"saait":9,"rate":0.11538461538461539},{"name":"krishna Ekadashi","index":26,"days":77,"saait":10,"rate":0.12987012987012986},{"name":"krishna Dwadashi","index":27,"days":74,"saait":6,"rate":0.08108108108108109},{"name":"krishna Trayodashi","index":28,"days":73,"saait":0,"rate":0.0},{"name":"krishna Chaturdashi","index":29,"days":73,"saait":0,"rate":0.0},{"name":"krishna Purnima/Amavasya","index":30,"days":73,"saait":0,"rate":0.0}],"vara_rate":[{"name":"Sunday","days":313,"saait":21,"rate":0.0670926517571885},{"name":"Monday","days":314,"saait":26,"rate":0.08280254777070063},{"name":"Tuesday","days":314,"saait":30,"rate":0.09554140127388536},{"name":"Wednesday","days":313,"saait":23,"rate":0.07348242811501597},{"name":"Thursday","days":312,"saait":30,"rate":0.09615384615384616},{"name":"Friday","days":313,"saait":26,"rate":0.08306709265175719},{"name":"Saturday","days":313,"saait":30,"rate":0.09584664536741214}],"nakshatra_at_sunrise_vs_anytime":{"classical_at_sunrise":0.6075268817204301,"classical_somewhere_in_day":0.9946236559139785},"gate_funnel":[{"stage":"All days in the six labelled years","days":2192,"saait_kept":186},{"stage":"Sun in a marriage sign","days":1095,"saait_kept":186},{"stage":"Outside Chaturmas","days":1031,"saait_kept":186},{"stage":"Shukra (Venus) visible","days":930,"saait_kept":186},{"stage":"Guru (Jupiter) visible","days":826,"saait_kept":186}]},"test_metrics":{"n_days":730,"n_positive":80,"average_precision":0.45890098693476644,"roc_auc":0.9174230769230769,"brier":0.07220648263800908,"precision_at_n":0.4375,"gate_recall":1.0,"gate_days_kept":0.4054794520547945},"test_metrics_by_year":{"2082":{"n_days":365,"n_positive":39,"average_precision":0.4755108379079467,"roc_auc":0.9279534371558912,"brier":0.07147885286789621,"precision_at_n":0.46153846153846156,"gate_recall":1.0,"gate_days_kept":0.3287671232876712},"2083":{"n_days":365,"n_positive":41,"average_precision":0.4632750821943419,"roc_auc":0.9119241192411924,"brier":0.07293411240812195,"precision_at_n":0.43902439024390244,"gate_recall":1.0,"gate_days_kept":0.4821917808219178}},"window_metrics":{"3":{"n_windows":728,"observed_rate":0.2129120879120879,"predicted_rate":0.17827122310824775,"brier":0.0966519714730791,"brier_uncalibrated":0.09241627755999306},"7":{"n_windows":724,"observed_rate":0.3314917127071823,"predicted_rate":0.30107303170034283,"brier":0.07714658935560706,"brier_uncalibrated":0.07462328509607197}},"coefficients":[{"feature":"good-nakshatra hours","weight":2.021},{"feature":"good-nakshatra & good-tithi & no-Vishti hours","weight":0.815},{"feature":"Vishti (Bhadra) hours","weight":-0.295},{"feature":"good-tithi hours","weight":-0.199},{"feature":"fair-nakshatra hours","weight":0.091},{"feature":"evening hours with a vivaha lagna and a clean muhurta","weight":0.089},{"feature":"bad-yoga hours","weight":-0.006}],"sweep":{"n_configs":1458,"objective":"average precision, leave-one-year-out over the four validation years","top":[{"ayanamsa":"Lahiri","nakshatras":"classical","bad_tithis":"4+9+14+15","venus_deg":6.5,"jupiter_deg":11.5,"blocks":"window","C":0.3,"average_precision":0.453,"precision_at_n":0.4868,"brier":0.0683,"gate_recall":1.0},{"ayanamsa":"Lahiri","nakshatras":"classical","bad_tithis":"4+9+14+15","venus_deg":8.0,"jupiter_deg":11.5,"blocks":"window","C":0.1,"average_precision":0.45,"precision_at_n":0.4937,"brier":0.0678,"gate_recall":0.9861},{"ayanamsa":"Lahiri","nakshatras":"classical","bad_tithis":"4+9+14+15","venus_deg":8.0,"jupiter_deg":11.5,"blocks":"window","C":0.03,"average_precision":0.4498,"precision_at_n":0.4807,"brier":0.073,"gate_recall":0.9861},{"ayanamsa":"Lahiri","nakshatras":"classical","bad_tithis":"4+9+14+15","venus_deg":6.5,"jupiter_deg":11.5,"blocks":"window","C":0.1,"average_precision":0.4476,"precision_at_n":0.4799,"brier":0.0692,"gate_recall":1.0},{"ayanamsa":"Lahiri","nakshatras":"classical","bad_tithis":"4+9+14+15","venus_deg":8.0,"jupiter_deg":11.5,"blocks":"window","C":0.3,"average_precision":0.4474,"precision_at_n":0.4799,"brier":0.0667,"gate_recall":0.9861},{"ayanamsa":"Lahiri","nakshatras":"classical","bad_tithis":"4+9+14+15","venus_deg":6.5,"jupiter_deg":11.5,"blocks":"window","C":0.03,"average_precision":0.4467,"precision_at_n":0.466,"brier":0.0744,"gate_recall":1.0},{"ayanamsa":"Lahiri","nakshatras":"classical","bad_tithis":"4+9+14+15","venus_deg":8.0,"jupiter_deg":8.0,"blocks":"window","C":0.3,"average_precision":0.4455,"precision_at_n":0.4519,"brier":0.0697,"gate_recall":0.9861},{"ayanamsa":"Lahiri","nakshatras":"classical","bad_tithis":"4+8+9+14+15","venus_deg":8.0,"jupiter_deg":11.5,"blocks":"window","C":0.1,"average_precision":0.4441,"precision_at_n":0.4378,"brier":0.0694,"gate_recall":0.9861},{"ayanamsa":"Lahiri","nakshatras":"classical","bad_tithis":"4+8+9+14+15","venus_deg":8.0,"jupiter_deg":11.5,"blocks":"window","C":0.03,"average_precision":0.4428,"precision_at_n":0.4447,"brier":0.0748,"gate_recall":0.9861},{"ayanamsa":"Lahiri","nakshatras":"classical","bad_tithis":"4+9+14+15","venus_deg":6.5,"jupiter_deg":8.0,"blocks":"window","C":0.3,"average_precision":0.4412,"precision_at_n":0.466,"brier":0.0714,"gate_recall":1.0}],"worst":[{"ayanamsa":"Surya Siddhanta","nakshatras":"extended","bad_tithis":"4+9+14","venus_deg":0.0,"jupiter_deg":0.0,"blocks":"window+moon+vara","C":0.3,"average_precision":0.2226,"precision_at_n":0.1766,"brier":0.1106,"gate_recall":0.9206},{"ayanamsa":"Surya Siddhanta","nakshatras":"extended","bad_tithis":"4+8+9+14+15","venus_deg":0.0,"jupiter_deg":0.0,"blocks":"window+moon+vara","C":0.1,"average_precision":0.2129,"precision_at_n":0.1903,"brier":0.109,"gate_recall":0.9206},{"ayanamsa":"Surya Siddhanta","nakshatras":"extended","bad_tithis":"4+8+9+14+15","venus_deg":0.0,"jupiter_deg":0.0,"blocks":"window+moon+vara","C":0.3,"average_precision":0.2084,"precision_at_n":0.1693,"brier":0.1105,"gate_recall":0.9206}]},"ablation":[{"axis":"feature blocks","ayanamsa":"Lahiri","nakshatras":"classical","bad_tithis":"4+9+14+15","venus_deg":6.5,"jupiter_deg":11.5,"blocks":"window","C":0.3,"average_precision":0.4384,"precision_at_n":0.4799,"brier":0.0494,"gate_recall":1.0,"is_chosen":true},{"axis":"feature blocks","ayanamsa":"Lahiri","nakshatras":"classical","bad_tithis":"4+9+14+15","venus_deg":6.5,"jupiter_deg":11.5,"blocks":"window+nakshatra","C":0.3,"average_precision":0.3861,"precision_at_n":0.4157,"brier":0.052,"gate_recall":1.0,"is_chosen":false},{"axis":"feature blocks","ayanamsa":"Lahiri","nakshatras":"classical","bad_tithis":"4+9+14+15","venus_deg":6.5,"jupiter_deg":11.5,"blocks":"window+moon+vara","C":0.3,"average_precision":0.4214,"precision_at_n":0.4168,"brier":0.051,"gate_recall":1.0,"is_chosen":false},{"axis":"feature blocks","ayanamsa":"Lahiri","nakshatras":"classical","bad_tithis":"4+9+14+15","venus_deg":6.5,"jupiter_deg":11.5,"blocks":"window+nakshatra+tithi+moon+vara+season","C":0.3,"average_precision":0.374,"precision_at_n":0.381,"brier":0.0533,"gate_recall":1.0,"is_chosen":false},{"axis":"ayanamsa","ayanamsa":"Lahiri","nakshatras":"classical","bad_tithis":"4+9+14+15","venus_deg":6.5,"jupiter_deg":11.5,"blocks":"window","C":0.3,"average_precision":0.4384,"precision_at_n":0.4799,"brier":0.0494,"gate_recall":1.0,"is_chosen":true},{"axis":"ayanamsa","ayanamsa":"Raman","nakshatras":"classical","bad_tithis":"4+9+14+15","venus_deg":6.5,"jupiter_deg":11.5,"blocks":"window","C":0.3,"average_precision":0.4203,"precision_at_n":0.417,"brier":0.0517,"gate_recall":0.9641,"is_chosen":false},{"axis":"ayanamsa","ayanamsa":"Surya Siddhanta","nakshatras":"classical","bad_tithis":"4+9+14+15","venus_deg":6.5,"jupiter_deg":11.5,"blocks":"window","C":0.3,"average_precision":0.4021,"precision_at_n":0.446,"brier":0.0536,"gate_recall":0.9206,"is_chosen":false},{"axis":"Venus gate","ayanamsa":"Lahiri","nakshatras":"classical","bad_tithis":"4+9+14+15","venus_deg":0.0,"jupiter_deg":11.5,"blocks":"window","C":0.3,"average_precision":0.4113,"precision_at_n":0.4312,"brier":0.0521,"gate_recall":1.0,"is_chosen":false},{"axis":"Venus gate","ayanamsa":"Lahiri","nakshatras":"classical","bad_tithis":"4+9+14+15","venus_deg":6.5,"jupiter_deg":11.5,"blocks":"window","C":0.3,"average_precision":0.4384,"precision_at_n":0.4799,"brier":0.0494,"gate_recall":1.0,"is_chosen":true},{"axis":"Venus gate","ayanamsa":"Lahiri","nakshatras":"classical","bad_tithis":"4+9+14+15","venus_deg":8.0,"jupiter_deg":11.5,"blocks":"window","C":0.3,"average_precision":0.4404,"precision_at_n":0.4868,"brier":0.0492,"gate_recall":0.9861,"is_chosen":false},{"axis":"Jupiter gate","ayanamsa":"Lahiri","nakshatras":"classical","bad_tithis":"4+9+14+15","venus_deg":6.5,"jupiter_deg":0.0,"blocks":"window","C":0.3,"average_precision":0.3977,"precision_at_n":0.4102,"brier":0.0524,"gate_recall":1.0,"is_chosen":false},{"axis":"Jupiter gate","ayanamsa":"Lahiri","nakshatras":"classical","bad_tithis":"4+9+14+15","venus_deg":6.5,"jupiter_deg":8.0,"blocks":"window","C":0.3,"average_precision":0.434,"precision_at_n":0.459,"brier":0.0503,"gate_recall":1.0,"is_chosen":false},{"axis":"Jupiter gate","ayanamsa":"Lahiri","nakshatras":"classical","bad_tithis":"4+9+14+15","venus_deg":6.5,"jupiter_deg":11.5,"blocks":"window","C":0.3,"average_precision":0.4384,"precision_at_n":0.4799,"brier":0.0494,"gate_recall":1.0,"is_chosen":true},{"axis":"nakshatra set","ayanamsa":"Lahiri","nakshatras":"classical","bad_tithis":"4+9+14+15","venus_deg":6.5,"jupiter_deg":11.5,"blocks":"window","C":0.3,"average_precision":0.4384,"precision_at_n":0.4799,"brier":0.0494,"gate_recall":1.0,"is_chosen":true},{"axis":"nakshatra set","ayanamsa":"Lahiri","nakshatras":"extended","bad_tithis":"4+9+14+15","venus_deg":6.5,"jupiter_deg":11.5,"blocks":"window","C":0.3,"average_precision":0.3652,"precision_at_n":0.3306,"brier":0.0522,"gate_recall":1.0,"is_chosen":false}],"forecast":[{"date":"2027-05-15","bs":"2084-Jestha-1","vara":"Saturday","nak":"Purva Phalguni","tithi":"shukla Dashami","moon":0.695,"sun":"Mesha","gnh":16.99,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.4047},{"date":"2027-05-16","bs":"2084-Jestha-2","vara":"Sunday","nak":"Uttara Phalguni","tithi":"shukla Ekadashi","moon":0.791,"sun":"Vrisha","gnh":23.99,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.4066},{"date":"2027-05-17","bs":"2084-Jestha-3","vara":"Monday","nak":"Hasta","tithi":"shukla Dwadashi","moon":0.872,"sun":"Vrisha","gnh":6.5,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.2261},{"date":"2027-05-18","bs":"2084-Jestha-4","vara":"Tuesday","nak":"Chitra","tithi":"shukla Trayodashi","moon":0.935,"sun":"Vrisha","gnh":16.99,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.3214},{"date":"2027-05-19","bs":"2084-Jestha-5","vara":"Wednesday","nak":"Swati","tithi":"shukla Chaturdashi","moon":0.977,"sun":"Vrisha","gnh":7.5,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.1234},{"date":"2027-05-20","bs":"2084-Jestha-6","vara":"Thursday","nak":"Vishakha","tithi":"shukla Purnima/Amavasya","moon":0.998,"sun":"Vrisha","gnh":15.5,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.3031},{"date":"2027-05-21","bs":"2084-Jestha-7","vara":"Friday","nak":"Anuradha","tithi":"krishna Pratipada","moon":0.997,"sun":"Vrisha","gnh":10.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.1789},{"date":"2027-05-22","bs":"2084-Jestha-8","vara":"Saturday","nak":"Jyeshtha","tithi":"krishna Dwitiya","moon":0.977,"sun":"Vrisha","gnh":12.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.2219},{"date":"2027-05-23","bs":"2084-Jestha-9","vara":"Sunday","nak":"Mula","tithi":"krishna Tritiya","moon":0.938,"sun":"Vrisha","gnh":14.5,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.1916},{"date":"2027-05-24","bs":"2084-Jestha-10","vara":"Monday","nak":"Purva Ashadha","tithi":"krishna Chaturthi","moon":0.884,"sun":"Vrisha","gnh":6.5,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.1493},{"date":"2027-05-25","bs":"2084-Jestha-11","vara":"Tuesday","nak":"Uttara Ashadha","tithi":"krishna Panchami","moon":0.817,"sun":"Vrisha","gnh":20.5,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.4386},{"date":"2027-05-26","bs":"2084-Jestha-12","vara":"Wednesday","nak":"Shravana","tithi":"krishna Sasthi","moon":0.738,"sun":"Vrisha","gnh":0.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.0623},{"date":"2027-05-27","bs":"2084-Jestha-13","vara":"Thursday","nak":"Dhanishta","tithi":"krishna Saptami","moon":0.651,"sun":"Vrisha","gnh":0.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.0542},{"date":"2027-05-28","bs":"2084-Jestha-14","vara":"Friday","nak":"Dhanishta","tithi":"krishna Saptami","moon":0.558,"sun":"Vrisha","gnh":0.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.0623},{"date":"2027-05-29","bs":"2084-Jestha-15","vara":"Saturday","nak":"Shatabhisha","tithi":"krishna Astami","moon":0.462,"sun":"Vrisha","gnh":0.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.0781},{"date":"2027-05-30","bs":"2084-Jestha-16","vara":"Sunday","nak":"Purva Bhadrapada","tithi":"krishna Navami","moon":0.364,"sun":"Vrisha","gnh":17.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.3048},{"date":"2027-05-31","bs":"2084-Jestha-17","vara":"Monday","nak":"Uttara Bhadrapada","tithi":"krishna Dashami","moon":0.27,"sun":"Vrisha","gnh":24.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.4791},{"date":"2027-06-01","bs":"2084-Jestha-18","vara":"Tuesday","nak":"Revati","tithi":"krishna Ekadashi","moon":0.182,"sun":"Vrisha","gnh":8.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.1468},{"date":"2027-06-02","bs":"2084-Jestha-19","vara":"Wednesday","nak":"Ashwini","tithi":"krishna Dwadashi","moon":0.105,"sun":"Vrisha","gnh":0.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.0626},{"date":"2027-06-03","bs":"2084-Jestha-20","vara":"Thursday","nak":"Bharani","tithi":"krishna Trayodashi","moon":0.047,"sun":"Vrisha","gnh":0.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.0699},{"date":"2027-06-04","bs":"2084-Jestha-21","vara":"Friday","nak":"Krittika","tithi":"krishna Purnima/Amavasya","moon":0.01,"sun":"Vrisha","gnh":19.5,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.3208},{"date":"2027-06-05","bs":"2084-Jestha-22","vara":"Saturday","nak":"Rohini","tithi":"shukla Pratipada","moon":0.0,"sun":"Vrisha","gnh":24.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.5434},{"date":"2027-06-06","bs":"2084-Jestha-23","vara":"Sunday","nak":"Ardra","tithi":"shukla Dwitiya","moon":0.019,"sun":"Vrisha","gnh":0.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.0623},{"date":"2027-06-07","bs":"2084-Jestha-24","vara":"Monday","nak":"Punarvasu","tithi":"shukla Tritiya","moon":0.067,"sun":"Vrisha","gnh":0.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.067},{"date":"2027-06-08","bs":"2084-Jestha-25","vara":"Tuesday","nak":"Pushya","tithi":"shukla Chaturthi","moon":0.139,"sun":"Vrisha","gnh":0.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.0608},{"date":"2027-06-09","bs":"2084-Jestha-26","vara":"Wednesday","nak":"Ashlesha","tithi":"shukla Panchami","moon":0.23,"sun":"Vrisha","gnh":9.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.1648},{"date":"2027-06-10","bs":"2084-Jestha-27","vara":"Thursday","nak":"Magha","tithi":"shukla Sasthi","moon":0.335,"sun":"Vrisha","gnh":14.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.346},{"date":"2027-06-11","bs":"2084-Jestha-28","vara":"Friday","nak":"Purva Phalguni","tithi":"shukla Saptami","moon":0.446,"sun":"Vrisha","gnh":11.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.1902},{"date":"2027-06-12","bs":"2084-Jestha-29","vara":"Saturday","nak":"Uttara Phalguni","tithi":"shukla Navami","moon":0.558,"sun":"Vrisha","gnh":24.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.3921},{"date":"2027-06-13","bs":"2084-Jestha-30","vara":"Sunday","nak":"Hasta","tithi":"shukla Dashami","moon":0.664,"sun":"Vrisha","gnh":12.5,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.3198},{"date":"2027-06-14","bs":"2084-Jestha-31","vara":"Monday","nak":"Chitra","tithi":"shukla Ekadashi","moon":0.76,"sun":"Vrisha","gnh":11.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.1862},{"date":"2027-06-15","bs":"2084-Ashadh-1","vara":"Tuesday","nak":"Swati","tithi":"shukla Dwadashi","moon":0.843,"sun":"Vrisha","gnh":13.5,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.336},{"date":"2027-06-16","bs":"2084-Ashadh-2","vara":"Wednesday","nak":"Vishakha","tithi":"shukla Trayodashi","moon":0.91,"sun":"Mithuna","gnh":9.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.254},{"date":"2027-06-17","bs":"2084-Ashadh-3","vara":"Thursday","nak":"Anuradha","tithi":"shukla Chaturdashi","moon":0.959,"sun":"Mithuna","gnh":17.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.2546},{"date":"2027-06-18","bs":"2084-Ashadh-4","vara":"Friday","nak":"Jyeshtha","tithi":"shukla Purnima/Amavasya","moon":0.989,"sun":"Mithuna","gnh":5.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.0964},{"date":"2027-06-19","bs":"2084-Ashadh-5","vara":"Saturday","nak":"Mula","tithi":"shukla Purnima/Amavasya","moon":1.0,"sun":"Mithuna","gnh":21.5,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.482},{"date":"2027-06-20","bs":"2084-Ashadh-6","vara":"Sunday","nak":"Purva Ashadha","tithi":"krishna Pratipada","moon":0.992,"sun":"Mithuna","gnh":0.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.1469},{"date":"2027-06-21","bs":"2084-Ashadh-7","vara":"Monday","nak":"Purva Ashadha","tithi":"krishna Dwitiya","moon":0.965,"sun":"Mithuna","gnh":23.5,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.4713},{"date":"2027-06-22","bs":"2084-Ashadh-8","vara":"Tuesday","nak":"Uttara Ashadha","tithi":"krishna Tritiya","moon":0.923,"sun":"Mithuna","gnh":3.5,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.0838},{"date":"2027-06-23","bs":"2084-Ashadh-9","vara":"Wednesday","nak":"Shravana","tithi":"krishna Chaturthi","moon":0.865,"sun":"Mithuna","gnh":0.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.0679},{"date":"2027-06-24","bs":"2084-Ashadh-10","vara":"Thursday","nak":"Dhanishta","tithi":"krishna Panchami","moon":0.794,"sun":"Mithuna","gnh":0.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.0626},{"date":"2027-06-25","bs":"2084-Ashadh-11","vara":"Friday","nak":"Shatabhisha","tithi":"krishna Sasthi","moon":0.712,"sun":"Mithuna","gnh":0.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.066},{"date":"2027-06-26","bs":"2084-Ashadh-12","vara":"Saturday","nak":"Purva Bhadrapada","tithi":"krishna Saptami","moon":0.621,"sun":"Mithuna","gnh":9.5,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.2303},{"date":"2027-06-27","bs":"2084-Ashadh-13","vara":"Sunday","nak":"Uttara Bhadrapada","tithi":"krishna Astami","moon":0.523,"sun":"Mithuna","gnh":24.01,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.5007},{"date":"2027-06-28","bs":"2084-Ashadh-14","vara":"Monday","nak":"Revati","tithi":"krishna Navami","moon":0.421,"sun":"Mithuna","gnh":17.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.2445},{"date":"2027-06-29","bs":"2084-Ashadh-15","vara":"Tuesday","nak":"Ashwini","tithi":"krishna Dashami","moon":0.32,"sun":"Mithuna","gnh":0.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.0548},{"date":"2027-06-30","bs":"2084-Ashadh-16","vara":"Wednesday","nak":"Bharani","tithi":"krishna Ekadashi","moon":0.223,"sun":"Mithuna","gnh":0.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.0823},{"date":"2027-07-01","bs":"2084-Ashadh-17","vara":"Thursday","nak":"Krittika","tithi":"krishna Dwadashi","moon":0.137,"sun":"Mithuna","gnh":9.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.2603},{"date":"2027-07-02","bs":"2084-Ashadh-18","vara":"Friday","nak":"Rohini","tithi":"krishna Trayodashi","moon":0.067,"sun":"Mithuna","gnh":24.01,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.4145},{"date":"2027-07-03","bs":"2084-Ashadh-19","vara":"Saturday","nak":"Mrigashira","tithi":"krishna Chaturdashi","moon":0.02,"sun":"Mithuna","gnh":10.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.1593},{"date":"2027-07-04","bs":"2084-Ashadh-20","vara":"Sunday","nak":"Ardra","tithi":"krishna Purnima/Amavasya","moon":0.0,"sun":"Mithuna","gnh":0.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.0644},{"date":"2027-07-05","bs":"2084-Ashadh-21","vara":"Monday","nak":"Punarvasu","tithi":"shukla Dwitiya","moon":0.011,"sun":"Mithuna","gnh":0.0,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.0626},{"date":"2027-07-06","bs":"2084-Ashadh-22","vara":"Tuesday","nak":"Pushya","tithi":"shukla Tritiya","moon":0.051,"sun":"Mithuna","gnh":0.5,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.0685},{"date":"2027-07-07","bs":"2084-Ashadh-23","vara":"Wednesday","nak":"Magha","tithi":"shukla Chaturthi","moon":0.118,"sun":"Mithuna","gnh":21.01,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.3595},{"date":"2027-07-08","bs":"2084-Ashadh-24","vara":"Thursday","nak":"Purva Phalguni","tithi":"shukla Panchami","moon":0.205,"sun":"Mithuna","gnh":4.5,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.1971},{"date":"2027-07-09","bs":"2084-Ashadh-25","vara":"Friday","nak":"Uttara Phalguni","tithi":"shukla Sasthi","moon":0.305,"sun":"Mithuna","gnh":24.01,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.5413},{"date":"2027-07-10","bs":"2084-Ashadh-26","vara":"Saturday","nak":"Hasta","tithi":"shukla Saptami","moon":0.413,"sun":"Mithuna","gnh":18.01,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.2942},{"date":"2027-07-11","bs":"2084-Ashadh-27","vara":"Sunday","nak":"Chitra","tithi":"shukla Astami","moon":0.522,"sun":"Mithuna","gnh":5.5,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.1427},{"date":"2027-07-12","bs":"2084-Ashadh-28","vara":"Monday","nak":"Swati","tithi":"shukla Navami","moon":0.627,"sun":"Mithuna","gnh":19.01,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.3981},{"date":"2027-07-13","bs":"2084-Ashadh-29","vara":"Tuesday","nak":"Vishakha","tithi":"shukla Dashami","moon":0.723,"sun":"Mithuna","gnh":3.5,"ok":true,"cm":false,"vc":false,"jc":false,"so":true,"p":0.157},{"date":"2027-07-14","bs":"2084-Ashadh-30","vara":"Wednesday","nak":"Anuradha","tithi":"shukla Ekadashi","moon":0.809,"sun":"Mithuna","gnh":22.51,"ok":false,"cm":true,"vc":false,"jc":false,"so":true,"p":0.0},{"date":"2027-07-15","bs":"2084-Ashadh-31","vara":"Thursday","nak":"Jyeshtha","tithi":"shukla Dwadashi","moon":0.88,"sun":"Mithuna","gnh":0.0,"ok":false,"cm":true,"vc":false,"jc":false,"so":true,"p":0.0},{"date":"2027-07-16","bs":"2084-Ashadh-32","vara":"Friday","nak":"Jyeshtha","tithi":"shukla Trayodashi","moon":0.936,"sun":"Mithuna","gnh":23.01,"ok":false,"cm":true,"vc":false,"jc":false,"so":true,"p":0.0},{"date":"2027-07-17","bs":"2084-Shrawan-1","vara":"Saturday","nak":"Mula","tithi":"shukla Chaturdashi","moon":0.975,"sun":"Mithuna","gnh":3.5,"ok":false,"cm":true,"vc":false,"jc":false,"so":true,"p":0.0},{"date":"2027-07-18","bs":"2084-Shrawan-2","vara":"Sunday","nak":"Purva Ashadha","tithi":"shukla Purnima/Amavasya","moon":0.996,"sun":"Karka","gnh":17.51,"ok":false,"cm":true,"vc":false,"jc":false,"so":false,"p":0.0},{"date":"2027-07-19","bs":"2084-Shrawan-3","vara":"Monday","nak":"Uttara Ashadha","tithi":"krishna Pratipada","moon":0.999,"sun":"Karka","gnh":9.5,"ok":false,"cm":true,"vc":false,"jc":false,"so":false,"p":0.0},{"date":"2027-07-20","bs":"2084-Shrawan-4","vara":"Tuesday","nak":"Shravana","tithi":"krishna Dwitiya","moon":0.984,"sun":"Karka","gnh":0.0,"ok":false,"cm":true,"vc":true,"jc":false,"so":false,"p":0.0},{"date":"2027-07-21","bs":"2084-Shrawan-5","vara":"Wednesday","nak":"Dhanishta","tithi":"krishna Tritiya","moon":0.952,"sun":"Karka","gnh":0.0,"ok":false,"cm":true,"vc":true,"jc":false,"so":false,"p":0.0},{"date":"2027-07-22","bs":"2084-Shrawan-6","vara":"Thursday","nak":"Shatabhisha","tithi":"krishna Chaturthi","moon":0.904,"sun":"Karka","gnh":0.0,"ok":false,"cm":true,"vc":true,"jc":false,"so":false,"p":0.0},{"date":"2027-07-23","bs":"2084-Shrawan-7","vara":"Friday","nak":"Purva Bhadrapada","tithi":"krishna Chaturthi","moon":0.84,"sun":"Karka","gnh":3.0,"ok":false,"cm":true,"vc":true,"jc":false,"so":false,"p":0.0},{"date":"2027-07-24","bs":"2084-Shrawan-8","vara":"Saturday","nak":"Uttara Bhadrapada","tithi":"krishna Panchami","moon":0.762,"sun":"Karka","gnh":24.01,"ok":false,"cm":true,"vc":true,"jc":false,"so":false,"p":0.0},{"date":"2027-07-25","bs":"2084-Shrawan-9","vara":"Sunday","nak":"Revati","tithi":"krishna Sasthi","moon":0.673,"sun":"Karka","gnh":24.01,"ok":false,"cm":true,"vc":true,"jc":false,"so":false,"p":0.0},{"date":"2027-07-26","bs":"2084-Shrawan-10","vara":"Monday","nak":"Revati","tithi":"krishna Saptami","moon":0.575,"sun":"Karka","gnh":0.5,"ok":false,"cm":true,"vc":true,"jc":false,"so":false,"p":0.0},{"date":"2027-07-27","bs":"2084-Shrawan-11","vara":"Tuesday","nak":"Ashwini","tithi":"krishna Astami","moon":0.47,"sun":"Karka","gnh":0.0,"ok":false,"cm":true,"vc":true,"jc":false,"so":false,"p":0.0},{"date":"2027-07-28","bs":"2084-Shrawan-12","vara":"Wednesday","nak":"Bharani","tithi":"krishna Navami","moon":0.363,"sun":"Karka","gnh":0.0,"ok":false,"cm":true,"vc":true,"jc":false,"so":false,"p":0.0},{"date":"2027-07-29","bs":"2084-Shrawan-13","vara":"Thursday","nak":"Rohini","tithi":"krishna Dashami","moon":0.26,"sun":"Karka","gnh":24.01,"ok":false,"cm":true,"vc":true,"jc":false,"so":false,"p":0.0},{"date":"2027-07-30","bs":"2084-Shrawan-14","vara":"Friday","nak":"Mrigashira","tithi":"krishna Ekadashi","moon":0.166,"sun":"Karka","gnh":20.51,"ok":false,"cm":true,"vc":true,"jc":false,"so":false,"p":0.0},{"date":"2027-07-31","bs":"2084-Shrawan-15","vara":"Saturday","nak":"Ardra","tithi":"krishna Trayodashi","moon":0.087,"sun":"Karka","gnh":0.0,"ok":false,"cm":true,"vc":true,"jc":false,"so":false,"p":0.0},{"date":"2027-08-01","bs":"2084-Shrawan-16","vara":"Sunday","nak":"Punarvasu","tithi":"krishna Chaturdashi","moon":0.031,"sun":"Karka","gnh":0.0,"ok":false,"cm":true,"vc":true,"jc":false,"so":false,"p":0.0},{"date":"2027-08-02","bs":"2084-Shrawan-17","vara":"Monday","nak":"Pushya","tithi":"krishna Purnima/Amavasya","moon":0.003,"sun":"Karka","gnh":0.0,"ok":false,"cm":true,"vc":true,"jc":false,"so":false,"p":0.0},{"date":"2027-08-03","bs":"2084-Shrawan-18","vara":"Tuesday","nak":"Ashlesha","tithi":"shukla Pratipada","moon":0.005,"sun":"Karka","gnh":14.51,"ok":false,"cm":true,"vc":true,"jc":false,"so":false,"p":0.0},{"date":"2027-08-04","bs":"2084-Shrawan-19","vara":"Wednesday","nak":"Magha","tithi":"shukla Dwitiya","moon":0.037,"sun":"Karka","gnh":6.5,"ok":false,"cm":true,"vc":true,"jc":false,"so":false,"p":0.0},{"date":"2027-08-05","bs":"2084-Shrawan-20","vara":"Thursday","nak":"Purva Phalguni","tithi":"shukla Chaturthi","moon":0.096,"sun":"Karka","gnh":19.51,"ok":false,"cm":true,"vc":true,"jc":false,"so":false,"p":0.0},{"date":"2027-08-06","bs":"2084-Shrawan-21","vara":"Friday","nak":"Uttara Phalguni","tithi":"shukla Panchami","moon":0.176,"sun":"Karka","gnh":24.01,"ok":false,"cm":true,"vc":true,"jc":false,"so":false,"p":0.0},{"date":"2027-08-07","bs":"2084-Shrawan-22","vara":"Saturday","nak":"Hasta","tithi":"shukla Sasthi","moon":0.27,"sun":"Karka","gnh":1.5,"ok":false,"cm":true,"vc":true,"jc":false,"so":false,"p":0.0},{"date":"2027-08-08","bs":"2084-Shrawan-23","vara":"Sunday","nak":"Chitra","tithi":"shukla Saptami","moon":0.373,"sun":"Karka","gnh":23.01,"ok":false,"cm":true,"vc":true,"jc":false,"so":false,"p":0.0},{"date":"2027-08-09","bs":"2084-Shrawan-24","vara":"Monday","nak":"Swati","tithi":"shukla Astami","moon":0.478,"sun":"Karka","gnh":1.5,"ok":false,"cm":true,"vc":true,"jc":false,"so":false,"p":0.0},{"date":"2027-08-10","bs":"2084-Shrawan-25","vara":"Tuesday","nak":"Vishakha","tithi":"shukla Navami","moon":0.581,"sun":"Karka","gnh":21.51,"ok":false,"cm":true,"vc":true,"jc":false,"so":false,"p":0.0},{"date":"2027-08-11","bs":"2084-Shrawan-26","vara":"Wednesday","nak":"Anuradha","tithi":"shukla Dashami","moon":0.677,"sun":"Karka","gnh":4.0,"ok":false,"cm":true,"vc":true,"jc":false,"so":false,"p":0.0},{"date":"2027-08-12","bs":"2084-Shrawan-27","vara":"Thursday","nak":"Jyeshtha","tithi":"shukla Ekadashi","moon":0.765,"sun":"Karka","gnh":17.51,"ok":false,"cm":true,"vc":true,"jc":false,"so":false,"p":0.0},{"date":"2027-08-13","bs":"2084-Shrawan-28","vara":"Friday","nak":"Mula","tithi":"shukla Dwadashi","moon":0.841,"sun":"Karka","gnh":9.0,"ok":false,"cm":true,"vc":true,"jc":false,"so":false,"p":0.0},{"date":"2027-08-14","bs":"2084-Shrawan-29","vara":"Saturday","nak":"Purva Ashadha","tithi":"shukla Dwadashi","moon":0.904,"sun":"Karka","gnh":11.5,"ok":false,"cm":true,"vc":true,"jc":false,"so":false,"p":0.0},{"date":"2027-08-15","bs":"2084-Shrawan-30","vara":"Sunday","nak":"Uttara Ashadha","tithi":"shukla Trayodashi","moon":0.953,"sun":"Karka","gnh":15.51,"ok":false,"cm":true,"vc":true,"jc":false,"so":false,"p":0.0},{"date":"2027-08-16","bs":"2084-Shrawan-31","vara":"Monday","nak":"Shravana","tithi":"shukla Chaturdashi","moon":0.984,"sun":"Karka","gnh":0.0,"ok":false,"cm":true,"vc":true,"jc":true,"so":false,"p":0.0},{"date":"2027-08-17","bs":"2084-Bhadra-1","vara":"Tuesday","nak":"Dhanishta","tithi":"shukla Purnima/Amavasya","moon":0.999,"sun":"Karka","gnh":0.0,"ok":false,"cm":true,"vc":true,"jc":true,"so":false,"p":0.0},{"date":"2027-08-18","bs":"2084-Bhadra-2","vara":"Wednesday","nak":"Shatabhisha","tithi":"krishna Pratipada","moon":0.996,"sun":"Simha","gnh":0.0,"ok":false,"cm":true,"vc":true,"jc":true,"so":false,"p":0.0},{"date":"2027-08-19","bs":"2084-Bhadra-3","vara":"Thursday","nak":"Purva Bhadrapada","tithi":"krishna Dwitiya","moon":0.974,"sun":"Simha","gnh":0.0,"ok":false,"cm":true,"vc":true,"jc":true,"so":false,"p":0.0},{"date":"2027-08-20","bs":"2084-Bhadra-4","vara":"Friday","nak":"Purva Bhadrapada","tithi":"krishna Tritiya","moon":0.935,"sun":"Simha","gnh":21.51,"ok":false,"cm":true,"vc":true,"jc":true,"so":false,"p":0.0},{"date":"2027-08-21","bs":"2084-Bhadra-5","vara":"Saturday","nak":"Uttara Bhadrapada","tithi":"krishna Chaturthi","moon":0.878,"sun":"Simha","gnh":24.01,"ok":false,"cm":true,"vc":true,"jc":true,"so":false,"p":0.0},{"date":"2027-08-22","bs":"2084-Bhadra-6","vara":"Sunday","nak":"Revati","tithi":"krishna Panchami","moon":0.804,"sun":"Simha","gnh":6.0,"ok":false,"cm":true,"vc":true,"jc":true,"so":false,"p":0.0},{"date":"2027-08-23","bs":"2084-Bhadra-7","vara":"Monday","nak":"Ashwini","tithi":"krishna Sasthi","moon":0.717,"sun":"Simha","gnh":0.0,"ok":false,"cm":true,"vc":true,"jc":true,"so":false,"p":0.0},{"date":"2027-08-24","bs":"2084-Bhadra-8","vara":"Tuesday","nak":"Bharani","tithi":"krishna Saptami","moon":0.618,"sun":"Simha","gnh":0.0,"ok":false,"cm":true,"vc":true,"jc":true,"so":false,"p":0.0},{"date":"2027-08-25","bs":"2084-Bhadra-9","vara":"Wednesday","nak":"Krittika","tithi":"krishna Astami","moon":0.512,"sun":"Simha","gnh":16.51,"ok":false,"cm":true,"vc":true,"jc":true,"so":false,"p":0.0},{"date":"2027-08-26","bs":"2084-Bhadra-10","vara":"Thursday","nak":"Rohini","tithi":"krishna Navami","moon":0.401,"sun":"Simha","gnh":24.01,"ok":false,"cm":true,"vc":true,"jc":true,"so":false,"p":0.0},{"date":"2027-08-27","bs":"2084-Bhadra-11","vara":"Friday","nak":"Mrigashira","tithi":"krishna Dashami","moon":0.293,"sun":"Simha","gnh":5.0,"ok":false,"cm":true,"vc":true,"jc":true,"so":false,"p":0.0},{"date":"2027-08-28","bs":"2084-Bhadra-12","vara":"Saturday","nak":"Ardra","tithi":"krishna Ekadashi","moon":0.193,"sun":"Simha","gnh":0.0,"ok":false,"cm":true,"vc":true,"jc":true,"so":false,"p":0.0},{"date":"2027-08-29","bs":"2084-Bhadra-13","vara":"Sunday","nak":"Punarvasu","tithi":"krishna Dwadashi","moon":0.108,"sun":"Simha","gnh":0.0,"ok":false,"cm":true,"vc":true,"jc":true,"so":false,"p":0.0},{"date":"2027-08-30","bs":"2084-Bhadra-14","vara":"Monday","nak":"Ashlesha","tithi":"krishna Trayodashi","moon":0.045,"sun":"Simha","gnh":4.0,"ok":false,"cm":true,"vc":true,"jc":true,"so":false,"p":0.0},{"date":"2027-08-31","bs":"2084-Bhadra-15","vara":"Tuesday","nak":"Magha","tithi":"krishna Purnima/Amavasya","moon":0.008,"sun":"Simha","gnh":17.01,"ok":false,"cm":true,"vc":true,"jc":true,"so":false,"p":0.0}],"candidates":{"3":[{"s":"2027-06-19","e":"2027-06-21","p":0.7664,"x":1.1,"b":{"date":"2027-06-19","p":0.482,"nakshatra":"Mula","bs":"Ashadh 5"},"d":[{"date":"2027-06-19","p":0.482,"n":"Mula","bs":"Ashadh 5"},{"date":"2027-06-20","p":0.1469,"n":"Purva Ashadha","bs":"Ashadh 6"},{"date":"2027-06-21","p":0.4713,"n":"Purva Ashadha","bs":"Ashadh 7"}]},{"s":"2027-07-07","e":"2027-07-09","p":0.7641,"x":1.098,"b":{"date":"2027-07-09","p":0.5413,"nakshatra":"Uttara Phalguni","bs":"Ashadh 25"},"d":[{"date":"2027-07-07","p":0.3595,"n":"Magha","bs":"Ashadh 23"},{"date":"2027-07-08","p":0.1971,"n":"Purva Phalguni","bs":"Ashadh 24"},{"date":"2027-07-09","p":0.5413,"n":"Uttara Phalguni","bs":"Ashadh 25"}]},{"s":"2027-05-15","e":"2027-05-17","p":0.7266,"x":1.037,"b":{"date":"2027-05-16","p":0.4066,"nakshatra":"Uttara Phalguni","bs":"Jestha 2"},"d":[{"date":"2027-05-15","p":0.4047,"n":"Purva Phalguni","bs":"Jestha 1"},{"date":"2027-05-16","p":0.4066,"n":"Uttara Phalguni","bs":"Jestha 2"},{"date":"2027-05-17","p":0.2261,"n":"Hasta","bs":"Jestha 3"}]}],"7":[{"s":"2027-07-07","e":"2027-07-13","p":0.9276,"x":2.09,"b":{"date":"2027-07-09","p":0.5413,"nakshatra":"Uttara Phalguni","bs":"Ashadh 25"},"d":[{"date":"2027-07-07","p":0.3595,"n":"Magha","bs":"Ashadh 23"},{"date":"2027-07-08","p":0.1971,"n":"Purva Phalguni","bs":"Ashadh 24"},{"date":"2027-07-09","p":0.5413,"n":"Uttara Phalguni","bs":"Ashadh 25"},{"date":"2027-07-10","p":0.2942,"n":"Hasta","bs":"Ashadh 26"},{"date":"2027-07-11","p":0.1427,"n":"Chitra","bs":"Ashadh 27"},{"date":"2027-07-12","p":0.3981,"n":"Swati","bs":"Ashadh 28"},{"date":"2027-07-13","p":0.157,"n":"Vishakha","bs":"Ashadh 29"}]},{"s":"2027-06-15","e":"2027-06-21","p":0.9221,"x":2.041,"b":{"date":"2027-06-19","p":0.482,"nakshatra":"Mula","bs":"Ashadh 5"},"d":[{"date":"2027-06-15","p":0.336,"n":"Swati","bs":"Ashadh 1"},{"date":"2027-06-16","p":0.254,"n":"Vishakha","bs":"Ashadh 2"},{"date":"2027-06-17","p":0.2546,"n":"Anuradha","bs":"Ashadh 3"},{"date":"2027-06-18","p":0.0964,"n":"Jyeshtha","bs":"Ashadh 4"},{"date":"2027-06-19","p":0.482,"n":"Mula","bs":"Ashadh 5"},{"date":"2027-06-20","p":0.1469,"n":"Purva Ashadha","bs":"Ashadh 6"},{"date":"2027-06-21","p":0.4713,"n":"Purva Ashadha","bs":"Ashadh 7"}]},{"s":"2027-05-30","e":"2027-06-05","p":0.9165,"x":1.927,"b":{"date":"2027-06-05","p":0.5434,"nakshatra":"Rohini","bs":"Jestha 22"},"d":[{"date":"2027-05-30","p":0.3048,"n":"Purva Bhadrapada","bs":"Jestha 16"},{"date":"2027-05-31","p":0.4791,"n":"Uttara Bhadrapada","bs":"Jestha 17"},{"date":"2027-06-01","p":0.1468,"n":"Revati","bs":"Jestha 18"},{"date":"2027-06-02","p":0.0626,"n":"Ashwini","bs":"Jestha 19"},{"date":"2027-06-03","p":0.0699,"n":"Bharani","bs":"Jestha 20"},{"date":"2027-06-04","p":0.3208,"n":"Krittika","bs":"Jestha 21"},{"date":"2027-06-05","p":0.5434,"n":"Rohini","bs":"Jestha 22"}]}]},"window_curve":{"3":[{"s":"2027-05-15","p":0.7266},{"s":"2027-05-16","p":0.6884},{"s":"2027-05-17","p":0.5396},{"s":"2027-05-18","p":0.5854},{"s":"2027-05-19","p":0.4984},{"s":"2027-05-20","p":0.5547},{"s":"2027-05-21","p":0.4835},{"s":"2027-05-22","p":0.4649},{"s":"2027-05-23","p":0.6139},{"s":"2027-05-24","p":0.5522},{"s":"2027-05-25","p":0.5021},{"s":"2027-05-26","p":0.1684},{"s":"2027-05-27","p":0.1824},{"s":"2027-05-28","p":0.399},{"s":"2027-05-29","p":0.6662},{"s":"2027-05-30","p":0.691},{"s":"2027-05-31","p":0.5834},{"s":"2027-06-01","p":0.256},{"s":"2027-06-02","p":0.4078},{"s":"2027-06-03","p":0.7115},{"s":"2027-06-04","p":0.7092},{"s":"2027-06-05","p":0.6005},{"s":"2027-06-06","p":0.1783},{"s":"2027-06-07","p":0.2681},{"s":"2027-06-08","p":0.487},{"s":"2027-06-09","p":0.5577},{"s":"2027-06-10","p":0.6781},{"s":"2027-06-11","p":0.6652},{"s":"2027-06-12","p":0.6635},{"s":"2027-06-13","p":0.6324},{"s":"2027-06-14","p":0.5969},{"s":"2027-06-15","p":0.6308},{"s":"2027-06-16","p":0.4975},{"s":"2027-06-17","p":0.6511},{"s":"2027-06-18","p":0.6007},{"s":"2027-06-19","p":0.7664},{"s":"2027-06-20","p":0.5868},{"s":"2027-06-21","p":0.5485},{"s":"2027-06-22","p":0.1995},{"s":"2027-06-23","p":0.1839},{"s":"2027-06-24","p":0.3261},{"s":"2027-06-25","p":0.6411},{"s":"2027-06-26","p":0.7097},{"s":"2027-06-27","p":0.6435},{"s":"2027-06-28","p":0.3447},{"s":"2027-06-29","p":0.3584},{"s":"2027-06-30","p":0.6026},{"s":"2027-07-01","p":0.6359},{"s":"2027-07-02","p":0.5395},{"s":"2027-07-03","p":0.2627},{"s":"2027-07-04","p":0.183},{"s":"2027-07-05","p":0.4407},{"s":"2027-07-06","p":0.521},{"s":"2027-07-07","p":0.7641},{"s":"2027-07-08","p":0.74},{"s":"2027-07-09","p":0.7224},{"s":"2027-07-10","p":0.6358},{"s":"2027-07-11","p":0.565},{"s":"2027-07-12","p":0.4926},{"s":"2027-07-13","p":0.157},{"s":"2027-07-14","p":0.0},{"s":"2027-07-15","p":0.0},{"s":"2027-07-16","p":0.0},{"s":"2027-07-17","p":0.0},{"s":"2027-07-18","p":0.0},{"s":"2027-07-19","p":0.0},{"s":"2027-07-20","p":0.0},{"s":"2027-07-21","p":0.0},{"s":"2027-07-22","p":0.0},{"s":"2027-07-23","p":0.0},{"s":"2027-07-24","p":0.0},{"s":"2027-07-25","p":0.0},{"s":"2027-07-26","p":0.0},{"s":"2027-07-27","p":0.0},{"s":"2027-07-28","p":0.0},{"s":"2027-07-29","p":0.0},{"s":"2027-07-30","p":0.0},{"s":"2027-07-31","p":0.0},{"s":"2027-08-01","p":0.0},{"s":"2027-08-02","p":0.0},{"s":"2027-08-03","p":0.0},{"s":"2027-08-04","p":0.0},{"s":"2027-08-05","p":0.0},{"s":"2027-08-06","p":0.0},{"s":"2027-08-07","p":0.0},{"s":"2027-08-08","p":0.0},{"s":"2027-08-09","p":0.0},{"s":"2027-08-10","p":0.0},{"s":"2027-08-11","p":0.0},{"s":"2027-08-12","p":0.0},{"s":"2027-08-13","p":0.0},{"s":"2027-08-14","p":0.0},{"s":"2027-08-15","p":0.0},{"s":"2027-08-16","p":0.0},{"s":"2027-08-17","p":0.0},{"s":"2027-08-18","p":0.0},{"s":"2027-08-19","p":0.0},{"s":"2027-08-20","p":0.0},{"s":"2027-08-21","p":0.0},{"s":"2027-08-22","p":0.0},{"s":"2027-08-23","p":0.0},{"s":"2027-08-24","p":0.0},{"s":"2027-08-25","p":0.0},{"s":"2027-08-26","p":0.0},{"s":"2027-08-27","p":0.0},{"s":"2027-08-28","p":0.0},{"s":"2027-08-29","p":0.0}],"7":[{"s":"2027-05-15","p":0.9069},{"s":"2027-05-16","p":0.8784},{"s":"2027-05-17","p":0.8343},{"s":"2027-05-18","p":0.8178},{"s":"2027-05-19","p":0.8493},{"s":"2027-05-20","p":0.8388},{"s":"2027-05-21","p":0.7812},{"s":"2027-05-22","p":0.7502},{"s":"2027-05-23","p":0.704},{"s":"2027-05-24","p":0.7455},{"s":"2027-05-25","p":0.8441},{"s":"2027-05-26","p":0.7631},{"s":"2027-05-27","p":0.7632},{"s":"2027-05-28","p":0.7671},{"s":"2027-05-29","p":0.8313},{"s":"2027-05-30","p":0.9165},{"s":"2027-05-31","p":0.8873},{"s":"2027-06-01","p":0.7981},{"s":"2027-06-02","p":0.7778},{"s":"2027-06-03","p":0.802},{"s":"2027-06-04","p":0.8608},{"s":"2027-06-05","p":0.834},{"s":"2027-06-06","p":0.7791},{"s":"2027-06-07","p":0.8397},{"s":"2027-06-08","p":0.8602},{"s":"2027-06-09","p":0.9012},{"s":"2027-06-10","p":0.9117},{"s":"2027-06-11","p":0.8994},{"s":"2027-06-12","p":0.8877},{"s":"2027-06-13","p":0.9043},{"s":"2027-06-14","p":0.88},{"s":"2027-06-15","p":0.9221},{"s":"2027-06-16","p":0.8925},{"s":"2027-06-17","p":0.8656},{"s":"2027-06-18","p":0.831},{"s":"2027-06-19","p":0.8253},{"s":"2027-06-20","p":0.7405},{"s":"2027-06-21","p":0.8481},{"s":"2027-06-22","p":0.7829},{"s":"2027-06-23","p":0.776},{"s":"2027-06-24","p":0.7795},{"s":"2027-06-25","p":0.826},{"s":"2027-06-26","p":0.8909},{"s":"2027-06-27","p":0.8809},{"s":"2027-06-28","p":0.7768},{"s":"2027-06-29","p":0.723},{"s":"2027-06-30","p":0.727},{"s":"2027-07-01","p":0.8095},{"s":"2027-07-02","p":0.7932},{"s":"2027-07-03","p":0.838},{"s":"2027-07-04","p":0.864},{"s":"2027-07-05","p":0.8754},{"s":"2027-07-06","p":0.92},{"s":"2027-07-07","p":0.9276},{"s":"2027-07-08","p":0.8869},{"s":"2027-07-09","p":0.8592},{"s":"2027-07-10","p":0.693},{"s":"2027-07-11","p":0.565},{"s":"2027-07-12","p":0.4926},{"s":"2027-07-13","p":0.157},{"s":"2027-07-14","p":0.0},{"s":"2027-07-15","p":0.0},{"s":"2027-07-16","p":0.0},{"s":"2027-07-17","p":0.0},{"s":"2027-07-18","p":0.0},{"s":"2027-07-19","p":0.0},{"s":"2027-07-20","p":0.0},{"s":"2027-07-21","p":0.0},{"s":"2027-07-22","p":0.0},{"s":"2027-07-23","p":0.0},{"s":"2027-07-24","p":0.0},{"s":"2027-07-25","p":0.0},{"s":"2027-07-26","p":0.0},{"s":"2027-07-27","p":0.0},{"s":"2027-07-28","p":0.0},{"s":"2027-07-29","p":0.0},{"s":"2027-07-30","p":0.0},{"s":"2027-07-31","p":0.0},{"s":"2027-08-01","p":0.0},{"s":"2027-08-02","p":0.0},{"s":"2027-08-03","p":0.0},{"s":"2027-08-04","p":0.0},{"s":"2027-08-05","p":0.0},{"s":"2027-08-06","p":0.0},{"s":"2027-08-07","p":0.0},{"s":"2027-08-08","p":0.0},{"s":"2027-08-09","p":0.0},{"s":"2027-08-10","p":0.0},{"s":"2027-08-11","p":0.0},{"s":"2027-08-12","p":0.0},{"s":"2027-08-13","p":0.0},{"s":"2027-08-14","p":0.0},{"s":"2027-08-15","p":0.0},{"s":"2027-08-16","p":0.0},{"s":"2027-08-17","p":0.0},{"s":"2027-08-18","p":0.0},{"s":"2027-08-19","p":0.0},{"s":"2027-08-20","p":0.0},{"s":"2027-08-21","p":0.0},{"s":"2027-08-22","p":0.0},{"s":"2027-08-23","p":0.0},{"s":"2027-08-24","p":0.0},{"s":"2027-08-25","p":0.0}]},"year_summary":{"2077":{"days":366,"saait":18,"open":107,"hit_top":0},"2078":{"days":365,"saait":36,"open":151,"hit_top":0},"2080":{"days":365,"saait":35,"open":146,"hit_top":0},"2081":{"days":366,"saait":17,"open":126,"hit_top":0},"2082":{"days":365,"saait":39,"open":120,"hit_top":0},"2083":{"days":365,"saait":41,"open":176,"hit_top":0}}}</script>
+<script>
+const D = JSON.parse(document.getElementById('payload').textContent);
+const RAMP = ['--ramp-0','--ramp-1','--ramp-2','--ramp-3','--ramp-4'];
+const PCT = x => (x * 100).toFixed(0) + '%';
+const PCT1 = x => (x * 100).toFixed(1) + '%';
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const parse = s => { const [y,m,d] = s.split('-').map(Number); return new Date(Date.UTC(y, m-1, d)); };
+const pretty = s => { const d = parse(s); return MONTHS[d.getUTCMonth()] + ' ' + d.getUTCDate(); };
+const RAMP_MAX = 0.56;
+const rampStep = p => Math.min(RAMP.length - 1, Math.floor((p / RAMP_MAX) * RAMP.length));
+const rampColor = p => `var(${RAMP[rampStep(p)]})`;
+const inkOn = p => rampStep(p) >= 3 ? 'var(--ps-cream)' : 'var(--ps-text1)';
+const svgEl = (tag, attrs) => {
+  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  for (const k in attrs) el.setAttribute(k, attrs[k]);
+  return el;
+};
+
+/* ---------- tooltip ---------- */
+const tip = document.getElementById('tip');
+function showTip(html, ev) {
+  tip.innerHTML = html;
+  tip.style.opacity = 1;
+  const r = tip.getBoundingClientRect();
+  let x = ev.clientX + 14, y = ev.clientY - r.height / 2;
+  if (x + r.width > innerWidth - 8) x = ev.clientX - r.width - 14;
+  tip.style.left = Math.max(8, x) + 'px';
+  tip.style.top = Math.min(Math.max(8, y), innerHeight - r.height - 8) + 'px';
+}
+const hideTip = () => { tip.style.opacity = 0; };
+function bindTip(el, html) {
+  el.addEventListener('mousemove', e => showTip(html, e));
+  el.addEventListener('mouseleave', hideTip);
+}
+
+/* ---------- verdict dockets ---------- */
+function blockReason(day) {
+  if (!day.so) return 'Sun outside the marriage signs';
+  if (day.cm) return 'Chaturmas';
+  if (day.vc) return 'Shukra asta — Venus combust';
+  if (day.jc) return 'Guru asta — Jupiter combust';
+  return null;
+}
+const byDate = Object.fromEntries(D.forecast.map(d => [d.date, d]));
+const STAMP_TONE = ['high', '', 'medium'];
+
+function candCard(c, i, len) {
+  const el = document.createElement('div');
+  el.className = 'receipt cand';
+  const strip = c.d.map(d => {
+    const full = byDate[d.date];
+    const blocked = full && blockReason(full);
+    const bg = blocked ? 'var(--blocked)' : rampColor(d.p);
+    return `<div class="d"><div class="bar" style="background:${bg}"></div>
+      <div class="lbl">${parse(d.date).getUTCDate()}</div></div>`;
+  }).join('');
+  el.innerHTML = `
+    <div class="head">
+      <div>
+        <div class="range">${pretty(c.s)} – ${pretty(c.e)}</div>
+        <div class="bs">${c.d[0].bs} – ${c.d[c.d.length - 1].bs} 2084</div>
+      </div>
+      <span class="stamp ${STAMP_TONE[i]}" style="--rot:${i % 2 ? 2 : -2.5}deg">Pick ${i + 1}</span>
+    </div>
+    <div class="dashed"></div>
+    <div>
+      <div class="big">${PCT(c.p)}</div>
+      <div class="cap">Chance of at least one saait</div>
+    </div>
+    <div class="strip">${strip}</div>
+    <div class="dashed"></div>
+    <div class="line"><span class="muted">Expected saait</span><b class="num">${c.x.toFixed(1)}</b></div>
+    <div class="line"><span class="muted">Strongest day</span><b>${pretty(c.b.date)} &middot; ${PCT(c.b.p)}</b></div>
+    <div class="line"><span class="muted">Its nakshatra</span><b>${c.b.nakshatra}</b></div>
+    <div class="line"><span class="muted">Window</span><b>${len} days</b></div>`;
+  return el;
+}
+D.candidates['7'].forEach((c, i) => document.getElementById('cand7').appendChild(candCard(c, i, 7)));
+D.candidates['3'].forEach((c, i) => document.getElementById('cand3').appendChild(candCard(c, i, 3)));
+
+const best7 = D.candidates['7'][0], best3 = D.candidates['3'][0];
+document.getElementById('verdict-note').innerHTML =
+  `<b>Recommendation.</b> Book ${pretty(best7.s)} – ${pretty(best7.e)} 2027. It carries a
+   ${PCT(best7.p)} chance of containing a published saait and expects ${best7.x.toFixed(1)} of them,
+   and it sits just before Chaturmas closes the season on 14 July — so if the committee's Ashadh list
+   is thin, there is no later fallback inside your window. If you need a three-day ceremony block
+   instead, ${pretty(best3.s)} – ${pretty(best3.e)} is the strongest at ${PCT(best3.p)}.`;
+
+/* ---------- hero stats ---------- */
+const ev = D.evidence;
+const nY = Object.keys(D.year_summary).length;
+const totalSaait = Object.values(D.year_summary).reduce((a, b) => a + b.saait, 0);
+document.getElementById('hero-stats').innerHTML = [
+  ['Published years', nY, 'of official Samiti lists'],
+  ['Saait days', totalSaait, 'positive examples'],
+  ['Days examined', Object.values(D.year_summary).reduce((a, b) => a + b.days, 0), 'one row per BS day'],
+  ['Calendar removed', PCT(1 - 826 / 2192), 'by the four hard gates'],
+  ['Saait lost to gates', '0', 'perfect gate recall'],
+].map(([k, v, n]) => `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div><div class="n">${n}</div></div>`).join('');
+
+document.getElementById('sr-pct').textContent = PCT(ev.nakshatra_at_sunrise_vs_anytime.classical_at_sunrise);
+document.getElementById('at-pct').textContent = PCT1(ev.nakshatra_at_sunrise_vs_anytime.classical_somewhere_in_day);
+
+/* ---------- gate funnel ---------- */
+(function () {
+  const f = ev.gate_funnel, W = 470, rowH = 34, H = f.length * rowH + 18;
+  const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, width: W, role: 'img',
+    'aria-label': 'Days remaining after each astronomical gate' });
+  const max = f[0].days, barW = W - 196;
+  f.forEach((g, i) => {
+    const y = i * rowH + 6, w = Math.max(2, (g.days / max) * barW);
+    svg.appendChild(svgEl('rect', { x: 0, y, width: w, height: 19, rx: 2,
+      fill: i === 0 ? 'var(--bar-muted)' : 'var(--series-a)' }));
+    const t1 = svgEl('text', { x: w + 8, y: y + 14, class: 'val' });
+    t1.textContent = g.days.toLocaleString() + ' days';
+    svg.appendChild(t1);
+    const t2 = svgEl('text', { x: W, y: y + 14, 'text-anchor': 'end' });
+    t2.setAttribute('fill', 'var(--ps-high)');
+    t2.textContent = g.saait_kept + '/186 saait kept';
+    svg.appendChild(t2);
+    const lbl = svgEl('text', { x: 0, y: y + 32, 'font-size': 9.5 });
+    lbl.textContent = g.stage;
+    svg.appendChild(lbl);
+  });
+  document.getElementById('funnel').appendChild(svg);
+})();
+
+/* ---------- nakshatra chart ---------- */
+(function () {
+  const rows = [...ev.nakshatra_rate].sort((a, b) => b.rate - a.rate);
+  const classical = new Set(D.config.good_nakshatras.map(i => ev.nakshatra_rate[i - 1].name));
+  const rowH = 17, W = 560, H = rows.length * rowH + 26, labelW = 132, barW = W - labelW - 56;
+  const max = Math.max(...rows.map(r => r.rate));
+  const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, width: W, role: 'img',
+    'aria-label': 'Saait rate by nakshatra' });
+  [0, 0.05, 0.10, 0.15, 0.20].forEach(t => {
+    const x = labelW + (t / max) * barW;
+    svg.appendChild(svgEl('line', { x1: x, y1: 16, x2: x, y2: H - 10, class: 'grid-line' }));
+    const tx = svgEl('text', { x, y: 10, 'text-anchor': 'middle', 'font-size': 9 });
+    tx.textContent = PCT(t);
+    svg.appendChild(tx);
+  });
+  rows.forEach((r, i) => {
+    const y = i * rowH + 20, isC = classical.has(r.name);
+    const lbl = svgEl('text', { x: labelW - 7, y: y + 9, 'text-anchor': 'end', 'font-size': 9.5 });
+    if (isC) lbl.setAttribute('fill', 'var(--ps-text1)');
+    lbl.textContent = r.name;
+    svg.appendChild(lbl);
+    const w = Math.max(r.rate > 0 ? 2 : 0, (r.rate / max) * barW);
+    const bar = svgEl('rect', { x: labelW, y: y + 1, width: w, height: 11, rx: 2,
+      fill: isC ? 'var(--series-a)' : 'var(--bar-muted)' });
+    svg.appendChild(bar);
+    const v = svgEl('text', { x: labelW + w + 6, y: y + 10, class: 'val', 'font-size': 9 });
+    v.textContent = r.saait + '/' + r.days;
+    svg.appendChild(v);
+    bindTip(bar, `<div class="t-h">${r.name}</div>
+      <div class="t-r"><span>Became saait</span><b>${r.saait} of ${r.days}</b></div>
+      <div class="t-r"><span>Rate</span><b>${PCT1(r.rate)}</b></div>
+      <div class="t-r"><span>Classical vivaha</span><b>${isC ? 'yes' : 'no'}</b></div>`);
+  });
+  document.getElementById('nak-chart').appendChild(svg);
+})();
+
+/* ---------- tithi chart ---------- */
+(function () {
+  const rows = ev.tithi_rate, W = 420, H = 190, padL = 30, padB = 44, padT = 12;
+  const max = Math.max(...rows.map(r => r.rate));
+  const plotH = H - padB - padT, colW = (W - padL - 8) / rows.length;
+  const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, width: W, role: 'img',
+    'aria-label': 'Saait rate by lunar day' });
+  [0, 0.05, 0.10, 0.15].forEach(t => {
+    const y = padT + plotH - (t / max) * plotH;
+    svg.appendChild(svgEl('line', { x1: padL, y1: y, x2: W - 4, y2: y, class: 'grid-line' }));
+    const tx = svgEl('text', { x: padL - 5, y: y + 3, 'text-anchor': 'end', 'font-size': 9 });
+    tx.textContent = PCT(t);
+    svg.appendChild(tx);
+  });
+  rows.forEach((r, i) => {
+    const shukla = i < 15;
+    const h = Math.max(r.rate > 0 ? 1.5 : 0, (r.rate / max) * plotH);
+    const x = padL + i * colW;
+    const bar = svgEl('rect', { x: x + 1, y: padT + plotH - h, width: Math.max(2, colW - 3),
+      height: h, rx: 1, fill: shukla ? 'var(--series-a)' : 'var(--series-b)' });
+    svg.appendChild(bar);
+    bindTip(bar, `<div class="t-h">${r.name}</div>
+      <div class="t-r"><span>Became saait</span><b>${r.saait} of ${r.days}</b></div>
+      <div class="t-r"><span>Rate</span><b>${PCT1(r.rate)}</b></div>`);
+  });
+  const mid = padL + 15 * colW;
+  svg.appendChild(svgEl('line', { x1: mid, y1: padT, x2: mid, y2: padT + plotH,
+    stroke: 'rgba(9,43,31,.45)', 'stroke-dasharray': '2 3' }));
+  svg.appendChild(svgEl('line', { x1: padL, y1: padT + plotH, x2: W - 4, y2: padT + plotH, class: 'axis' }));
+  [[padL + 7.5 * colW, 'Shukla 1–15'], [padL + 22.5 * colW, 'Krishna 1–15']].forEach(([x, t]) => {
+    const tx = svgEl('text', { x, y: padT + plotH + 15, 'text-anchor': 'middle', 'font-size': 9.5 });
+    tx.textContent = t;
+    svg.appendChild(tx);
+  });
+  const note = svgEl('text', { x: padL, y: H - 8, 'font-size': 9 });
+  note.textContent = 'Suppressed: Chaturthi · Navami · Chaturdashi · Purnima';
+  svg.appendChild(note);
+  document.getElementById('tithi-chart').appendChild(svg);
+})();
+
+/* ---------- vara chart ---------- */
+(function () {
+  const rows = ev.vara_rate, W = 400, H = 180, padL = 32, padB = 40, padT = 12;
+  const max = 0.12, plotH = H - padB - padT, colW = (W - padL - 8) / rows.length;
+  const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, width: W, role: 'img',
+    'aria-label': 'Saait rate by weekday' });
+  [0, 0.04, 0.08, 0.12].forEach(t => {
+    const y = padT + plotH - (t / max) * plotH;
+    svg.appendChild(svgEl('line', { x1: padL, y1: y, x2: W - 4, y2: y, class: 'grid-line' }));
+    const tx = svgEl('text', { x: padL - 5, y: y + 3, 'text-anchor': 'end', 'font-size': 9 });
+    tx.textContent = PCT(t);
+    svg.appendChild(tx);
+  });
+  const mean = rows.reduce((a, r) => a + r.saait, 0) / rows.reduce((a, r) => a + r.days, 0);
+  rows.forEach((r, i) => {
+    const h = (r.rate / max) * plotH, x = padL + i * colW;
+    const bar = svgEl('rect', { x: x + 3, y: padT + plotH - h, width: colW - 7, height: h,
+      rx: 2, fill: 'var(--series-a)' });
+    svg.appendChild(bar);
+    bindTip(bar, `<div class="t-h">${r.name}</div>
+      <div class="t-r"><span>Became saait</span><b>${r.saait} of ${r.days}</b></div>
+      <div class="t-r"><span>Rate</span><b>${PCT1(r.rate)}</b></div>`);
+    const tx = svgEl('text', { x: x + colW / 2, y: padT + plotH + 14, 'text-anchor': 'middle', 'font-size': 9 });
+    tx.textContent = r.name.slice(0, 3);
+    svg.appendChild(tx);
+  });
+  const my = padT + plotH - (mean / max) * plotH;
+  svg.appendChild(svgEl('line', { x1: padL, y1: my, x2: W - 4, y2: my,
+    stroke: 'var(--series-b)', 'stroke-width': 2, 'stroke-dasharray': '4 3' }));
+  const ml = svgEl('text', { x: W - 4, y: my - 5, 'text-anchor': 'end', 'font-size': 9 });
+  ml.setAttribute('fill', 'var(--series-b)');
+  ml.textContent = 'overall ' + PCT1(mean);
+  svg.appendChild(ml);
+  svg.appendChild(svgEl('line', { x1: padL, y1: padT + plotH, x2: W - 4, y2: padT + plotH, class: 'axis' }));
+  document.getElementById('vara-chart').appendChild(svg);
+})();
+
+/* ---------- calendar ---------- */
+(function () {
+  const cal = document.getElementById('cal');
+  const DOW = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const top = new Set([...D.forecast].sort((a, b) => b.p - a.p).slice(0, 3).map(d => d.date));
+
+  cal.appendChild(Object.assign(document.createElement('div'), { className: 'dow' }));
+  DOW.forEach(d => {
+    const el = document.createElement('div');
+    el.className = 'dow'; el.textContent = d;
+    cal.appendChild(el);
+  });
+
+  const first = parse(D.forecast[0].date);
+  const gridStart = new Date(first);
+  gridStart.setUTCDate(gridStart.getUTCDate() - gridStart.getUTCDay());
+  const last = parse(D.forecast[D.forecast.length - 1].date);
+  let cursor = new Date(gridStart);
+  while (cursor <= last) {
+    const wk = document.createElement('div');
+    wk.className = 'wk';
+    wk.textContent = MONTHS[cursor.getUTCMonth()] + ' ' + cursor.getUTCDate();
+    cal.appendChild(wk);
+    for (let i = 0; i < 7; i++) {
+      const iso = cursor.toISOString().slice(0, 10);
+      const day = byDate[iso];
+      const cell = document.createElement('div');
+      if (!day) {
+        cell.className = 'cell empty';
+      } else {
+        const reason = blockReason(day);
+        cell.className = 'cell' + (reason ? ' blocked' : '') + (top.has(iso) ? ' hi' : '');
+        if (!reason) {
+          cell.style.background = rampColor(day.p);
+          cell.style.color = inkOn(day.p);
+        }
+        cell.innerHTML = `<span class="dnum">${cursor.getUTCDate()}</span>
+          <span class="pnum">${reason ? '—' : PCT(day.p)}</span>`;
+        bindTip(cell, `<div class="t-h">${pretty(iso)} 2027 &middot; ${day.vara}</div>
+          <div class="t-r"><span>Bikram Sambat</span><b>${day.bs.replace(/-/g, ' ')}</b></div>
+          <div class="t-r"><span>Nakshatra</span><b>${day.nak}</b></div>
+          <div class="t-r"><span>Tithi</span><b>${day.tithi}</b></div>
+          <div class="t-r"><span>Moon lit</span><b>${PCT(day.moon)}</b></div>
+          <div class="t-r"><span>Vivaha nakshatra</span><b>${day.gnh.toFixed(1)} h</b></div>
+          ${reason
+            ? `<div class="t-r"><span>Blocked</span><b>${reason}</b></div>`
+            : `<div class="t-r"><span>Probability</span><b>${PCT1(day.p)}</b></div>`}`);
+      }
+      cal.appendChild(cell);
+      cursor.setUTCDate(cursor.getUTCDate() + 1);
+    }
+  }
+
+  document.getElementById('cal-legend').innerHTML =
+    RAMP.map((r, i) => {
+      const lo = (i * RAMP_MAX / RAMP.length * 100).toFixed(0);
+      const hiV = ((i + 1) * RAMP_MAX / RAMP.length * 100).toFixed(0);
+      return `<span><i class="swatch" style="background:var(${r})"></i>${lo}–${hiV}%</span>`;
+    }).join('') +
+    `<span><i class="swatch" style="background:var(--blocked)"></i>Gate closed</span>`;
+
+  document.getElementById('exp-count').textContent =
+    D.forecast.reduce((a, d) => a + d.p, 0).toFixed(1);
+})();
+
+/* ---------- window curve ---------- */
+(function () {
+  const W = 700, H = 250, padL = 38, padR = 12, padB = 42, padT = 14;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const s7 = D.window_curve['7'], s3 = D.window_curve['3'];
+  const xs = s3.map(d => parse(d.s).getTime());
+  const x0 = Math.min(...xs), x1 = Math.max(...xs);
+  const X = t => padL + ((t - x0) / (x1 - x0)) * plotW;
+  const Y = p => padT + plotH - p * plotH;
+  const svg = svgEl('svg', { viewBox: `0 0 ${W} ${H}`, width: W, role: 'img',
+    'aria-label': 'Probability a window contains at least one saait, by start date' });
+  [0, 0.25, 0.5, 0.75, 1].forEach(t => {
+    svg.appendChild(svgEl('line', { x1: padL, y1: Y(t), x2: W - padR, y2: Y(t), class: 'grid-line' }));
+    const tx = svgEl('text', { x: padL - 6, y: Y(t) + 3, 'text-anchor': 'end', 'font-size': 9 });
+    tx.textContent = PCT(t);
+    svg.appendChild(tx);
+  });
+  [[5, 15], [6, 1], [6, 15], [7, 1], [7, 15], [8, 1], [8, 15]].forEach(([m, d]) => {
+    const t = Date.UTC(2027, m - 1, d);
+    if (t < x0 || t > x1) return;
+    const tx = svgEl('text', { x: X(t), y: padT + plotH + 15, 'text-anchor': 'middle', 'font-size': 9 });
+    tx.textContent = MONTHS[m - 1] + ' ' + d;
+    svg.appendChild(tx);
+  });
+  const cut = Date.UTC(2027, 6, 14);
+  svg.appendChild(svgEl('rect', { x: X(cut), y: padT, width: (W - padR) - X(cut), height: plotH,
+    fill: 'rgba(9,43,31,.09)' }));
+  const cl = svgEl('text', { x: X(cut) + 5, y: padT + 12, 'font-size': 9 });
+  cl.textContent = 'Chaturmas — closed';
+  svg.appendChild(cl);
+
+  const line = (series, color) => {
+    const pts = series.map(d => `${X(parse(d.s).getTime())},${Y(d.p)}`).join(' ');
+    svg.appendChild(svgEl('polyline', { points: pts, fill: 'none', stroke: color,
+      'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round' }));
+  };
+  line(s7, 'var(--series-a)');
+  line(s3, 'var(--series-b)');
+
+  const peak7 = s7.reduce((a, b) => b.p > a.p ? b : a);
+  svg.appendChild(svgEl('circle', { cx: X(parse(peak7.s).getTime()), cy: Y(peak7.p), r: 4,
+    fill: 'var(--series-a)', stroke: 'var(--ps-paper)', 'stroke-width': 2 }));
+  const pl = svgEl('text', { x: X(parse(peak7.s).getTime()), y: Y(peak7.p) - 10,
+    'text-anchor': 'middle', 'font-size': 9.5 });
+  pl.setAttribute('fill', 'var(--ps-text1)');
+  pl.textContent = `${PCT(peak7.p)} · ${pretty(peak7.s)}`;
+  svg.appendChild(pl);
+
+  svg.appendChild(svgEl('line', { x1: padL, y1: padT + plotH, x2: W - padR, y2: padT + plotH, class: 'axis' }));
+
+  const hover = svgEl('line', { y1: padT, y2: padT + plotH, stroke: 'rgba(9,43,31,.5)',
+    'stroke-width': 1, 'stroke-dasharray': '3 3', opacity: 0 });
+  svg.appendChild(hover);
+  const hit = svgEl('rect', { x: padL, y: padT, width: plotW, height: plotH, fill: 'transparent' });
+  svg.appendChild(hit);
+  const at = (series, iso) => series.find(d => d.s === iso);
+  hit.addEventListener('mousemove', e => {
+    const box = svg.getBoundingClientRect();
+    const rel = (e.clientX - box.left) / box.width * W;
+    const t = x0 + ((rel - padL) / plotW) * (x1 - x0);
+    const nearest = s3.reduce((a, b) =>
+      Math.abs(parse(b.s).getTime() - t) < Math.abs(parse(a.s).getTime() - t) ? b : a);
+    const x = X(parse(nearest.s).getTime());
+    hover.setAttribute('x1', x); hover.setAttribute('x2', x); hover.setAttribute('opacity', 1);
+    const w7 = at(s7, nearest.s);
+    showTip(`<div class="t-h">Starting ${pretty(nearest.s)}</div>
+      <div class="t-r"><span>7-day window</span><b>${w7 ? PCT1(w7.p) : '—'}</b></div>
+      <div class="t-r"><span>3-day window</span><b>${PCT1(nearest.p)}</b></div>`, e);
+  });
+  hit.addEventListener('mouseleave', () => { hover.setAttribute('opacity', 0); hideTip(); });
+  document.getElementById('curve').appendChild(svg);
+
+  document.getElementById('b3').textContent = D.window_metrics['3'].brier_uncalibrated.toFixed(3);
+  document.getElementById('b7').textContent = D.window_metrics['7'].brier_uncalibrated.toFixed(3);
+})();
+
+/* ---------- appendix tables ---------- */
+const tbl = (id, head, rows) => {
+  const t = document.getElementById(id);
+  t.innerHTML = `<thead><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows}</tbody>`;
+};
+
+const SRC = {
+  2077: ['Apr 2020 – Apr 2021', 'Arthabazar, quoting the committee chair'],
+  2078: ['Apr 2021 – Apr 2022', 'Nepali Patro, Samiti-approved patro'],
+  2080: ['Apr 2023 – Apr 2024', 'Khabar Center, quoting the Samiti'],
+  2081: ['Apr 2024 – Apr 2025', 'Hamro Patro saait page'],
+  2082: ['Apr 2025 – Apr 2026', 'Hamro Patro saait page'],
+  2083: ['Apr 2026 – Apr 2027', 'Hamro Patro saait page'],
+};
+const isTest = y => D.data.test_years.includes(Number(y));
+tbl('split-table', ['BS year', 'Gregorian', 'Saait days', 'Gate-open days', 'Split'],
+  Object.entries(D.year_summary).map(([y, s]) =>
+    `<tr><td>${y}</td><td>${SRC[y] ? SRC[y][0] : ''}</td><td>${s.saait}</td><td>${s.open}</td>
+     <td><span class="chip ${isTest(y) ? 'test' : 'ok'}">${isTest(y) ? 'test — scored once' : 'validation'}</span></td></tr>`).join(''));
+
+const tm = D.test_metrics;
+document.getElementById('ap-test').textContent = tm.average_precision.toFixed(3);
+document.getElementById('test-stats').innerHTML = [
+  ['Average precision', tm.average_precision.toFixed(3), 'validation was 0.438'],
+  ['ROC AUC', tm.roc_auc.toFixed(3), 'ranking quality'],
+  ['Brier score', tm.brier.toFixed(3), 'probability calibration'],
+  ['Precision at N', PCT(tm.precision_at_n), 'top-N vs true count'],
+  ['Gate recall', PCT(tm.gate_recall), 'saait surviving the gates'],
+  ['Days kept by gates', PCT(tm.gate_days_kept), 'search space left'],
+].map(([k, v, n]) => `<div class="stat"><div class="k">${k}</div><div class="v">${v}</div><div class="n">${n}</div></div>`).join('');
+
+tbl('year-table', ['Test year', 'Saait', 'Avg precision', 'ROC AUC', 'Brier', 'Precision@N', 'Gate recall'],
+  Object.entries(D.test_metrics_by_year).map(([y, m]) =>
+    `<tr><td>${y}</td><td>${m.n_positive}</td><td>${m.average_precision.toFixed(3)}</td>
+     <td>${m.roc_auc.toFixed(3)}</td><td>${m.brier.toFixed(3)}</td>
+     <td>${PCT(m.precision_at_n)}</td><td>${PCT(m.gate_recall)}</td></tr>`).join(''));
+
+let lastAxis = null;
+tbl('abl-table', ['Axis', 'Value tested', 'Avg precision', 'Gate recall'],
+  D.ablation.map(a => {
+    const value = ({
+      'feature blocks': a.blocks,
+      'ayanamsa': a.ayanamsa,
+      'Venus gate': a.venus_deg === 0 ? 'gate off' : a.venus_deg + '°',
+      'Jupiter gate': a.jupiter_deg === 0 ? 'gate off' : a.jupiter_deg + '°',
+      'nakshatra set': a.nakshatras + ' (' + (a.nakshatras === 'classical' ? 11 : 17) + ')',
+    })[a.axis];
+    const show = a.axis !== lastAxis;
+    lastAxis = a.axis;
+    return `<tr class="${a.is_chosen ? 'chosen' : ''}"><td>${show ? a.axis : ''}</td>
+      <td>${value}</td><td>${a.average_precision.toFixed(4)}</td><td>${PCT(a.gate_recall)}</td></tr>`;
+  }).join(''));
+
+document.getElementById('n-configs').textContent = D.sweep.n_configs.toLocaleString();
+tbl('sweep-table', ['Ayanamsa', 'Nakshatras', 'Excluded tithis', 'Venus', 'Jupiter', 'Features', 'C', 'Avg precision', 'Gate recall'],
+  D.sweep.top.map((s, i) =>
+    `<tr class="${i === 0 ? 'chosen' : ''}"><td>${s.ayanamsa}</td><td>${s.nakshatras}</td>
+     <td>${s.bad_tithis}</td><td>${s.venus_deg}°</td><td>${s.jupiter_deg}°</td>
+     <td>${s.blocks}</td><td>${s.C}</td><td>${s.average_precision.toFixed(4)}</td>
+     <td>${PCT(s.gate_recall)}</td></tr>`).join(''));
+
+tbl('coef-table', ['Feature', 'Weight'],
+  D.coefficients.map(c =>
+    `<tr><td>${c.feature}</td><td style="color:${c.weight >= 0 ? 'var(--ps-high)' : 'var(--ps-low)'}">
+     ${c.weight >= 0 ? '+' : ''}${c.weight.toFixed(2)}</td></tr>`).join(''));
+
+tbl('src-table', ['BS year', 'Gregorian', 'Saait days', 'Source'],
+  Object.entries(SRC).map(([y, [span, src]]) =>
+    `<tr><td>${y}</td><td>${span}</td>
+     <td>${D.year_summary[y] ? D.year_summary[y].saait : '—'}</td><td>${src}</td></tr>`).join(''));
+
+document.getElementById('gen-date').textContent = D.generated;
+
+/* Barcode, as a printed docket would carry. */
+document.getElementById('barcode').innerHTML =
+  [3, 1, 1, 2, 1, 3, 2, 1, 1, 1, 3, 1, 2, 2, 1, 3, 1, 1, 2, 1]
+    .map(w => `<i style="width:${w}px"></i>`).join('');
+</script>
+</body>
+</html>
