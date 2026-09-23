@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>What structure lives inside mHC's residual-mixing matrices?</title>
+<title>mHC Mixing Matrices</title>
 <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
 <script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
 <style>
@@ -223,7 +223,7 @@ footer { padding: var(--s8) 0; border-top: 1px dashed var(--border); font-family
 
 <section id="next"><h2>Next steps</h2><ul class="checks" id="next-list"></ul></section>
 
-<section id="ideas"><h2>Idea deck</h2>
+<section id="ideas"><h2>Proposed experiments</h2>
   <div class="deck">
     <div class="deckgrid" id="deck-grid"></div>
     <button class="shuffle" id="deck-shuffle">⤮ Shuffle</button>
@@ -565,7 +565,7 @@ const PAPERS = [
     "venue": "arXiv:2603.14833",
     "citation_count": 0,
     "url": "https://arxiv.org/abs/2603.14833",
-    "key_claim": "First open mHC LM (781M, 36 layers, 4 streams); CKA shows a mid-layer checkerboard of two stream groups (~L12); high CKA similarity does NOT imply causal interchangeability \u2014 pair (0,2) mutually recoverable ~75-81%, pair (1,3) asymmetric.",
+    "key_claim": "First open mHC LM (781M, 36 layers, 4 streams); CKA shows a mid-layer checkerboard of two stream groups (~L12); streams with high CKA similarity are not necessarily interchangeable: streams 0 and 2 can each recover about 75-81% of the other's contribution, while streams 1 and 3 recover each other asymmetrically.",
     "relevance_to_question": "Direct causal/interpretability evidence on effective-rank/subspace geometry of the constrained multi-stream maps.",
     "angle": "C",
     "citation_count_estimated": false,
@@ -689,7 +689,7 @@ const PAPERS = [
     "citation_count": 3,
     "url": "https://arxiv.org/abs/2601.02451",
     "key_claim": "Ports doubly-stochastic stream-mixing to GNNs; claims provably slower over-smoothing and ability to distinguish graphs beyond 1-WL.",
-    "relevance_to_question": "Cross-domain replication making the diffusion/oversmoothing connection literal; the doubly-stochastic-mixing structure slows representation collapse.",
+    "relevance_to_question": "Applies mHC-style mixing to graph neural networks, where the link to diffusion and oversmoothing is direct, and reports that it slows representation collapse.",
     "angle": "D",
     "citation_count_estimated": false,
     "lat": 20.3,
@@ -803,7 +803,7 @@ const PAPERS = [
     "citation_count": 552,
     "url": "https://arxiv.org/abs/2103.03404",
     "key_claim": "Without skips and MLPs, self-attention output converges doubly-exponentially to a rank-1 matrix (token uniformity); skips and MLPs halt the collapse.",
-    "relevance_to_question": "Doubly-stochastic averaging is the canonical rank-collapse operator \u2014 the central tension: what stops mHC streams collapsing is the residual injection.",
+    "relevance_to_question": "Repeated doubly-stochastic averaging is a standard cause of rank collapse; in mHC, the new content each layer adds to the streams is what prevents it.",
     "angle": "D",
     "citation_count_estimated": false,
     "lat": 37.42,
@@ -828,7 +828,7 @@ const PAPERS = [
     "citation_count": 31,
     "url": "https://arxiv.org/abs/1905.10947",
     "key_claim": "Deep GNNs converge to a low-dimensional invariant subspace of the (doubly-)stochastic propagation operator, losing node-discriminative power exponentially with depth (oversmoothing).",
-    "relevance_to_question": "Formalizes Perron-collapse for stochastic mixing operators \u2014 the failure mode latent in mHC's diffusion step.",
+    "relevance_to_question": "Formalizes how repeated stochastic mixing collapses signals toward the leading eigenvector, a possible failure mode for mHC's mixing step.",
     "angle": "D",
     "citation_count_estimated": false,
     "lat": 35.71,
@@ -970,7 +970,7 @@ const PAPERS = [
     "citation_count": 90,
     "url": "https://arxiv.org/abs/1808.07593",
     "key_claim": "For deterministic networks the IB functional is ill-posed (infinite or piecewise-constant), so the IB curve cannot be traced by the IB Lagrangian.",
-    "relevance_to_question": "Shows IB itself is contested for deterministic nets \u2014 reinforcing that mHC's 'information bottleneck' is metaphor, not rigorous IB.",
+    "relevance_to_question": "Shows the information bottleneck is poorly defined for deterministic networks, which supports reading mHC's use of the term as informal.",
     "angle": "D",
     "citation_count_estimated": false,
     "lat": 35.69,
@@ -1012,104 +1012,219 @@ const PAPERS = [
   }
 ];
 const CONTENT = {
-  "title": "What structure lives inside mHC's residual-mixing matrices?",
+  "title": "Structure of the residual-mixing matrices in mHC",
   "question": "What kind of structures emerge in the linear transformations added by Manifold Constrained Hyper Connections (mHC) used in modern language models to solve the information bottleneck problem in the residual stream? Studied from geometric, eigenvalue, and other perspectives.",
   "date": "2026-06-24",
-  "stats": { "papers": 33, "edges": 149 },
-
+  "stats": {
+    "papers": 33,
+    "edges": 149
+  },
   "tldr": [
-    { "point": "mHC [[xie2025mhc]] widens the residual stream into n parallel copies, then constrains each n×n mixing matrix to the Birkhoff polytope (doubly-stochastic) via Sinkhorn–Knopp.", "sub": [
-      "Generalizes Hyper-Connections [[zhu2024hc]], whose free mixing matrices broke the residual identity-map and blew composite gain to ~3000× at 27B.",
-      "Doubly-stochastic projection caps composite signal gain at ~1.6×."
-    ]},
-    { "point": "SETTLED — what the manifold forces (true of any doubly-stochastic matrix, by theorem):", "sub": [
-      "Perron eigenvalue = 1 (all-ones eigenvector); every other |λ| ≤ 1.",
-      "Spectral norm σ_max ≤ 1 (non-expansive); closed under multiplication, so the composite stays bounded at any depth [[birkhoff1946]].",
-      "By Birkhoff–von Neumann, the map is a convex combination of stream-permutations — an averaging operator between routing and uniform mixing."
-    ]},
-    { "point": "OPEN — what actually emerges in trained weights: nobody has reported the eigenvalue/SVD spectra, the polytope entropy, or the effective rank of a single trained H^res.", "sub": [
-      "The geometric thesis is inferred from the imposed constraint, NOT measured. Frame as enforced-by-construction, not empirically-observed.",
-      "Only mechanistic probe (Ablate-and-Rescue [[ablate2026]]) shows streams specialize into causally non-interchangeable roles — argues against uniform collapse, but measures CKA, not the matrices."
-    ]},
-    "\"Information bottleneck\" here = limited residual bandwidth (mech-interp sense), NOT Tishby's IB [[shwartzziv2017]]. mHC optimizes zero mutual information.",
-    "Verdict HIGH confidence: core paper + 7 follow-ups all verified on arXiv (Jun 2026), math is correct — but every headline number is single-source, self-reported, closed-weights DeepSeek at ≤27B."
+    {
+      "point": "Manifold-Constrained Hyper-Connections (mHC) [[xie2025mhc]] replace the single residual stream with n parallel copies and mix them with an n×n matrix at each layer. mHC constrains each mixing matrix to be doubly stochastic (non-negative, every row and column sums to 1), using the Sinkhorn–Knopp algorithm to project onto that set, which is called the Birkhoff polytope.",
+      "sub": [
+        "mHC builds on Hyper-Connections (HC) [[zhu2024hc]], which left the mixing matrices unconstrained. In HC, the product of mixing matrices across layers amplified the signal by up to about 3000× in a 27B-parameter model, which caused loss spikes.",
+        "With the doubly-stochastic constraint, the same measure of signal amplification stays at about 1.6×."
+      ]
+    },
+    {
+      "point": "Some properties follow directly from the constraint and hold for every doubly-stochastic matrix, trained or not:",
+      "sub": [
+        "The largest eigenvalue is 1, with the all-ones vector as its eigenvector, and every other eigenvalue has magnitude at most 1.",
+        "The largest singular value is at most 1, so the matrix never amplifies a vector. The product of doubly-stochastic matrices is also doubly stochastic, so the combined map across any number of layers stays bounded [[birkhoff1946]].",
+        "By the Birkhoff–von Neumann theorem, each such matrix is a weighted average of permutation matrices. It therefore sits somewhere between pure routing (reordering the streams) and uniform averaging (mixing all streams equally)."
+      ]
+    },
+    {
+      "point": "What training actually produces inside that constraint is unknown. No published work reports the eigenvalues, singular values, entropy, or effective rank of a trained mHC mixing matrix.",
+      "sub": [
+        "The spectral properties above describe what the constraint guarantees, not what has been measured in trained models.",
+        "The only mechanistic study, Ablate-and-Rescue [[ablate2026]], finds that the streams take on distinct roles and cannot be swapped for each other without loss. This suggests the streams do not collapse into copies, but the study measures stream activations (with CKA similarity), not the mixing matrices."
+      ]
+    },
+    "The mHC paper uses \"information bottleneck\" to mean that the residual stream has limited bandwidth, as in the mechanistic-interpretability literature. It does not refer to Tishby's information bottleneck principle [[shwartzziv2017]]; mHC does not measure or optimize mutual information.",
+    "Confidence in this review is high. The core paper and seven follow-up papers were checked on arXiv in June 2026, and the math holds. However, every headline number comes from a single self-reported DeepSeek paper whose largest model is 27B parameters and whose weights are not public."
   ],
-
   "insights": [
-    { "title": "Enforced ≠ emergent", "points": [
-      "λ=1, |λ|≤1, σ_max≤1 are a math consequence of the doubly-stochastic constraint.",
-      "True of an untrained random Sinkhorn matrix too — they say nothing about what training selects.",
-      "The real question is where inside that envelope the learned maps land."
-    ]},
-    { "title": "The free axis: routing ⇄ uniform averaging", "points": [
-      "Birkhoff–von Neumann: every mixer is a convex combo of stream-permutations [[birkhoff1946]].",
-      "Low entropy → near-permutation (routing); high entropy → near-uniform (consensus).",
-      "That position — the polytope entropy — is exactly the unmeasured quantity."
-    ]},
-    { "title": "Stability and oversmoothing are the same operator", "points": [
-      "A doubly-stochastic operator is the canonical non-expansive stabilizer AND the canonical Perron-consensus / rank-collapse operator [[oono2019]] [[dong2021]].",
-      "mHC trades gradient-explosion for a latent oversmoothing mode.",
-      "Suppressed by tiny n, input-dependent matrices, and interleaved residual injection [[scholkemper2024]] — never characterized."
-    ]},
-    { "title": "Doubly-stochastic is not orthogonal", "points": [
-      "σ_max ≤ 1 but σ_min can fall below 1: contractive, non-isometric, generally non-invertible, rank-shrinking toward the Perron mode.",
-      "The deliberate price vs the true isometry (all σ=1) of orthogonal/Stiefel variants [[jpmhc2026]] [[lezcano2019]].",
-      "Competing 2026 proposals push spectral-sphere [[spectralsphere2026]] and orthostochastic [[gomhc2026]] instead."
-    ]},
-    { "title": "Same idea, older lineage: orthogonal/unitary RNNs", "points": [
-      "Constraining a depth-recurrent mixing matrix is the uRNN problem [[arjovsky2016]].",
-      "|eigenvalue|=1 via unitary (uRNN), scaled-Cayley [[helfrich2018]], or Riemannian exp-map [[lezcano2019]].",
-      "All chase σ≈1 dynamical isometry [[saxe2013]] [[pennington2017]] — mHC picks the cheaper, contractive cousin."
-    ]},
-    { "title": "Streams specialize — and asymmetrically", "points": [
-      "Ablate-and-Rescue [[ablate2026]]: mid-layer CKA checkerboard, two stream groups formed by ~layer 12.",
-      "High CKA similarity does NOT imply causal interchangeability.",
-      "Pair (1,3) asymmetric: rescuing stream 3 restores 15.86% more KL than stream 1 — differentiated, directional info."
-    ]},
-    { "title": "It's a diffusion step bolted onto a residual block", "points": [
-      "Doubly-stochastic mixing = discrete Markov/diffusion operator over the n-stream graph.",
-      "The residual is an Euler step of an ODE [[chen2018node]] doing iterative inference [[jastrzebski2017]].",
-      "Sinkhorn–Knopp is the same machinery as differentiable optimal transport [[cuturi2013]] / Gumbel-Sinkhorn [[mena2018]]."
-    ]},
-    { "title": "The measurement gap is the headline", "points": [
-      "Every spectral claim traces to one closed-weights DeepSeek paper via scalar row/column-sum gain proxies.",
-      "No published eigenvalue or SVD spectrum of a single trained H^res.",
-      "Highest-value, lowest-cost open experiment in the whole thread."
-    ]}
+    {
+      "title": "Guaranteed properties versus learned structure",
+      "points": [
+        "An eigenvalue of 1, all other eigenvalue magnitudes at most 1, and a largest singular value at most 1 are mathematical consequences of the doubly-stochastic constraint.",
+        "A randomly initialized, untrained Sinkhorn matrix has the same properties, so they tell us nothing about what training selects.",
+        "The open question is where within the set of allowed matrices the trained ones end up."
+      ]
+    },
+    {
+      "title": "The main unmeasured quantity: routing versus averaging",
+      "points": [
+        "By the Birkhoff–von Neumann theorem, every mixing matrix is a weighted average of permutation matrices [[birkhoff1946]].",
+        "A matrix with low entropy is close to a single permutation, which routes each stream to one destination. A matrix with high entropy is close to uniform, which averages all streams together.",
+        "Nobody has measured where trained mixing matrices fall on this scale."
+      ]
+    },
+    {
+      "title": "The property that gives stability can also cause oversmoothing",
+      "points": [
+        "Repeatedly applying a fixed doubly-stochastic matrix keeps signals bounded, but it also drives all streams toward the same average value. This is the mechanism behind oversmoothing in graph neural networks and rank collapse in attention [[oono2019]] [[dong2021]].",
+        "So mHC removes the exploding-signal failure of HC but carries a possible oversmoothing failure instead.",
+        "In practice this is likely held back because n is small (about 4), the matrices change with each layer and input, and each layer adds new content to the streams, which is known to prevent collapse [[scholkemper2024]]. The mHC paper does not study this failure mode."
+      ]
+    },
+    {
+      "title": "Doubly-stochastic matrices are not orthogonal",
+      "points": [
+        "The largest singular value is at most 1, but the smallest can be well below 1. The map can shrink vectors, is generally not invertible, and can reduce rank by pulling signals toward the all-ones direction.",
+        "Orthogonal matrices, used in Stiefel-manifold variants, keep every singular value at exactly 1 and preserve norms exactly [[jpmhc2026]] [[lezcano2019]]. mHC gives this up in exchange for a cheaper constraint.",
+        "Two 2026 papers propose other constraints: one bounds the spectral radius to 1 [[spectralsphere2026]], and one uses orthostochastic matrices (entrywise squares of orthogonal matrices) [[gomhc2026]]."
+      ]
+    },
+    {
+      "title": "Related earlier work: orthogonal and unitary RNNs",
+      "points": [
+        "Constraining a mixing matrix that is applied repeatedly is the same problem that unitary recurrent networks addressed [[arjovsky2016]].",
+        "Those models kept eigenvalue magnitudes at exactly 1 using unitary matrices (uRNN), a scaled Cayley transform (scoRNN) [[helfrich2018]], or an exponential-map parametrization (expRNN) [[lezcano2019]].",
+        "All of these aim for singular values near 1, known as dynamical isometry [[saxe2013]] [[pennington2017]]. mHC chooses a cheaper constraint that allows shrinking."
+      ]
+    },
+    {
+      "title": "Streams specialize, and not symmetrically",
+      "points": [
+        "Ablate-and-Rescue [[ablate2026]] trained an open 781M-parameter mHC model with 4 streams. CKA similarity between streams shows a checkerboard pattern in the middle layers: two groups of streams form by about layer 12.",
+        "Streams that look similar under CKA are not necessarily interchangeable when tested causally.",
+        "For streams 1 and 3, the effect is asymmetric: rescuing stream 3 restores 15.86% more of the KL divergence than rescuing stream 1. The streams carry different information."
+      ]
+    },
+    {
+      "title": "mHC adds a diffusion step to each residual block",
+      "points": [
+        "Multiplying by a doubly-stochastic matrix is one step of a Markov chain, or diffusion, over a graph whose n nodes are the streams.",
+        "A residual block can be read as one Euler step of an ordinary differential equation [[chen2018node]] and as one step of iterative refinement of the representation [[jastrzebski2017]].",
+        "Sinkhorn–Knopp is the same algorithm used for differentiable optimal transport [[cuturi2013]] and Gumbel-Sinkhorn [[mena2018]]."
+      ]
+    },
+    {
+      "title": "The biggest gap is the missing measurement",
+      "points": [
+        "Every spectral claim traces back to one DeepSeek paper with unreleased weights, which reports only a summary gain based on row and column sums.",
+        "No one has published the eigenvalues or singular values of a trained mixing matrix.",
+        "Measuring them is the most useful and cheapest experiment available in this area."
+      ]
+    }
   ],
-
   "next_steps": [
-    "Clone lucidrains/hyper-connections, confirm the mHC path runs, train one small n=4 LM with periodic H^res checkpointing.",
-    "Run the missing-spectra measurement (D1) + its untrained-vs-trained control (D8) first — highest value, lowest cost.",
-    "Lock a matched Pre-LN baseline early so the effective-rank and oversmoothing tests are apples-to-apples.",
-    "Branch into the manifold ablation (D4) and oversmoothing sweep (D5) reusing the same backbone.",
-    "Report framing: foreground enforced-envelope vs emergent-point; flag every DeepSeek headline number as single-source self-reported."
+    "Clone lucidrains/hyper-connections, check that the mHC code path runs, and train one small language model with n=4 streams, saving the mixing matrices at regular checkpoints.",
+    "Run the spectrum measurement (D1) and its untrained-versus-trained comparison (D8) first, since they are the most useful and the cheapest.",
+    "Train a matched Pre-LN baseline early so the effective-rank and oversmoothing tests compare like with like.",
+    "Then run the constraint comparison (D4) and the oversmoothing sweep (D5) on the same model setup.",
+    "When writing up, separate what the constraint guarantees from what training produces, and note that every DeepSeek headline number comes from a single self-reported source."
   ],
-
   "ideas": [
-    { "id": "D1", "question": "What are the eigenvalue/SVD spectra of trained H^res across layers and training steps?", "hypothesis": "They drift from high-entropy near-uniform (early) toward sparser near-permutation / near-identity (late), with σ_min staying well below 1.", "experiment": "Train a small mHC LM (lucidrains, n=4, ~100–300M), dump every H^res per checkpoint, plot eigenvalues / SVD / entropy vs (layer, step).", "why": "THE named open measurement — converts the entire geometric thesis from inference to data." },
-    { "id": "D2", "question": "Does the doubly-stochastic entropy of learned mixers move toward permutations or toward uniform over training?", "hypothesis": "Entropy decreases (toward routing) where streams specialize, increases where they pool.", "experiment": "Per-matrix entropy (distance to nearest permutation vs to uniform 1/n) for each checkpoint; correlate with the layer's downstream contribution.", "why": "Pinpoints the single free axis Birkhoff–von Neumann leaves open; near-free alongside D1." },
-    { "id": "D3", "question": "Does mHC actually widen residual-stream effective rank vs Pre-LN?", "hypothesis": "Effective rank stays higher across depth and degrades more slowly than baseline.", "experiment": "Matched mHC vs Pre-LN small LMs; measure per-layer stable rank / singular-value entropy of activations over depth.", "why": "Tests the core motivating claim directly instead of via proxy cosine similarity." },
-    { "id": "D4", "question": "Is doubly-stochastic the best constraint, or do orthogonal / spectral-sphere / orthostochastic / unconstrained win?", "hypothesis": "Orthogonal matches stability with better gradient spectra; unconstrained diverges; doubly-stochastic best per-FLOP.", "experiment": "Same backbone, swap only the constraint (Sinkhorn vs Cayley vs spectral-sphere vs go-mHC vs none); compare composite gain, loss, downstream.", "why": "Resolves the live JPmHC / spectral-sphere debate at solo-researcher scale." },
-    { "id": "D5", "question": "Can the latent consensus-collapse (oversmoothing) mode be triggered?", "hypothesis": "Shrinking residual-injection magnitude or stacking depth drives stream-to-stream CKA → 1.", "experiment": "Sweep residual-injection scale α↓ and depth↑ on a small mHC LM; track inter-stream CKA and effective rank toward the Perron mode.", "why": "Confirms or kills the paper's uncharacterized failure mode; tests Scholkemper's 'residual injection prevents collapse' mechanistically." },
-    { "id": "D6", "question": "Is the CKA checkerboard + non-interchangeable (1,3) asymmetry robust, and is it visible in H^res itself?", "hypothesis": "The asymmetry shows up as directional off-diagonal mass in the learned mixers, not just in carried content.", "experiment": "Reproduce Ablate-and-Rescue's CKA + ablate-rescue on the D1 model; cross-reference rescue asymmetry against off-diagonal structure of the H^res rows/columns.", "why": "Links the one existing causal result to the actual matrices — 'streams differ' becomes 'here's the operator that makes them differ.'" },
-    { "id": "D7", "question": "How few Sinkhorn iterations preserve the spectral structure, and does the approximation gap accumulate with depth?", "hypothesis": "Far fewer than 20 suffice (per mHC-lite); residual double-stochasticity error grows with depth.", "experiment": "Sweep t_max ∈ {1,2,5,10,20} and exact-Birkhoff; measure per-layer deviation of the composite from doubly-stochastic and downstream loss.", "why": "Isolates how much of the structure (and the 6.7% overhead) is actually load-bearing." },
-    { "id": "D8", "question": "How much of the observed spectrum is constraint-forced vs training-selected?", "hypothesis": "Untrained Sinkhorn mixers are high-entropy / near-uniform; training meaningfully moves them.", "experiment": "Compare H^res spectra / entropy at init vs converged for the D1 model — a near-zero-cost control.", "why": "Without it, any 'emergent structure' claim is unfalsifiable; cheapest experiment, highest framing payoff." },
-    { "id": "Q1", "question": "Does the spectrum vary systematically with depth — early layers route, late layers average, mirroring the curse-of-depth Jacobian→identity trend [[sun2025curse]]?", "why": "Would connect mHC's structure to the known depth pathology it claims to fix." },
-    { "id": "Q2", "question": "What drives the asymmetric, non-interchangeable stream roles — off-diagonal structure of H^res, or purely what the streams carry?", "why": "Determines whether stream specialization is an operator property or a content property." }
+    {
+      "id": "D1",
+      "question": "What are the eigenvalues and singular values of the trained mixing matrices, across layers and over training?",
+      "hypothesis": "Early in training they are close to uniform (high entropy); later they become sparser and closer to permutations or the identity, while the smallest singular value stays well below 1.",
+      "experiment": "Train a small mHC language model (lucidrains code, n=4, about 100–300M parameters), save every mixing matrix at each checkpoint, and plot eigenvalues, singular values, and entropy by layer and training step.",
+      "why": "This is the main open measurement. It would replace the current inferences about structure with data."
+    },
+    {
+      "id": "D2",
+      "question": "Over training, do the learned mixing matrices move toward permutations or toward uniform averaging?",
+      "hypothesis": "Entropy falls (more routing) in layers where streams specialize and rises in layers where streams are pooled.",
+      "experiment": "At each checkpoint, compute each matrix's entropy, its distance to the nearest permutation, and its distance to the uniform 1/n matrix. Correlate these with how much each layer contributes downstream.",
+      "why": "This measures the one property the Birkhoff–von Neumann theorem leaves open, and it costs almost nothing on top of D1."
+    },
+    {
+      "id": "D3",
+      "question": "Does mHC actually increase the effective rank of the residual stream compared with Pre-LN?",
+      "hypothesis": "Effective rank stays higher through depth and declines more slowly than in the baseline.",
+      "experiment": "Train matched mHC and Pre-LN small language models, and measure the stable rank and singular-value entropy of the activations at each layer.",
+      "why": "This tests the main motivation for mHC directly, rather than through the cosine-similarity proxy used so far."
+    },
+    {
+      "id": "D4",
+      "question": "Is the doubly-stochastic constraint the best choice, or do orthogonal, spectral-sphere, orthostochastic, or unconstrained matrices do better?",
+      "hypothesis": "Orthogonal matrices are equally stable and give better gradient spectra; unconstrained matrices diverge; doubly-stochastic matrices give the best results per unit of compute.",
+      "experiment": "Keep the model fixed and change only the constraint (Sinkhorn, Cayley, spectral sphere, go-mHC, or none). Compare composite gain, loss, and downstream scores.",
+      "why": "This would settle the current disagreement between mHC, JPmHC, and the spectral-sphere paper at a scale one person can run."
+    },
+    {
+      "id": "D5",
+      "question": "Can oversmoothing, where all streams converge to the same value, be triggered in mHC?",
+      "hypothesis": "Reducing how much new content each layer adds, or adding more layers, pushes the CKA similarity between streams toward 1.",
+      "experiment": "On a small mHC model, lower the residual-injection scale α and increase depth. Track similarity between streams and how much the effective rank drops toward the all-ones direction.",
+      "why": "This would confirm or rule out a failure mode the mHC paper does not study, and it tests Scholkemper et al.'s claim that residual injection prevents collapse."
+    },
+    {
+      "id": "D6",
+      "question": "Does the CKA checkerboard and the asymmetry between streams 1 and 3 replicate, and does it show up in the mixing matrices themselves?",
+      "hypothesis": "The asymmetry appears as uneven off-diagonal weights in the learned mixing matrices, not only in what the streams carry.",
+      "experiment": "Repeat Ablate-and-Rescue's CKA and ablate-and-rescue tests on the D1 model, then compare the rescue asymmetry with the off-diagonal entries of the mixing matrices.",
+      "why": "This would connect the only existing causal result to the matrices, identifying which part of the operator makes the streams differ."
+    },
+    {
+      "id": "D7",
+      "question": "How few Sinkhorn iterations are needed to keep the spectral properties, and does the approximation error grow with depth?",
+      "hypothesis": "Far fewer than 20 iterations are enough, as mHC-lite reports; the deviation from exact double stochasticity grows with depth.",
+      "experiment": "Try t_max of 1, 2, 5, 10, and 20, plus the exact Birkhoff parametrization. Measure how far the product of matrices at each layer is from doubly stochastic, and the effect on loss.",
+      "why": "This shows how much of the structure, and of the 6.7% training overhead, is actually needed."
+    },
+    {
+      "id": "D8",
+      "question": "How much of the observed spectrum comes from the constraint and how much from training?",
+      "hypothesis": "Untrained Sinkhorn matrices are close to uniform with high entropy, and training changes them substantially.",
+      "experiment": "Compare the spectra and entropy of the mixing matrices at initialization with those at the end of training for the D1 model. This costs almost nothing.",
+      "why": "Without this control, no claim about learned structure can be tested; it is the cheapest experiment and matters most for how results are framed."
+    },
+    {
+      "id": "Q1",
+      "question": "Does the spectrum change systematically with depth, for example routing in early layers and averaging in late layers, similar to how deep-layer Jacobians approach the identity in Pre-LN models [[sun2025curse]]?",
+      "why": "This would link the structure of mHC to the depth problem it is meant to fix."
+    },
+    {
+      "id": "Q2",
+      "question": "What causes the asymmetric, non-interchangeable roles of the streams: the off-diagonal structure of the mixing matrices, or only the content each stream carries?",
+      "why": "This determines whether stream specialization comes from the operator or from the content."
+    }
   ],
-
   "report_quality": {
     "verdict": "HIGH",
-    "verdict_note": "Core paper + 7 follow-ups verified verbatim on arXiv; math correct; but all headline numbers single-source, self-reported, closed-weights DeepSeek at ≤27B, and no trained-weight spectra exist.",
+    "verdict_note": "The core paper and seven follow-ups were checked against arXiv and the math is correct. However, all headline numbers come from one self-reported DeepSeek paper with unreleased weights and models up to 27B parameters, and no spectra of trained matrices exist.",
     "axes": [
-      { "name": "Freshness", "score": 5, "note": "Core + 7 follow-ups all 2025–2026, current to the day." },
-      { "name": "Accuracy", "score": 5, "note": "Every checkable quantitative claim matches the source verbatim (3000×→1.6×, 27B/262B tok, 6.7%@n=4, tmax=20)." },
-      { "name": "Reproducibility", "score": 3, "note": "One open repro (lucidrains) + one open model (Ablate-and-Rescue 781M); core 27B is closed-weights." },
-      { "name": "Bias/Completeness", "score": 4, "note": "Good adversarial breadth, but heavy reliance on DeepSeek self-reported numbers; no 3rd-party 27B replication." },
-      { "name": "Causal rigor", "score": 4, "note": "Ablate-and-Rescue gives genuine interventions; CKA≠interchangeability correctly flagged." },
-      { "name": "Scale-transfer", "score": 3, "note": "Tops out at 27B ≪ frontier; 'effective at scale' is honest-flagged extrapolation." },
-      { "name": "Falsifiability", "score": 4, "note": "Clear open measurement named: empirical eigenvalue/SVD spectra of trained H^res." }
+      {
+        "name": "Freshness",
+        "score": 5,
+        "note": "The core paper and all seven follow-ups are from 2025–2026 and current as of this review."
+      },
+      {
+        "name": "Accuracy",
+        "score": 5,
+        "note": "Every quantitative claim that could be checked matches the source exactly (3000× to 1.6× gain, 27B model on 262B tokens, 6.7% overhead at n=4, 20 Sinkhorn iterations)."
+      },
+      {
+        "name": "Reproducibility",
+        "score": 3,
+        "note": "There is one open reimplementation (lucidrains) and one open model (Ablate-and-Rescue, 781M parameters). The core 27B model's weights are not public."
+      },
+      {
+        "name": "Bias/Completeness",
+        "score": 4,
+        "note": "Critical perspectives are well covered, but the review relies heavily on DeepSeek's self-reported numbers, and no one else has replicated the 27B results."
+      },
+      {
+        "name": "Causal rigor",
+        "score": 4,
+        "note": "Ablate-and-Rescue uses real interventions, and the review correctly notes that CKA similarity does not imply the streams are interchangeable."
+      },
+      {
+        "name": "Scale-transfer",
+        "score": 3,
+        "note": "Experiments stop at 27B parameters, far below frontier models, so claims about larger scale are extrapolation (and are labeled as such)."
+      },
+      {
+        "name": "Falsifiability",
+        "score": 4,
+        "note": "There is a clear open measurement: the eigenvalues and singular values of trained mixing matrices."
+      }
     ]
   }
 };
@@ -1164,7 +1279,7 @@ document.getElementById('foot-stats').textContent = `${nP} papers · ${nE} citat
 /* ---------- nav ---------- */
 const SECTIONS = [
   ['tldr','TLDR'],['insights','Insights'],['graph','Graph'],['timeline','Timeline'],
-  ['next','Next steps'],['ideas','Idea deck'],['quality','Quality'],['citations','Citations']
+  ['next','Next steps'],['ideas','Experiments'],['quality','Quality'],['citations','Citations']
 ];
 const navinner = document.getElementById('navinner');
 const prevA = document.createElement('button'); prevA.className='navarrow'; prevA.textContent='‹';
