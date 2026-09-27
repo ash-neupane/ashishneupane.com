@@ -16,7 +16,7 @@ export default function Home() {
           href={PERSONAL.github}
           target="_blank"
           rel="noopener noreferrer"
-          className="rounded-[3px] border border-border bg-surface px-5 py-2 text-sm font-medium text-ink shadow-[var(--shadow-paper)] transition-colors hover:bg-paper"
+          className="rounded-lg border border-border bg-surface px-5 py-2 text-sm font-medium text-ink transition-colors hover:bg-paper"
         >
           GitHub
         </a>
@@ -24,13 +24,13 @@ export default function Home() {
           href={PERSONAL.linkedin}
           target="_blank"
           rel="noopener noreferrer"
-          className="rounded-[3px] border border-border bg-surface px-5 py-2 text-sm font-medium text-ink shadow-[var(--shadow-paper)] transition-colors hover:bg-paper"
+          className="rounded-lg border border-border bg-surface px-5 py-2 text-sm font-medium text-ink transition-colors hover:bg-paper"
         >
           LinkedIn
         </a>
       </div>
 
-      <section className="rounded-[3px] border border-border bg-surface p-8 shadow-[var(--shadow-paper)]">
+      <section className="rounded-lg border border-border bg-surface p-8">
         <p className="max-w-xl text-base leading-relaxed text-ink">
           Hello, I am a human. I enjoy hiking and reading research papers.
         </p>
