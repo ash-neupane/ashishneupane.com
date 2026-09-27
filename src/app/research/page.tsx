@@ -21,7 +21,7 @@ export default function ResearchIndex() {
   if (RESEARCH.length === 0) {
     return (
       <Container className="py-16">
-        <p className="rounded-[3px] border border-border bg-surface p-8 text-muted shadow-[var(--shadow-paper)]">
+        <p className="rounded-lg border border-border bg-surface p-8 text-muted">
           No reports yet. Check back soon.
         </p>
       </Container>
@@ -36,7 +36,7 @@ export default function ResearchIndex() {
           <li key={thread.slug}>
             <Link
               href={`/research/${thread.slug}`}
-              className="block rounded-[3px] border border-border bg-surface p-6 shadow-[var(--shadow-paper)] transition-shadow hover:shadow-[var(--shadow-pop)]"
+              className="block rounded-lg border border-border bg-surface p-6 transition-colors hover:bg-paper"
             >
               <h2 className="text-lg font-semibold leading-snug text-ink">
                 {thread.title}

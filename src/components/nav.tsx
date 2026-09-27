@@ -34,7 +34,7 @@ export function Nav() {
               <li key={href}>
                 <Link
                   href={href}
-                  className={`rounded-[3px] border px-3 py-1.5 text-sm font-medium transition-colors ${
+                  className={`rounded-lg border px-3 py-1.5 text-sm font-medium transition-colors ${
                     active
                       ? "border-accent bg-accent text-on-ink"
                       : "border-transparent text-muted hover:border-border hover:bg-paper hover:text-ink"
